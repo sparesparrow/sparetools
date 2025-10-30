@@ -13,8 +13,8 @@ class CPythonToolConan(ConanFile):
     license = "Python-2.0"
     url = "https://github.com/sparesparrow/sparetools"
     
-    # Optional: Use sparetools-base utilities if needed
-    # python_requires = "sparetools-base/1.0.0"
+    # Use sparetools-base utilities
+    python_requires = "sparetools-base/1.0.0"
     
     settings = "os", "arch", "compiler", "build_type"
     

@@ -1,0 +1,21 @@
+launcher:
+  artifactory_config:
+    artifactory:
+      conan_name: openssl-tools
+      conan_paths:
+      - /usr/local/bin/conan
+      - /opt/conan/bin/conan
+      - $HOME/.local/bin/conan
+      conan_url: https://artifactory.example.com/artifactory/api/conan/openssl-tools-local
+      password: ${ARTIFACTORY_PASSWORD}
+      root: https://artifactory.example.com:443/artifactory
+      schema_version: '1.0'
+      user: openssl-tools-user
+  build_optimization: true
+  cache_cleanup: true
+  conan_home: ''
+  git_repository: $HOME/projects/openssl
+  parallel_downloads: true
+  python_interpreter: ''
+  remote_setup: ''
+  version: '2.0'

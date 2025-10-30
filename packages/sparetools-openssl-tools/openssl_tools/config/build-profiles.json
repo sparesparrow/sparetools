@@ -1,0 +1,123 @@
+{
+    "profiles": [
+        {
+            "name": "linux-gcc-release",
+            "os": "ubuntu-22.04",
+            "cache_key": "linux-gcc11-rel",
+            "priority": "high",
+            "test_enabled": true,
+            "description": "Linux GCC Release build with optimizations"
+        },
+        {
+            "name": "linux-gcc-debug",
+            "os": "ubuntu-22.04",
+            "cache_key": "linux-gcc11-debug",
+            "priority": "medium",
+            "test_enabled": true,
+            "description": "Linux GCC Debug build for testing"
+        },
+        {
+            "name": "linux-fips",
+            "os": "ubuntu-22.04",
+            "cache_key": "linux-fips",
+            "priority": "critical",
+            "test_enabled": true,
+            "separate_cache": true,
+            "description": "Linux FIPS build with separate cache"
+        },
+        {
+            "name": "windows-msvc",
+            "os": "windows-2022",
+            "cache_key": "win-msvc2022",
+            "priority": "high",
+            "test_enabled": false,
+            "description": "Windows MSVC build"
+        },
+        {
+            "name": "macos-clang",
+            "os": "macos-13",
+            "cache_key": "macos-clang15",
+            "priority": "high",
+            "test_enabled": false,
+            "description": "macOS Clang build"
+        }
+    ],
+    "category_mappings": {
+        "crypto": {
+            "patterns": [
+                "crypto/",
+                "include/openssl/"
+            ],
+            "profiles": [
+                "linux-gcc-release",
+                "windows-msvc",
+                "macos-clang"
+            ],
+            "priority": "high"
+        },
+        "ssl": {
+            "patterns": [
+                "ssl/",
+                "include/openssl/ssl"
+            ],
+            "profiles": [
+                "linux-gcc-release",
+                "windows-msvc",
+                "macos-clang"
+            ],
+            "priority": "high"
+        },
+        "fips": {
+            "patterns": [
+                "providers/fips/",
+                "fips/"
+            ],
+            "profiles": [
+                "linux-fips"
+            ],
+            "priority": "critical",
+            "separate_cache": true
+        },
+        "test": {
+            "patterns": [
+                "test/",
+                "fuzz/"
+            ],
+            "profiles": [
+                "linux-gcc-debug"
+            ],
+            "priority": "medium"
+        },
+        "build_system": {
+            "patterns": [
+                "conanfile.py",
+                "Configure",
+                "config/",
+                "Makefile"
+            ],
+            "profiles": [
+                "linux-gcc-release",
+                "linux-gcc-debug",
+                "windows-msvc",
+                "macos-clang",
+                "linux-fips"
+            ],
+            "priority": "critical"
+        },
+        "documentation": {
+            "patterns": [
+                "doc/",
+                "*.md",
+                "README"
+            ],
+            "profiles": [],
+            "priority": "low"
+        }
+    },
+    "cache_config": {
+        "default_retention_days": 30,
+        "fips_retention_days": 60,
+        "warmup_schedule": "0 2 * * *",
+        "cleanup_schedule": "0 3 * * 0"
+    }
+}

@@ -1,0 +1,9 @@
+build:
+  download_threads: -1
+  enable_ccache: true
+  enable_sccache: false
+  max_jobs: 4
+  optimize_build: true
+  parallel_download: true
+  reproducible_builds: true
+  schema_version: '1.0'

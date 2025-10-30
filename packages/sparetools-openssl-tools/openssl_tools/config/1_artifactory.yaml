@@ -1,0 +1,11 @@
+artifactory:
+  conan_name: openssl-tools
+  conan_paths:
+  - /usr/local/bin/conan
+  - /opt/conan/bin/conan
+  - $HOME/.local/bin/conan
+  conan_url: https://artifactory.example.com/artifactory/api/conan/openssl-tools-local
+  password: ${ARTIFACTORY_PASSWORD}
+  root: https://artifactory.example.com:443/artifactory
+  schema_version: '1.0'
+  user: openssl-tools-user
