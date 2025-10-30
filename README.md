@@ -1,4 +1,4 @@
-# SPARETOOLS
+# SpareTools - DevOps Tooling for OpenSSL Ecosystem
 
 Zero-copy dependency management and prebuilt toolchains for OpenSSL development.
 
@@ -10,31 +10,63 @@ Foundation utilities providing:
 - Security gates (Trivy, Syft, FIPS validation)
 - Conan extensions and helpers
 
+**Status:** ✅ Published to Cloudsmith (`sparetools-base/1.0.0`)
+
 ### `sparetools-cpython` (application)
 Prebuilt CPython 3.12.7 with:
 - OpenSSL support
 - LTO and PGO optimizations
 - Zero-dependency installation
+- Both `python` and `python3` commands
+
+**Status:** ✅ Published to Cloudsmith (`sparetools-cpython/3.12.7`)
 
 ## 🚀 Quick Start
 
-Add Cloudsmith remoteconan remote add cloudsmith https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/index.jsonInstall prebuilt CPythonconan install --requires=sparetools-cpython/3.12.7 -r cloudsmith --deployer=full_deployActivate environmentsource full_deploy/host/sparetools-cpython/3.12.7/*/activate.sh
+See [QUICKSTART.md](QUICKSTART.md) for full installation instructions.
+
+Quick version:
+```bash
+# Add remote
+conan remote add sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+
+# Install CPython
+conan install --requires=sparetools-cpython/3.12.7 -r sparesparrow-conan --deployer=full_deploy
+
+# Activate
+source full_deploy/host/sparetools-cpython/3.12.7/*/activate.sh
+
+# Test
 python3 --version  # Python 3.12.7
+```
 
 ## 📚 Documentation
 
+- [QUICKSTART.md](QUICKSTART.md) - Installation and usage guide
 - [Bootstrap Executor](docs/BOOTSTRAP_PROMPT-EXECUTOR.md) - Automated environment setup
 - [Bootstrap Validator](docs/BOOTSTRAP_PROMPT-VALIDATOR.md) - Validation checks
 - [Bootstrap Orchestrator](docs/BOOTSTRAP_PROMPT-ORCHESTRATOR.md) - Recovery automation
 - [Bootstrap Instructions](docs/BOOTSTRAP-INSTRUCTIONS.md) - Complete guide
 
 ## 🏗 Repository Structure
+
+```
 sparetools/
 ├── packages/
 │   ├── sparetools-base/       # Python_requires utilities
+│   │   ├── conanfile.py       # Published v1.0.0 ✅
+│   │   ├── symlink_helpers.py
+│   │   ├── security_gates.py
+│   │   └── README.md
 │   └── sparetools-cpython/    # Prebuilt CPython
-├── docs/                      # Bootstrap prompts and guides
-└── scripts/                   # Automation scripts
+│       ├── conanfile.py       # Published v3.12.7 ✅
+│       └── README.md
+├── docs/                      # Bootstrap prompts
+├── scripts/                   # Automation scripts
+│   └── validate-install.sh   # Installation validator
+├── QUICKSTART.md              # Installation guide
+└── README.md                  # This file
+```
 
 ## 🔗 Related Projects
 
@@ -44,26 +76,9 @@ sparetools/
 ## 📄 License
 
 Apache-2.0
-EOF
 
-# Step 7: Create package READMEs
-cat > packages/sparetools-base/README.md << 'EOF'
-# sparetools-base
+## 🎯 Coming Soon
 
-Foundation python_requires package for SpareTools ecosystem.
-
-## Features
-
-- **Zero-copy symlink utilities** - NGA aerospace pattern
-- **Security gates** - Trivy, Syft, FIPS validation
-- **Conan extensions** - Custom helpers and tools
-
-## Usage
-from conan import ConanFileclass MyProject(ConanFile):
-python_requires = "sparetools-base/1.0.0"def build(self):
-    # Access utilities
-    base = self.python_requires["sparetools-base"].module
-    base.create_zero_copy_environment(self, "openssl", "./DEPS/openssl")
-## Export
-cd packages/sparetools-base
-conan export . --version=1.0.0
+- `sparetools-openssl/3.4.0` - Prebuilt OpenSSL with FIPS
+- `sparetools-conan/2.21.0` - Prebuilt Conan itself
+- GitHub Actions CI/CD workflows
