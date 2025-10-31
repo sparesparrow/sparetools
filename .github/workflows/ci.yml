@@ -1,0 +1,94 @@
+name: OpenSSL CI Matrix
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failure }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-gcc-shared
+            os: ubuntu-latest
+            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-std.profile
+            allow_failure: false
+          - name: linux-gcc-fips
+            os: ubuntu-latest
+            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-fips.profile
+            allow_failure: false
+          - name: macos-clang-shared
+            os: macos-latest
+            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-mac-arm64-clang-shared-std.profile
+            allow_failure: true
+          - name: windows-msvc-shared
+            os: windows-latest
+            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-win-x86_64-msvc-shared-std.profile
+            allow_failure: true
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential perl ninja-build cmake
+
+      - name: Install system dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install perl ninja cmake || true
+
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install -y strawberryperl cmake ninja
+
+      - name: Install Conan
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install conan==2.21.0
+
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+
+      - name: Create OpenSSL package
+        run: |
+          conan create packages/sparetools-openssl --version=3.3.2 --build=missing \
+            -pr:h=${{ matrix.profile }}
+
+      - name: Run test_package
+        run: |
+          cd packages/sparetools-openssl
+          conan test test_package sparetools-openssl/3.3.2@ -pr:h=${{ matrix.profile }}
+
+      - name: Upload build summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-logs
+          path: ~/.conan2/logs
+          if-no-files-found: ignore
+

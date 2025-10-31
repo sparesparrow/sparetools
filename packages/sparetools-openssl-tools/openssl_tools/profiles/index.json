@@ -1,0 +1,118 @@
+{
+  "version": 1,
+  "generated_from": "axes.yaml",
+  "profiles": [
+    {
+      "id": "perl-lin-x86_64-gcc-shared-std",
+      "path": "conan/perl-lin-x86_64-gcc-shared-std.profile",
+      "axes": {
+        "variant": "perl-configure",
+        "openssl_release": "v3_3_2",
+        "operating_system": "linux",
+        "architecture": "x86_64",
+        "compiler": "gcc",
+        "linkage": "shared",
+        "optimization_tier": "opt-balanced",
+        "fips_mode": "fips-off"
+      }
+    },
+    {
+      "id": "perl-lin-x86_64-gcc-shared-fips",
+      "path": "conan/perl-lin-x86_64-gcc-shared-fips.profile",
+      "axes": {
+        "variant": "perl-configure",
+        "openssl_release": "v3_3_2",
+        "operating_system": "linux",
+        "architecture": "x86_64",
+        "compiler": "gcc",
+        "linkage": "shared",
+        "optimization_tier": "opt-balanced",
+        "fips_mode": "fips-on"
+      }
+    },
+    {
+      "id": "autotools-lin-x86_64-gcc-static-std",
+      "path": "conan/autotools-lin-x86_64-gcc-static-std.profile",
+      "axes": {
+        "variant": "autotools",
+        "openssl_release": "v3_3_2",
+        "operating_system": "linux",
+        "architecture": "x86_64",
+        "compiler": "gcc",
+        "linkage": "static",
+        "optimization_tier": "opt-balanced",
+        "fips_mode": "fips-off"
+      }
+    },
+    {
+      "id": "cmake-lin-x86_64-clang-shared-std",
+      "path": "conan/cmake-lin-x86_64-clang-shared-std.profile",
+      "axes": {
+        "variant": "cmake",
+        "openssl_release": "v3_6_0",
+        "operating_system": "linux",
+        "architecture": "x86_64",
+        "compiler": "clang",
+        "linkage": "shared",
+        "optimization_tier": "opt-speed",
+        "fips_mode": "fips-off"
+      }
+    },
+    {
+      "id": "hybrid-lin-arm64-gcc-shared-std",
+      "path": "conan/hybrid-lin-arm64-gcc-shared-std.profile",
+      "axes": {
+        "variant": "hybrid",
+        "openssl_release": "v3_3_2",
+        "operating_system": "linux",
+        "architecture": "arm64",
+        "compiler": "gcc",
+        "linkage": "shared",
+        "optimization_tier": "opt-balanced",
+        "fips_mode": "fips-off"
+      }
+    },
+    {
+      "id": "perl-win-x86_64-msvc-shared-std",
+      "path": "conan/perl-win-x86_64-msvc-shared-std.profile",
+      "axes": {
+        "variant": "perl-configure",
+        "openssl_release": "v3_3_2",
+        "operating_system": "windows",
+        "architecture": "x86_64",
+        "compiler": "msvc",
+        "linkage": "shared",
+        "optimization_tier": "opt-balanced",
+        "fips_mode": "fips-off"
+      }
+    },
+    {
+      "id": "perl-mac-arm64-clang-shared-std",
+      "path": "conan/perl-mac-arm64-clang-shared-std.profile",
+      "axes": {
+        "variant": "perl-configure",
+        "openssl_release": "v3_3_2",
+        "operating_system": "macos",
+        "architecture": "arm64",
+        "compiler": "clang",
+        "linkage": "shared",
+        "optimization_tier": "opt-balanced",
+        "fips_mode": "fips-off"
+      }
+    },
+    {
+      "id": "cmake-mac-x86_64-clang-static-std",
+      "path": "conan/cmake-mac-x86_64-clang-static-std.profile",
+      "axes": {
+        "variant": "cmake",
+        "openssl_release": "v3_6_0",
+        "operating_system": "macos",
+        "architecture": "x86_64",
+        "compiler": "clang",
+        "linkage": "static",
+        "optimization_tier": "opt-speed",
+        "fips_mode": "fips-off"
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "tmux sessions in bash,  orchestrating multithreaded spawns of claude and cursor-agent in shell"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

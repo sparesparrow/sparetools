@@ -3,7 +3,7 @@ from conan.tools.files import copy
 
 class SpareToolsBootstrapConan(ConanFile):
     name = "sparetools-bootstrap"
-    version = "1.0.0"
+    version = "2.0.0"
     package_type = "python-require"
     description = "Bootstrap utilities for SpareTools ecosystem"
     license = "Apache-2.0"

@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "generated_at": "2025-10-31T00:00:00Z",
+  "tasks": [
+    {
+      "id": "openssl-windows-support",
+      "location": "packages/sparetools-openssl/TODO.json",
+      "status": "pending"
+    },
+    {
+      "id": "openssl-assembly-optimizations",
+      "location": "packages/sparetools-openssl/TODO.json",
+      "status": "pending"
+    },
+    {
+      "id": "openssl-provider-tests",
+      "location": "packages/sparetools-openssl/TODO.json",
+      "status": "pending"
+    },
+    {
+      "id": "tools-provider-ordering",
+      "location": "packages/sparetools-openssl-tools/TODO.json",
+      "status": "pending"
+    },
+    {
+      "id": "workspace-telemetry-dashboard",
+      "location": "workspaces/TODO.json",
+      "status": "pending"
+    },
+    {
+      "id": "docs-refresh-baseline",
+      "location": "docs/TODO.json",
+      "status": "pending"
+    }
+  ]
+}
+

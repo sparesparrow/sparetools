@@ -1,0 +1,11 @@
+[options]
+sparetools-openssl/*:build_method=python
+
+[conf]
+# Python configure.py - experimental, modern Python approach
+tools.build:skip_test=False
+
+[buildenv]
+# Ensure Python 3.12.7 from sparetools-cpython is available
+PYTHONPATH=/home/sparrow/.conan2/p/sparetcpyth*/p/lib/python3.12/site-packages
+

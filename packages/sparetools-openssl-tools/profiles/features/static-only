@@ -1,0 +1,9 @@
+[options]
+sparetools-openssl/*:shared=False
+sparetools-openssl/*:fPIC=True
+
+[conf]
+# Build static libraries only (.a, .lib)
+# Recommended for embedded systems and single-binary distributions
+tools.build:skip_test=False
+

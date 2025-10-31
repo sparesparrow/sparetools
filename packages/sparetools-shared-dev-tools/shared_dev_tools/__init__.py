@@ -8,5 +8,13 @@ This package provides common utilities that can be shared across
 different projects and repositories.
 """
 
-__version__ = "1.0.0"
-__all__ = ["conan", "util", "core", "exceptions", "build", "config_loader"]
+__version__ = "1.1.0"
+__all__ = [
+    "conan",
+    "util",
+    "core",
+    "exceptions",
+    "build",
+    "config_loader",
+    "scripts",
+]

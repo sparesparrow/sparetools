@@ -1,0 +1,29 @@
+{
+  "name": "SpareTools OpenSSL Dev",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspaces/sparetools",
+  "postCreateCommand": "bash .devcontainer/setup-tools.sh",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/usr/bin/python3"
+      },
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-vscode.cpptools",
+        "ms-vscode.cmake-tools",
+        "ms-azuretools.vscode-docker",
+        "github.vscode-github-actions",
+        "tamasfe.even-better-toml",
+        "redhat.vscode-yaml",
+        "charliermarsh.ruff"
+      ]
+    }
+  }
+}
+

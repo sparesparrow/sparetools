@@ -1,0 +1,429 @@
+{
+  "cursor_agent_assignments": {
+    "project": "sparetools - Multi-Repo Consolidation Orchestration",
+    "execution_date": "2025-10-31",
+    "total_agents": 8,
+    "phases": [
+      {
+        "phase_id": "phase_1",
+        "phase_name": "Analysis & Planning (Days 1-2)",
+        "duration_days": 2,
+        "agents_required": 4,
+        "assignments": [
+          {
+            "agent_id": "agent_001_lead",
+            "role": "Project Lead & Architecture Analyst",
+            "assigned_tasks": [
+              "task_001_001",
+              "task_001_005"
+            ],
+            "priority": "CRITICAL",
+            "task_sequence": [
+              {
+                "task_id": "task_001_001",
+                "title": "Analyze Current Package Structure",
+                "duration_hours": 4,
+                "key_files": [
+                  "/home/sparrow/sparetools/packages/",
+                  "/home/sparrow/sparetools/docs/ESSENTIAL-PACKAGES.md",
+                  "/home/sparrow/sparetools/docs/BASELINE.md"
+                ],
+                "deliverables": [
+                  "PACKAGE_STRUCTURE_ANALYSIS.md",
+                  "CONSOLIDATION_PLAN.md"
+                ],
+                "success_criteria": [
+                  "All packages documented",
+                  "Dependencies mapped",
+                  "Redundancies identified"
+                ],
+                "after_completion": "Wait for task_001_002, task_001_003, task_001_004"
+              },
+              {
+                "task_id": "task_001_005",
+                "title": "Create Master Consolidation Document",
+                "duration_hours": 2,
+                "depends_on": [
+                  "task_001_001",
+                  "task_001_002",
+                  "task_001_003",
+                  "task_001_004"
+                ],
+                "inputs": [
+                  "PACKAGE_STRUCTURE_ANALYSIS.md",
+                  "PROFILES_PLAN.md",
+                  "WORKSPACE_DESIGN.md",
+                  "WORKFLOWS_AUDIT.md"
+                ],
+                "deliverables": [
+                  "MASTER_CONSOLIDATION_PLAN.md"
+                ],
+                "success_criteria": [
+                  "All analyses synthesized",
+                  "Roadmap with phases clear",
+                  "No unknowns or blockers"
+                ]
+              }
+            ],
+            "git_workflow": {
+              "branch": "feature/group_001/analysis_lead",
+              "commits": [
+                "task_001_001: ANALYZE package structure and dependencies",
+                "task_001_005: SYNTHESIZE master consolidation plan"
+              ]
+            },
+            "communication": "Coordinate with agent_002, agent_003, agent_004 after task_001_001 completes"
+          },
+          {
+            "agent_id": "agent_002_profiles",
+            "role": "Build Variants & Profiles Specialist",
+            "assigned_tasks": [
+              "task_001_002"
+            ],
+            "priority": "HIGH",
+            "task_sequence": [
+              {
+                "task_id": "task_001_002",
+                "title": "Analyze OpenSSL Build Variants & Profiles",
+                "duration_hours": 3,
+                "key_files": [
+                  "/home/sparrow/projects/openssl-devenv/openssl/conanfile.py",
+                  "/home/sparrow/projects/openssl-devenv/openssl/configure.py",
+                  "/home/sparrow/projects/openssl-devenv/openssl-3.6.0"
+                ],
+                "analysis_focus": [
+                  "Current build variants (debug/release, static/shared, FIPS/non-FIPS)",
+                  "Build settings and options",
+                  "Compiler flags and optimizations",
+                  "Platform-specific configurations"
+                ],
+                "deliverables": [
+                  "PROFILES_PLAN.md",
+                  "BUILD_VARIANTS_MAPPING.json"
+                ],
+                "output_format": {
+                  "BUILD_VARIANTS_MAPPING.json": {
+                    "structure": "Map of all variant combinations with their settings",
+                    "example": {
+                      "release_static_nofips_linux_x64": {
+                        "build_type": "Release",
+                        "shared": false,
+                        "fips": false,
+                        "os": "Linux",
+                        "arch": "x86_64",
+                        "compiler": "gcc",
+                        "compiler_version": "11"
+                      }
+                    }
+                  }
+                },
+                "success_criteria": [
+                  "All variants documented",
+                  "Combinations matrix complete",
+                  "No missing configurations"
+                ]
+              }
+            ],
+            "git_workflow": {
+              "branch": "feature/group_001/profiles_analysis",
+              "commits": [
+                "task_001_002: ANALYZE OpenSSL build variants and profile structure"
+              ]
+            }
+          },
+          {
+            "agent_id": "agent_003_workspace",
+            "role": "Workspace & Integration Specialist",
+            "assigned_tasks": [
+              "task_001_003"
+            ],
+            "priority": "HIGH",
+            "task_sequence": [
+              {
+                "task_id": "task_001_003",
+                "title": "Map Workspace Integration Points",
+                "duration_hours": 4,
+                "key_files": [
+                  "/home/sparrow/projects/openssl-devenv/_openssl-devenv.code-workspace",
+                  "/home/sparrow/projects/openssl-devenv/_OLD_openssl-devenv.code-workspace",
+                  "/home/sparrow/projects/openssl-devenv/architecture-diagram.md"
+                ],
+                "analysis_sections": [
+                  "Folder structure and organization",
+                  "Launch configurations (debuggers, test runners)",
+                  "Task definitions (build, test, deploy)",
+                  "Settings and extensions",
+                  "Integration testing requirements"
+                ],
+                "deliverables": [
+                  "WORKSPACE_DESIGN.md",
+                  "INTEGRATION_POINTS.json"
+                ],
+                "output_format": {
+                  "INTEGRATION_POINTS.json": {
+                    "structure": "Detailed mapping of integration points",
+                    "sections": [
+                      "build_system",
+                      "testing_framework",
+                      "ci_cd_hooks",
+                      "debugging_support",
+                      "profile_management"
+                    ]
+                  }
+                },
+                "success_criteria": [
+                  "All integration points identified",
+                  "Dependencies between components mapped",
+                  "Design for consolidated workspace clear"
+                ]
+              }
+            ],
+            "git_workflow": {
+              "branch": "feature/group_001/workspace_analysis",
+              "commits": [
+                "task_001_003: ANALYZE workspace integration and architecture"
+              ]
+            }
+          },
+          {
+            "agent_id": "agent_004_workflows",
+            "role": "GitHub Actions & CI/CD Specialist",
+            "assigned_tasks": [
+              "task_001_004"
+            ],
+            "priority": "HIGH",
+            "task_sequence": [
+              {
+                "task_id": "task_001_004",
+                "title": "Review GitHub Workflows Across Repositories",
+                "duration_hours": 3,
+                "repositories_to_audit": [
+                  "sparesparrow/sparetools",
+                  "sparesparrow/openssl",
+                  "sparesparrow/openssl-tools"
+                ],
+                "paths_to_scan": [
+                  ".github/workflows/",
+                  ".github/actions/",
+                  "ci/"
+                ],
+                "audit_focus": [
+                  "Workflow duplication and redundancy",
+                  "Build matrix configurations",
+                  "Package publishing steps",
+                  "Test coverage",
+                  "Security scanning"
+                ],
+                "deliverables": [
+                  "WORKFLOWS_AUDIT.md",
+                  "CONSOLIDATION_STRATEGY.md"
+                ],
+                "output_sections": {
+                  "WORKFLOWS_AUDIT.md": [
+                    "Current workflows inventory",
+                    "Duplications identified",
+                    "Gaps in coverage",
+                    "Performance observations"
+                  ],
+                  "CONSOLIDATION_STRATEGY.md": [
+                    "Reusable workflow templates",
+                    "Shared actions",
+                    "Build matrix optimization",
+                    "Implementation phases"
+                  ]
+                },
+                "success_criteria": [
+                  "All workflows audited",
+                  "Consolidation opportunities identified",
+                  "Minimal workflow count achieved"
+                ]
+              }
+            ],
+            "git_workflow": {
+              "branch": "feature/group_001/workflows_analysis",
+              "commits": [
+                "task_001_004: AUDIT and consolidate GitHub workflows across repositories"
+              ]
+            }
+          }
+        ],
+        "phase_completion_criteria": {
+          "all_tasks_completed": true,
+          "no_blockers": true,
+          "documentation_comprehensive": true,
+          "master_plan_approved": true
+        },
+        "phase_gate_review": "After task_001_005 completes, review MASTER_CONSOLIDATION_PLAN.md before proceeding to Phase 2"
+      },
+      {
+        "phase_id": "phase_2",
+        "phase_name": "Package Consolidation (Days 3-7)",
+        "duration_days": 5,
+        "agents_required": 5,
+        "dependencies": [
+          "phase_1"
+        ],
+        "key_notes": "CRITICAL PHASE - Changes to core packages. Sequential merge window required.",
+        "assignments": [
+          {
+            "agent_id": "agent_001_unified_pkg",
+            "role": "Unified OpenSSL Package Lead",
+            "assigned_tasks": [
+              "task_002_001",
+              "task_002_002",
+              "task_002_003",
+              "task_002_005",
+              "task_004_001",
+              "task_004_005"
+            ],
+            "critical_path": true,
+            "task_sequence": [
+              {
+                "task_id": "task_002_001",
+                "duration_hours": 4,
+                "action": "DESIGN unified package architecture"
+              },
+              {
+                "task_id": "task_002_002",
+                "duration_hours": 6,
+                "action": "CREATE unified conanfile.py",
+                "depends_on": ["task_002_001"]
+              },
+              {
+                "task_id": "task_002_003",
+                "duration_hours": 8,
+                "action": "IMPLEMENT configuration logic for all variants",
+                "depends_on": ["task_002_002"],
+                "test_command": "conan create . --profile=../profiles/* --build=missing"
+              },
+              {
+                "task_id": "task_002_005",
+                "duration_hours": 2,
+                "action": "REMOVE legacy separate packages",
+                "depends_on": ["task_002_004"]
+              },
+              {
+                "task_id": "task_004_001",
+                "duration_hours": 2,
+                "action": "AUDIT sparetools-openssl-tools-mini"
+              },
+              {
+                "task_id": "task_004_005",
+                "duration_hours": 2,
+                "action": "REMOVE mini package",
+                "depends_on": ["task_004_004"]
+              }
+            ],
+            "pr_strategy": "Create 3 separate PRs for review-ability",
+            "merge_window": "Sequential - each PR merges before next starts"
+          },
+          {
+            "agent_id": "agent_002_cache_compat",
+            "role": "Binary Compatibility & Cache Migration",
+            "assigned_tasks": [
+              "task_002_004",
+              "task_002_008"
+            ],
+            "task_sequence": [
+              {
+                "task_id": "task_002_004",
+                "duration_hours": 4,
+                "action": "ENSURE binary cache compatibility"
+              },
+              {
+                "task_id": "task_002_008",
+                "duration_hours": 4,
+                "action": "CREATE integration tests",
+                "depends_on": ["task_002_003"]
+              }
+            ]
+          },
+          {
+            "agent_id": "agent_005_docs_migration",
+            "role": "Documentation & Migration Guide",
+            "assigned_tasks": [
+              "task_002_006",
+              "task_002_007",
+              "task_004_002",
+              "task_004_003",
+              "task_004_004"
+            ],
+            "task_sequence": [
+              {
+                "task_id": "task_002_006",
+                "duration_hours": 2,
+                "action": "WRITE migration guide for consumers"
+              },
+              {
+                "task_id": "task_002_007",
+                "duration_hours": 2,
+                "action": "UPDATE documentation"
+              },
+              {
+                "task_id": "task_004_002",
+                "duration_hours": 3,
+                "action": "CREATE shared-dev-tools package"
+              },
+              {
+                "task_id": "task_004_003",
+                "duration_hours": 4,
+                "action": "MIGRATE generic scripts"
+              },
+              {
+                "task_id": "task_004_004",
+                "duration_hours": 3,
+                "action": "REORGANIZE openssl-specific scripts"
+              }
+            ]
+          },
+          {
+            "agent_id": "agent_006_cleanup",
+            "role": "Package Cleanup & Verification",
+            "assigned_tasks": [
+              "task_004_006"
+            ],
+            "task_sequence": [
+              {
+                "task_id": "task_004_006",
+                "duration_hours": 2,
+                "action": "UPDATE all dependencies and imports",
+                "test_command": "grep -r 'openssl-tools-mini' .",
+                "success": "Zero results for old package references"
+              }
+            ]
+          }
+        ],
+        "phase_completion_criteria": {
+          "unified_package_working": "conan install --requires=openssl/* completes",
+          "no_breaking_changes": "All consumers compatible",
+          "tests_passing": "Integration tests 100% pass rate",
+          "mini_package_removed": "No references to openssl-tools-mini remain"
+        }
+      }
+    ],
+    "agent_roles": {
+      "agent_001": "Project Lead - Architecture & Coordination",
+      "agent_002": "OpenSSL Profiles & Build Variants Specialist",
+      "agent_003": "Workspace Infrastructure Specialist",
+      "agent_004": "GitHub Actions & CI/CD Specialist",
+      "agent_005": "Documentation & Migration Specialist",
+      "agent_006": "Testing & Verification Lead",
+      "agent_007": "Release Management Specialist",
+      "agent_008": "Cross-Repo Coordination Specialist"
+    },
+    "daily_standup_template": {
+      "time": "End of each business day (18:00 CET)",
+      "location": "GitHub PR comments in master PR",
+      "report_format": {
+        "agent_id": "string",
+        "tasks_completed": "array",
+        "tasks_in_progress": "array",
+        "blockers": "array",
+        "completion_percentage": "integer",
+        "prs_created": "array",
+        "prs_merged": "array",
+        "notes": "string"
+      }
+    }
+  }
+}

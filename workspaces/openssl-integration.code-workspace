@@ -1,0 +1,240 @@
+{
+  "folders": [
+    {
+      "name": "SpareTools",
+      "path": "."
+    },
+    {
+      "name": "Packages",
+      "path": "packages"
+    },
+    {
+      "name": "OpenSSL Tooling",
+      "path": "packages/sparetools-openssl-tools"
+    },
+    {
+      "name": "Documentation",
+      "path": "docs"
+    },
+    {
+      "name": "Workflows",
+      "path": ".github/workflows"
+    },
+    {
+      "name": "Conan Cache",
+      "path": "${env:HOME}/.conan2"
+    },
+    {
+      "name": "Bootstrap Logs",
+      "path": "${env:HOME}/.openssl-bootstrap/logs"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${env:OPENSSL_PYTHON_DEFAULT_INTERPRETER_PATH}",
+    "python.analysis.extraPaths": [
+      "${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools",
+      "${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages"
+    ],
+    "files.exclude": {
+      "**/.venv/**": true,
+      "**/__pycache__/**": true,
+      "**/*.pyc": true,
+      "**/build/**": true,
+      "**/.conan/**": true,
+      "**/.conan2/p/*/b": true,
+      "**/.conan2/p/*/d": true,
+      "**/.conan2/p/*/s": true
+    },
+    "files.watcherExclude": {
+      "**/.conan2/**": true,
+      "**/build/**": true,
+      "**/.openssl-bootstrap/logs/**": true
+    },
+    "search.exclude": {
+      "**/.conan2/**": true,
+      "**/build/**": true,
+      "**/.openssl-bootstrap/logs/**": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.rulers": [
+      80,
+      120
+    ],
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.python",
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    },
+    "cmake.configureOnOpen": false,
+    "cmake.generator": "Ninja",
+    "cmake.sourceDirectory": "packages/sparetools-openssl",
+    "cmake.buildDirectory": "packages/sparetools-openssl/build",
+    "terminal.integrated.defaultProfile.linux": "OpenSSL Env",
+    "terminal.integrated.profiles.linux": {
+      "OpenSSL Env": {
+        "path": "/bin/bash",
+        "args": [
+          "-c",
+          "source ${env:HOME}/.openssl-bootstrap/activate-openssl-env.sh && exec bash"
+        ],
+        "icon": "shield"
+      },
+      "bash": {
+        "path": "/bin/bash"
+      }
+    },
+    "terminal.integrated.env.linux": {
+      "CONAN_USER_HOME": "${env:HOME}/.conan2",
+      "PYTHONPATH": "${workspaceFolder:OpenSSL Tooling}/openssl_tools:${workspaceFolder:Packages}",
+      "PATH": "${env:HOME}/.openssl-bootstrap/cpython/bin:${env:PATH}"
+    },
+    "files.associations": {
+      "conanfile.py": "python",
+      "*.profile": "ini",
+      "*.yml": "yaml"
+    },
+    "git.ignoreLimitWarning": true,
+    "github.copilot.enable": {
+      "*": true
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Bootstrap :: Activate Environment",
+        "type": "shell",
+        "command": "source ${env:HOME}/.openssl-bootstrap/activate-openssl-env.sh",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "OpenSSL :: Create Package",
+        "type": "shell",
+        "command": "conan create . --version=3.3.2 --build=missing -pr ${input:opensslProfile}",
+        "options": {
+          "cwd": "${workspaceFolder:Packages}/sparetools-openssl"
+        },
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "OpenSSL :: Run Tests",
+        "type": "shell",
+        "command": "conan test test_package sparetools-openssl/3.3.2@",
+        "options": {
+          "cwd": "${workspaceFolder:Packages}/sparetools-openssl"
+        },
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Security :: Generate SBOM",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:OpenSSL Tooling}/openssl_tools/scripts/enhanced-sbom-generator.py --project ${workspaceFolder:Packages}/sparetools-openssl --output releases/openssl-sbom.json",
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Security :: Trivy Scan",
+        "type": "shell",
+        "command": "trivy fs ${workspaceFolder:Packages}/sparetools-openssl",
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Release :: Prepare Artifact",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:OpenSSL Tooling}/openssl_tools/scripts/create-improved-packages.py --workspace ${workspaceFolder}",
+        "group": "none",
+        "presentation": {
+          "reveal": "always",
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      }
+    ],
+    "inputs": [
+      {
+        "id": "opensslProfile",
+        "type": "pickString",
+        "description": "Select OpenSSL Conan profile",
+        "options": [
+          "packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-std.profile",
+          "packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-fips.profile",
+          "packages/sparetools-openssl-tools/openssl_tools/profiles/conan/autotools-lin-x86_64-gcc-static-std.profile",
+          "packages/sparetools-openssl-tools/openssl_tools/profiles/conan/cmake-lin-x86_64-clang-shared-std.profile"
+        ],
+        "default": "packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-std.profile"
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug :: OpenSSL CLI",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder:Packages}/sparetools-openssl/build/apps/openssl",
+        "args": [
+          "version",
+          "-a"
+        ],
+        "cwd": "${workspaceFolder:Packages}/sparetools-openssl/build",
+        "environment": [
+          {
+            "name": "LD_LIBRARY_PATH",
+            "value": "${workspaceFolder:Packages}/sparetools-openssl/build:${env:LD_LIBRARY_PATH}"
+          }
+        ],
+        "MIMode": "gdb",
+        "presentation": {
+          "group": "debug",
+          "reveal": "always"
+        }
+      },
+      {
+        "name": "Debug :: openssl-tools script",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder:OpenSSL Tooling}/openssl_tools/scripts/run-integration-tests.sh",
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder:OpenSSL Tooling}"
+      }
+    ]
+  }
+}
+

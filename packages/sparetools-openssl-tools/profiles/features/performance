@@ -1,0 +1,16 @@
+[options]
+sparetools-openssl/*:shared=False
+sparetools-openssl/*:fPIC=True
+sparetools-openssl/*:enable_threads=True
+sparetools-openssl/*:enable_asm=True
+sparetools-openssl/*:enable_zlib=True
+
+[settings]
+build_type=Release
+
+[conf]
+# Performance-optimized build
+# Enables all optimizations
+tools.build:skip_test=False
+tools.cmake.cmaketoolchain:generator=Ninja
+

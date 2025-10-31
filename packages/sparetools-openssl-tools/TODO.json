@@ -1,0 +1,20 @@
+{
+  "tasks": [
+    {
+      "id": "tools-provider-ordering",
+      "description": "Refine provider dependency ordering logic in hybrid_builder for OpenSSL 3.6+.",
+      "status": "pending"
+    },
+    {
+      "id": "tools-workflow-examples",
+      "description": "Document GitHub Actions reuse by exporting example workflow fragments in docs/.",
+      "status": "pending"
+    },
+    {
+      "id": "tools-matrix-generator-cli",
+      "description": "Expose a CLI wrapper that emits matrix JSON for CI via build_matrix module.",
+      "status": "pending"
+    }
+  ]
+}
+

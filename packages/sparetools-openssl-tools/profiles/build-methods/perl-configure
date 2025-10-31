@@ -1,0 +1,7 @@
+[options]
+sparetools-openssl/*:build_method=perl
+
+[conf]
+# Standard Perl Configure method - production-ready
+tools.build:skip_test=False
+

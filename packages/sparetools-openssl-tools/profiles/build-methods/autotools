@@ -1,0 +1,7 @@
+[options]
+sparetools-openssl/*:build_method=autotools
+
+[conf]
+# Autotools integration - cross-compilation friendly
+tools.build:skip_test=False
+

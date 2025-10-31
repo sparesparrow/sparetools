@@ -1,0 +1,140 @@
+version: 1
+metadata:
+  owner: sparetools-openssl-tools
+  description: |
+    Canonical definition of the OpenSSL build profile axes used by SpareTools.
+    Each axis is orthogonal and can be combined to express a concrete build
+    profile. Downstream tooling may collapse or filter axes to meet platform
+    requirements, but the naming rules must remain consistent.
+axes:
+  variant:
+    description: Build system / recipe variant to exercise.
+    values:
+      - id: perl-configure
+        label: perl
+        description: Canonical Perl Configure flow (production baseline).
+      - id: cmake
+        label: cmake
+        description: CMake-driven experiment for future upstream parity.
+      - id: autotools
+        label: autotools
+        description: Conan Autotools toolchain wrapper around Configure.
+      - id: hybrid
+        label: hybrid
+        description: Multi-stage Perl + Python configure enhancement.
+  openssl_release:
+    description: Upstream OpenSSL release this profile targets.
+    values:
+      - id: v3_3_2
+        label: "3.3.2"
+        notes: Production baseline (current shipping version).
+      - id: v3_6_0
+        label: "3.6.0"
+        notes: Experimental next-generation coverage for provider evolution.
+  operating_system:
+    description: Target operating system for the OpenSSL build.
+    values:
+      - id: linux
+        runner: ubuntu-22.04
+      - id: windows
+        runner: windows-2022
+      - id: macos
+        runner: macos-14
+  architecture:
+    description: Target CPU architecture.
+    values:
+      - id: x86_64
+      - id: arm64
+      - id: x86
+        notes: Optional legacy coverage for 32-bit Linux.
+  compiler:
+    description: Primary compiler family and version bucket.
+    values:
+      - id: gcc
+        default_version: "11"
+      - id: clang
+        default_version: "15"
+      - id: msvc
+        default_version: "193"
+  linkage:
+    description: Library linkage strategy.
+    values:
+      - id: shared
+      - id: static
+  optimization_tier:
+    description: Compiler optimisation + diagnostics bundle.
+    values:
+      - id: opt-speed
+        cflags: "-O3"
+        label: opt
+        notes: Performance-focused (default for release artefacts).
+      - id: opt-balanced
+        cflags: "-O2"
+        label: bal
+        notes: Balanced optimisation versus reproducibility (CI baseline).
+      - id: opt-debug
+        cflags: "-Og -g"
+        label: dbg
+        notes: Debug-friendly builds with rich symbols.
+  fips_mode:
+    description: Whether FIPS support is enabled for the build.
+    values:
+      - id: fips-on
+        label: fips
+      - id: fips-off
+        label: nonfips
+naming:
+  template: "{variant}/{os}/{arch}/{compiler}/{linkage}/{fips}"
+  separator: "-"
+  rules:
+    - axis: openssl_release
+      alias_map:
+        v3_3_2: 332
+        v3_6_0: 360
+      include_in_id: false
+    - axis: operating_system
+      alias_map:
+        linux: lin
+        windows: win
+        macos: mac
+    - axis: compiler
+      alias_map:
+        gcc: gcc
+        clang: clang
+        msvc: msvc
+    - axis: linkage
+      alias_map:
+        shared: shared
+        static: static
+    - axis: fips_mode
+      alias_map:
+        fips-on: fips
+        fips-off: std
+    - axis: optimization_tier
+      alias_map:
+        opt-speed: opt
+        opt-balanced: bal
+        opt-debug: dbg
+      include_in_id: false
+examples:
+  - profile_id: perl-lin-x86_64-gcc-shared-fips
+    axes:
+      variant: perl-configure
+      openssl_release: v3_3_2
+      operating_system: linux
+      architecture: x86_64
+      compiler: gcc
+      linkage: shared
+      optimization_tier: opt-balanced
+      fips_mode: fips-on
+  - profile_id: cmake-mac-arm64-clang-static-std
+    axes:
+      variant: cmake
+      openssl_release: v3_6_0
+      operating_system: macos
+      architecture: arm64
+      compiler: clang
+      linkage: static
+      optimization_tier: opt-speed
+      fips_mode: fips-off
+

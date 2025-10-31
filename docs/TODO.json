@@ -1,0 +1,15 @@
+{
+  "tasks": [
+    {
+      "id": "docs-refresh-baseline",
+      "description": "Update BASELINE.md and related handover docs to reflect version bumps and package consolidation.",
+      "status": "pending"
+    },
+    {
+      "id": "docs-workspace-guide",
+      "description": "Author step-by-step guide for the new VS Code workspaces including screenshots and troubleshooting.",
+      "status": "pending"
+    }
+  ]
+}
+

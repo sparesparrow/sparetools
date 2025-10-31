@@ -12,7 +12,7 @@ Architecture:
 Conan 2.21.0 | Python stdlib + selective shared utilities
 """
 
-__version__ = "1.2.6"
+__version__ = "2.0.0"
 __author__ = "sparesparrow"
 __description__ = "OpenSSL CI/CD automation tools"
 

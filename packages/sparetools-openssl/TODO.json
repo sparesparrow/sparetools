@@ -1,0 +1,20 @@
+{
+  "tasks": [
+    {
+      "id": "openssl-windows-support",
+      "description": "Enable MSVC builds in sparetools-openssl by expanding target mapping and verifying tool requirements.",
+      "status": "pending"
+    },
+    {
+      "id": "openssl-assembly-optimizations",
+      "description": "Wire optional assembly optimisations controlled by profiles (AVX/NEON toggles).",
+      "status": "pending"
+    },
+    {
+      "id": "openssl-provider-tests",
+      "description": "Extend test_package to cover provider ordering and FIPS smoke tests on every profile.",
+      "status": "pending"
+    }
+  ]
+}
+

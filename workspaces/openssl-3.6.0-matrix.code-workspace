@@ -1,0 +1,157 @@
+{
+  "folders": [
+    {
+      "name": "🔷 SpareTools - Build System & Tools",
+      "path": ".",
+      "description": "Complete SpareTools ecosystem (Conan packages, scripts, workflows)"
+    },
+    {
+      "name": "🟣 OpenSSL 3.6.0 Source - Main Development",
+      "path": "/home/sparrow/projects/openssl-devenv/openssl-3.6.0",
+      "description": "OpenSSL upstream source for testing and development"
+    },
+    {
+      "name": "🟢 Build Profiles - Configuration Matrix",
+      "path": "packages/sparetools-openssl-tools/openssl_tools/profiles",
+      "description": "Conan profiles (linux-gcc, darwin-clang, windows-msvc, hybrid)"
+    },
+    {
+      "name": "🟡 Matrix Logs - Build Output",
+      "path": "${env:HOME}/.openssl-matrix/logs",
+      "description": "Aggregated build logs and summaries from matrix builds"
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${env:HOME}/.openssl-bootstrap/cpython/bin/python3",
+    "python.analysis.extraPaths": [
+      "${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools"
+    ],
+    "files.exclude": {
+      "**/out/**": true,
+      "**/build/**": true,
+      "**/__pycache__/**": true
+    },
+    "files.trimTrailingWhitespace": true,
+    "editor.formatOnSave": true,
+    "editor.tabSize": 4,
+    "editor.rulers": [
+      80,
+      120
+    ],
+    "terminal.integrated.defaultProfile.linux": "🔧 Matrix Build Environment",
+    "terminal.integrated.profiles.linux": {
+      "🔧 Matrix Build Environment": {
+        "path": "/bin/bash",
+        "args": [
+          "-c",
+          "source ${env:HOME}/.openssl-bootstrap/activate-openssl-env.sh && exec bash"
+        ],
+        "icon": "circuit-board"
+      }
+    },
+    "terminal.integrated.env.linux": {
+      "CONAN_USER_HOME": "${env:HOME}/.conan2",
+      "PYTHONPATH": "${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools",
+      "PATH": "${env:HOME}/.openssl-bootstrap/cpython/bin:${env:PATH}"
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🐧 Linux x86_64 GCC - Shared Library",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools/scripts/build-openssl-source.py \\\n  --source ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development} \\\n  --target linux-x86_64 \\\n  --install-prefix ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}/out/linux-gcc-shared \\\n  --jobs $(nproc) \\\n  --shared \\\n  --log-dir ${workspaceFolder:🟡 Matrix Logs - Build Output}",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🐧 Linux x86_64 GCC - Static Library",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools/scripts/build-openssl-source.py \\\n  --source ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development} \\\n  --target linux-x86_64 \\\n  --install-prefix ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}/out/linux-gcc-static \\\n  --jobs $(nproc) \\\n  --log-dir ${workspaceFolder:🟡 Matrix Logs - Build Output}",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🍎 macOS ARM64 Clang - Shared Library",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools/scripts/build-openssl-source.py \\\n  --source ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development} \\\n  --target darwin64-arm64-cc \\\n  --install-prefix ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}/out/macos-arm64 \\\n  --jobs $(nproc) \\\n  --shared \\\n  --log-dir ${workspaceFolder:🟡 Matrix Logs - Build Output}",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🪟 Windows x86_64 MSVC - Shared Library",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:🔷 SpareTools - Build System & Tools}/packages/sparetools-openssl-tools/openssl_tools/scripts/build-openssl-source.py \\\n  --source ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development} \\\n  --target VC-WIN64A \\\n  --install-prefix ${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}/out/windows-msvc \\\n  --jobs $(nproc) \\\n  --shared \\\n  --log-dir ${workspaceFolder:🟡 Matrix Logs - Build Output}",
+        "options": {
+          "env": {
+            "CC": "x86_64-w64-mingw32-gcc"
+          }
+        },
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🚀 Build Matrix - All Platforms (Parallel)",
+        "dependsOn": [
+          "🐧 Linux x86_64 GCC - Shared Library",
+          "🐧 Linux x86_64 GCC - Static Library",
+          "🍎 macOS ARM64 Clang - Shared Library",
+          "🪟 Windows x86_64 MSVC - Shared Library"
+        ],
+        "dependsOrder": "parallel",
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "📊 Monitor Logs - Real-time Aggregation",
+        "type": "shell",
+        "command": "python3 ${workspaceFolder:🔷 SpareTools - Build System & Tools}/scripts/aggregate-build-logs.py ${workspaceFolder:🟡 Matrix Logs - Build Output} --follow",
+        "isBackground": true,
+        "presentation": {
+          "reveal": "always",
+          "panel": "new"
+        },
+        "problemMatcher": []
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🐛 Debug - OpenSSL 3.6.0 CLI (speed aes)",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}/apps/openssl",
+        "args": [
+          "speed",
+          "aes"
+        ],
+        "cwd": "${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}",
+        "MIMode": "gdb",
+        "environment": [
+          {
+            "name": "LD_LIBRARY_PATH",
+            "value": "${workspaceFolder:🟣 OpenSSL 3.6.0 Source - Main Development}/out/linux-gcc-shared/lib:${env:LD_LIBRARY_PATH}"
+          }
+        ]
+      }
+    ]
+  }
+}
+

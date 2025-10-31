@@ -1,0 +1,24 @@
+# Assembly Optimization Profile - AVX2 Only
+#
+# Enables AVX2 optimizations while disabling other SIMD instruction sets
+# Performance boost: 15-25% for cryptographic operations
+#
+# Recommended for:
+# - Moderate-performance systems
+# - x86_64 systems without SVE
+# - Compatibility with older AVX2 processors
+# - Balanced performance/compatibility trade-off
+
+[options]
+sparetools-openssl/*:enable_asm=True
+sparetools-openssl/*:enable_avx=True
+sparetools-openssl/*:enable_avx2=True
+sparetools-openssl/*:enable_neon=False
+sparetools-openssl/*:enable_sve=False
+
+[settings]
+build_type=Release
+
+[conf]
+tools.build:skip_test=False
+tools.cmake.cmaketoolchain:generator=Ninja

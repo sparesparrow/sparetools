@@ -1,0 +1,28 @@
+[settings]
+os=Windows
+arch=x86_64
+compiler=msvc
+compiler.version=193
+compiler.runtime=dynamic
+compiler.cppstd=17
+build_type=Release
+
+[options]
+# OpenSSL options for Windows MSVC build
+sparetools-openssl/*:shared=False
+sparetools-openssl/*:fPIC=True
+sparetools-openssl/*:build_method=perl
+sparetools-openssl/*:enable_threads=True
+sparetools-openssl/*:enable_asm=True
+sparetools-openssl/*:enable_avx=True
+sparetools-openssl/*:enable_avx2=True
+sparetools-openssl/*:enable_zlib=True
+
+[conf]
+# MSVC/Visual Studio configuration
+tools.cmake.cmaketoolchain:generator=Visual Studio 17 2022
+tools.microsoft.msbuild:max_cpu_count=8
+# Required for Perl Configure on Windows
+tools.build:sharedlinkflags=[]
+tools.build:exelinkflags=[]
+

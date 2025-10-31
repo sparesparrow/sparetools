@@ -1,0 +1,13 @@
+[options]
+sparetools-openssl/*:shared=False
+sparetools-openssl/*:fPIC=True
+sparetools-openssl/*:enable_threads=False
+sparetools-openssl/*:enable_asm=False
+sparetools-openssl/*:enable_zlib=False
+sparetools-openssl/*:enable_legacy=False
+
+[conf]
+# Minimal build configuration
+# Suitable for constrained embedded systems
+tools.build:skip_test=False
+

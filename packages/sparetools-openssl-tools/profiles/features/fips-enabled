@@ -1,0 +1,9 @@
+[options]
+sparetools-openssl/*:fips=True
+sparetools-openssl/*:enable_legacy=False
+
+[conf]
+# FIPS 140-3 compliance mode
+# Disables legacy algorithms for compliance
+tools.build:skip_test=False
+

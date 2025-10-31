@@ -1,0 +1,997 @@
+{
+  "project": "sparetools - Comprehensive Package Consolidation & Orchestration",
+  "version": "2025-10-31",
+  "created_by": "Perplexity AI Research Agent",
+  "metadata": {
+    "total_task_groups": 9,
+    "total_tasks": 78,
+    "parallel_agentes_recommended": 8,
+    "estimated_duration_sequential": "280 hours",
+    "estimated_duration_parallel": "45 hours",
+    "speedup_factor": "6.2x",
+    "critical_path": ["obj_001", "obj_002", "obj_005", "obj_006", "obj_007"],
+    "repositories_affected": [
+      "sparesparrow/sparetools",
+      "sparesparrow/openssl",
+      "sparesparrow/openssl-tools",
+      "sparesparrow/openssl-profiles",
+      "sparesparrow/openssl-test",
+      "sparesparrow/cpy",
+      "sparesparrow/mcp-prompts",
+      "sparesparrow/mcp-project-orchestrator"
+    ]
+  },
+  "task_groups": [
+    {
+      "group_id": "group_001_analysis",
+      "title": "📊 Architecture Analysis & Planning Phase",
+      "description": "Analyze existing structure, identify consolidation opportunities, plan implementation",
+      "priority": "critical",
+      "status": "pending",
+      "estimated_hours": 16,
+      "tasks": [
+        {
+          "id": "task_001_001",
+          "title": "Analyze Current Package Structure",
+          "description": "Review all packages in sparetools/packages/, document current structure, dependencies, redundancy",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 4,
+          "dependencies": [],
+          "files_to_analyze": [
+            "/home/sparrow/sparetools/packages/",
+            "/home/sparrow/sparetools/docs/ESSENTIAL-PACKAGES.md",
+            "/home/sparrow/sparetools/docs/BASELINE.md"
+          ],
+          "deliverables": ["PACKAGE_STRUCTURE_ANALYSIS.md", "CONSOLIDATION_PLAN.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_001_002",
+          "title": "Analyze OpenSSL Build Variants & Profiles",
+          "description": "Document all OpenSSL build variants, identify current profiles, plan Conan 2 profile structure",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 3,
+          "dependencies": [],
+          "files_to_analyze": [
+            "/home/sparrow/projects/openssl-devenv/openssl/conanfile.py",
+            "/home/sparrow/projects/openssl-devenv/openssl/configure.py",
+            "/home/sparrow/projects/openssl-devenv/openssl-3.6.0"
+          ],
+          "deliverables": ["PROFILES_PLAN.md", "BUILD_VARIANTS_MAPPING.json"],
+          "priority": "high"
+        },
+        {
+          "id": "task_001_003",
+          "title": "Map Workspace Integration Points",
+          "description": "Analyze VS Code workspace files, identify integration testing requirements, design workspace architecture",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 4,
+          "dependencies": [],
+          "files_to_analyze": [
+            "/home/sparrow/projects/openssl-devenv/_openssl-devenv.code-workspace",
+            "/home/sparrow/projects/openssl-devenv/_OLD_openssl-devenv.code-workspace",
+            "/home/sparrow/projects/openssl-devenv/architecture-diagram.md"
+          ],
+          "deliverables": ["WORKSPACE_DESIGN.md", "INTEGRATION_POINTS.json"],
+          "priority": "high"
+        },
+        {
+          "id": "task_001_004",
+          "title": "Review GitHub Workflows Across Repositories",
+          "description": "Map all GitHub Actions workflows, identify duplications, plan consolidation strategy",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 3,
+          "dependencies": [],
+          "files_to_analyze": [
+            "/home/sparrow/sparetools/.github/workflows/",
+            "/home/sparrow/projects/openssl-devenv/openssl/.github/workflows/",
+            "/home/sparrow/projects/openssl-devenv/openssl-tools/.github/workflows/"
+          ],
+          "deliverables": ["WORKFLOWS_AUDIT.md", "CONSOLIDATION_STRATEGY.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_001_005",
+          "title": "Create Master Consolidation Document",
+          "description": "Synthesize all analysis, create comprehensive consolidation roadmap with phases",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_001_001", "task_001_002", "task_001_003", "task_001_004"],
+          "deliverables": ["MASTER_CONSOLIDATION_PLAN.md"],
+          "priority": "critical"
+        }
+      ]
+    },
+    {
+      "group_id": "group_002_unify_packages",
+      "title": "📦 Objective 1: Unify OpenSSL Packages",
+      "description": "Group separate OpenSSL packages into single configurable package with Conan 2 profiles",
+      "priority": "critical",
+      "status": "pending",
+      "estimated_hours": 32,
+      "dependencies": ["group_001_analysis"],
+      "tasks": [
+        {
+          "id": "task_002_001",
+          "title": "Design Single Package Architecture",
+          "description": "Design unified openssl package with options/settings for variants, FIPS, versions",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 4,
+          "dependencies": ["task_001_001"],
+          "deliverables": ["UNIFIED_PACKAGE_DESIGN.md", "conanfile_unified.py.template"],
+          "priority": "critical"
+        },
+        {
+          "id": "task_002_002",
+          "title": "Create Unified conanfile.py",
+          "description": "Implement new unified conanfile.py combining all variant logic, settings for profiles",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 6,
+          "dependencies": ["task_002_001"],
+          "files_to_create": ["sparetools/packages/openssl/conanfile.py"],
+          "test_strategy": "conan create . --build=missing for multiple profiles",
+          "priority": "critical"
+        },
+        {
+          "id": "task_002_003",
+          "title": "Implement Package Configuration Logic",
+          "description": "Add configure(), build() methods supporting all variants: release/debug, static/shared, FIPS/non-FIPS",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 8,
+          "dependencies": ["task_002_002"],
+          "test_strategy": "Build with matrix of profile combinations",
+          "priority": "critical"
+        },
+        {
+          "id": "task_002_004",
+          "title": "Migrate Package Binary Cache",
+          "description": "Ensure all existing built packages can be consumed by new unified package structure",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 4,
+          "dependencies": ["task_002_003"],
+          "test_strategy": "Verify backward compatibility with conan cache",
+          "priority": "high"
+        },
+        {
+          "id": "task_002_005",
+          "title": "Remove Legacy Separate OpenSSL Packages",
+          "description": "Safely deprecate old individual openssl-* packages, ensure no breaking changes",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_002_004"],
+          "test_strategy": "Verify no consumers still depend on old packages",
+          "priority": "high"
+        },
+        {
+          "id": "task_002_006",
+          "title": "Write Migration Guide for Consumers",
+          "description": "Document how consumers switch from old packages to new unified package with profiles",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 2,
+          "dependencies": ["task_002_005"],
+          "deliverables": ["MIGRATION_GUIDE.md"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_002_007",
+          "title": "Update Documentation",
+          "description": "Update BASELINE.md, ESSENTIAL-PACKAGES.md, docs/ with new unified package structure",
+          "status": "pending",
+          "owner": "agent_006",
+          "estimated_hours": 2,
+          "dependencies": ["task_002_006"],
+          "files_to_update": ["/home/sparrow/sparetools/docs/"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_002_008",
+          "title": "Create Integration Tests",
+          "description": "Write comprehensive tests for unified package across all profile combinations",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 4,
+          "dependencies": ["task_002_003"],
+          "files_to_create": ["sparetools/tests/test_unified_openssl.py"],
+          "test_strategy": "pytest with matrix parametrization",
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "group_id": "group_003_build_profiles",
+      "title": "🔧 Objective 2: Build Variants as Conan Profiles",
+      "description": "Create Conan 2 profiles for build variants, organize as subcategory in openssl-tools",
+      "priority": "critical",
+      "status": "pending",
+      "estimated_hours": 24,
+      "dependencies": ["group_002_unify_packages"],
+      "tasks": [
+        {
+          "id": "task_003_001",
+          "title": "Design Conan Profile Hierarchy",
+          "description": "Create logical hierarchy for profiles: os/(linux/windows/macos), compiler, build_type, fips_mode, arch",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 3,
+          "dependencies": ["task_001_002"],
+          "deliverables": ["PROFILE_HIERARCHY.md", "profile_structure.yaml"],
+          "priority": "critical"
+        },
+        {
+          "id": "task_003_002",
+          "title": "Create Base Profiles",
+          "description": "Create base profile templates for Release, Debug, RelWithDebInfo, MinSizeRel variants",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 2,
+          "dependencies": ["task_003_001"],
+          "files_to_create": ["sparetools-openssl-tools/profiles/base_*.profile"],
+          "priority": "high"
+        },
+        {
+          "id": "task_003_003",
+          "title": "Create Platform-Specific Profiles",
+          "description": "Create profiles for Linux/Windows/macOS with appropriate compiler settings, FIPS variants",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 4,
+          "dependencies": ["task_003_002"],
+          "files_to_create": ["sparetools-openssl-tools/profiles/linux_*.profile", "sparetools-openssl-tools/profiles/windows_*.profile", "sparetools-openssl-tools/profiles/macos_*.profile"],
+          "priority": "high"
+        },
+        {
+          "id": "task_003_004",
+          "title": "Create FIPS-Specific Profiles",
+          "description": "Create fips_enabled and fips_disabled variants with appropriate environment variables",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 2,
+          "dependencies": ["task_003_003"],
+          "files_to_create": ["sparetools-openssl-tools/profiles/fips_*.profile"],
+          "priority": "high"
+        },
+        {
+          "id": "task_003_005",
+          "title": "Create Compiler-Specific Profiles",
+          "description": "Create profiles for GCC, Clang, MSVC with version-specific optimizations",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 3,
+          "dependencies": ["task_003_003"],
+          "files_to_create": ["sparetools-openssl-tools/profiles/compiler_*.profile"],
+          "priority": "high"
+        },
+        {
+          "id": "task_003_006",
+          "title": "Create Architecture-Specific Profiles",
+          "description": "Create profiles for x86_64, ARM, ARM64 with architecture-specific flags",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 2,
+          "dependencies": ["task_003_003"],
+          "files_to_create": ["sparetools-openssl-tools/profiles/arch_*.profile"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_003_007",
+          "title": "Validate Profile Configurations",
+          "description": "Test all profile combinations for validity, ensure no conflicts or invalid settings",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 4,
+          "dependencies": ["task_003_005", "task_003_006"],
+          "test_strategy": "conan profile show for each combination",
+          "priority": "high"
+        },
+        {
+          "id": "task_003_008",
+          "title": "Create Profile Documentation",
+          "description": "Document all profiles, usage examples, when to use each profile, migration from old variants",
+          "status": "pending",
+          "owner": "agent_006",
+          "estimated_hours": 2,
+          "dependencies": ["task_003_007"],
+          "files_to_create": ["sparetools-openssl-tools/profiles/README.md", "sparetools-openssl-tools/profiles/USAGE.md"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_003_009",
+          "title": "Update sparetools-openssl-tools Package",
+          "description": "Update package metadata to expose profiles as configuration subcategory",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_003_007"],
+          "files_to_update": ["sparetools/packages/openssl-tools/conanfile.py"],
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "group_id": "group_004_package_consolidation",
+      "title": "🔄 Objective 3: Package Consolidation & Cleanup",
+      "description": "Remove mini package, reorganize generic scripts to shared-dev-tools, openssl-specific to openssl-tools",
+      "priority": "high",
+      "status": "pending",
+      "estimated_hours": 16,
+      "dependencies": ["group_002_unify_packages"],
+      "tasks": [
+        {
+          "id": "task_004_001",
+          "title": "Audit sparetools-openssl-tools-mini",
+          "description": "Document all content in mini package, identify what's essential vs duplicative",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "deliverables": ["MINI_PACKAGE_AUDIT.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_004_002",
+          "title": "Create sparetools-shared-dev-tools Package",
+          "description": "Create new package for generic development tools (build scripts, CI utilities, etc.)",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 3,
+          "dependencies": ["task_004_001"],
+          "files_to_create": ["sparetools/packages/shared-dev-tools/"],
+          "priority": "high"
+        },
+        {
+          "id": "task_004_003",
+          "title": "Migrate Generic Scripts to shared-dev-tools",
+          "description": "Move generic build, CI, and utility scripts from mini and openssl-tools to shared-dev-tools",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 4,
+          "dependencies": ["task_004_002"],
+          "priority": "high"
+        },
+        {
+          "id": "task_004_004",
+          "title": "Reorganize OpenSSL-Specific Scripts",
+          "description": "Move openssl-specific scripts into openssl-tools package, organize by category",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 3,
+          "dependencies": ["task_004_003"],
+          "priority": "high"
+        },
+        {
+          "id": "task_004_005",
+          "title": "Remove sparetools-openssl-tools-mini Package",
+          "description": "After migration, deprecate and remove mini package, update all references",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_004_004"],
+          "priority": "high"
+        },
+        {
+          "id": "task_004_006",
+          "title": "Update Dependencies & Imports",
+          "description": "Update all consumers to use shared-dev-tools and openssl-tools, fix import statements",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 2,
+          "dependencies": ["task_004_005"],
+          "priority": "high"
+        }
+      ]
+    },
+    {
+      "group_id": "group_005_package_readmes",
+      "title": "📖 Objective 4: Add Package READMEs",
+      "description": "Create README.md for each package in packages/ with purpose, usage, examples",
+      "priority": "medium",
+      "status": "pending",
+      "estimated_hours": 14,
+      "dependencies": ["group_002_unify_packages"],
+      "tasks": [
+        {
+          "id": "task_005_001",
+          "title": "Create README Template",
+          "description": "Design standard README.md template for all packages with sections: Purpose, Usage, Options, Examples, etc.",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 1,
+          "deliverables": ["PACKAGE_README_TEMPLATE.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_005_002",
+          "title": "Write README for openssl Package",
+          "description": "Write comprehensive README for unified openssl package with usage examples for all profile combinations",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 2,
+          "dependencies": ["task_005_001"],
+          "files_to_create": ["sparetools/packages/openssl/README.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_005_003",
+          "title": "Write README for openssl-tools Package",
+          "description": "Document openssl-tools package with profile usage, script reference, examples",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 2,
+          "dependencies": ["task_005_001"],
+          "files_to_create": ["sparetools/packages/openssl-tools/README.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_005_004",
+          "title": "Write READMEs for Build Tool Packages",
+          "description": "Document all build-tool packages (cmake, ninja, etc.) with setup and usage",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 2,
+          "dependencies": ["task_005_001"],
+          "priority": "high"
+        },
+        {
+          "id": "task_005_005",
+          "title": "Write READMEs for CI/CD Packages",
+          "description": "Document CI/CD tool packages (github-actions helpers, etc.)",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 2,
+          "dependencies": ["task_005_001"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_005_006",
+          "title": "Write READMEs for Utility Packages",
+          "description": "Document remaining utility packages with purpose and usage",
+          "status": "pending",
+          "owner": "agent_006",
+          "estimated_hours": 2,
+          "dependencies": ["task_005_001"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_005_007",
+          "title": "Create Master Packages Documentation",
+          "description": "Create master index/overview document linking all package READMEs",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 1,
+          "dependencies": ["task_005_006"],
+          "files_to_create": ["sparetools/packages/README.md", "sparetools/packages/INDEX.md"],
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "group_id": "group_006_workspace_infrastructure",
+      "title": "🏗️ Objective 5: OpenSSL 3.6.0 Build Infrastructure",
+      "description": "Create VS Code workspace for integration testing, parallel builds with different profiles",
+      "priority": "critical",
+      "status": "pending",
+      "estimated_hours": 36,
+      "dependencies": ["group_003_build_profiles"],
+      "tasks": [
+        {
+          "id": "task_006_001",
+          "title": "Analyze Existing Workspace Files",
+          "description": "Review _openssl-devenv.code-workspace and _OLD_openssl-devenv.code-workspace, identify patterns",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_001_003"],
+          "deliverables": ["WORKSPACE_ANALYSIS.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_006_002",
+          "title": "Design New Integrated Workspace",
+          "description": "Design consolidated workspace covering bootstrap → build → test → release for openssl-3.6.0",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 3,
+          "dependencies": ["task_006_001"],
+          "deliverables": ["WORKSPACE_DESIGN.json", "integration_flow.md"],
+          "priority": "critical"
+        },
+        {
+          "id": "task_006_003",
+          "title": "Create VS Code Workspace JSON File",
+          "description": "Create openssl-3.6.0-integration.code-workspace with folders, launch configs, tasks, settings",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 4,
+          "dependencies": ["task_006_002"],
+          "files_to_create": ["openssl-devenv/openssl-3.6.0-integration.code-workspace"],
+          "priority": "critical"
+        },
+        {
+          "id": "task_006_004",
+          "title": "Create Launch Configurations",
+          "description": "Define launch configs for debugging, testing, parallel builds with different profile combinations",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 3,
+          "dependencies": ["task_006_003"],
+          "files_to_create": [".vscode/launch.json", ".vscode/tasks.json"],
+          "priority": "high"
+        },
+        {
+          "id": "task_006_005",
+          "title": "Create Build Orchestration Scripts",
+          "description": "Create Python/Shell scripts for parallel builds across profile matrix, result aggregation",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 6,
+          "dependencies": ["task_006_004"],
+          "files_to_create": ["openssl-devenv/scripts/parallel_build.py", "openssl-devenv/scripts/build_matrix.sh"],
+          "priority": "high"
+        },
+        {
+          "id": "task_006_006",
+          "title": "Create Dockerfile for Isolated Builds",
+          "description": "Create Dockerfile for reproducible builds, multi-stage for different profiles",
+          "status": "pending",
+          "owner": "agent_006",
+          "estimated_hours": 3,
+          "dependencies": ["task_006_003"],
+          "files_to_create": ["openssl-devenv/Dockerfile", "openssl-devenv/docker-compose.yml"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_006_007",
+          "title": "Create Realtime Progress Visualization",
+          "description": "Create web UI for monitoring parallel builds, showing progress per profile, logs",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 4,
+          "dependencies": ["task_006_005"],
+          "files_to_create": ["openssl-devenv/dashboard/", "openssl-devenv/dashboard/index.html"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_006_008",
+          "title": "Create Log Processing & Aggregation",
+          "description": "Implement log collection, parsing, and aggregation from parallel builds for analysis",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 3,
+          "dependencies": ["task_006_005"],
+          "files_to_create": ["openssl-devenv/tools/log_aggregator.py"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_006_009",
+          "title": "Create Integration Test Suite",
+          "description": "Write tests covering bootstrap → configure → build → test → package for each profile",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 4,
+          "dependencies": ["task_006_004"],
+          "files_to_create": ["openssl-devenv/tests/test_integration.py"],
+          "test_strategy": "pytest with parametrized profiles",
+          "priority": "high"
+        },
+        {
+          "id": "task_006_010",
+          "title": "Create Setup & Bootstrap Instructions",
+          "description": "Write README.md with setup, bootstrap, build, and troubleshooting instructions",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_006_009"],
+          "files_to_create": ["openssl-devenv/README.md", "openssl-devenv/BOOTSTRAP.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_006_011",
+          "title": "Implement Color-Coded Themes & Visual Design",
+          "description": "Create consistent color scheme, make workspace visually attractive, implement dark/light themes",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 2,
+          "dependencies": ["task_006_007"],
+          "files_to_create": [".vscode/settings.json", "openssl-devenv/themes/"],
+          "priority": "low"
+        }
+      ]
+    },
+    {
+      "group_id": "group_007_github_workflows",
+      "title": "🔄 Objective 6: GitHub Workflows Consolidation",
+      "description": "Plan workflows for sparetools, reconsolidate OpenSSL workflows across repositories",
+      "priority": "critical",
+      "status": "pending",
+      "estimated_hours": 28,
+      "dependencies": ["group_003_build_profiles", "group_006_workspace_infrastructure"],
+      "tasks": [
+        {
+          "id": "task_007_001",
+          "title": "Design Workflow Architecture",
+          "description": "Design reusable workflow architecture spanning: build → test → package → publish",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 3,
+          "dependencies": ["task_001_004"],
+          "deliverables": ["WORKFLOW_ARCHITECTURE.md"],
+          "priority": "critical"
+        },
+        {
+          "id": "task_007_002",
+          "title": "Create Reusable Build Workflow",
+          "description": "Create workflow template for parallel OpenSSL builds across profile matrix",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 4,
+          "dependencies": ["task_007_001"],
+          "files_to_create": ["sparetools/.github/workflows/build-openssl-matrix.yml"],
+          "priority": "critical"
+        },
+        {
+          "id": "task_007_003",
+          "title": "Create Reusable Test Workflow",
+          "description": "Create workflow for integration testing with matrix of profiles, OS versions",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 3,
+          "dependencies": ["task_007_001"],
+          "files_to_create": ["sparetools/.github/workflows/test-matrix.yml"],
+          "priority": "high"
+        },
+        {
+          "id": "task_007_004",
+          "title": "Create Package & Publish Workflow",
+          "description": "Create workflow for Conan package creation and Cloudsmith publishing with OIDC auth",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 3,
+          "dependencies": ["task_007_001"],
+          "files_to_create": ["sparetools/.github/workflows/publish-cloudsmith.yml"],
+          "priority": "high"
+        },
+        {
+          "id": "task_007_005",
+          "title": "Reconsolidate OpenSSL Workflows (Fork)",
+          "description": "Consolidate workflows in /openssl/.github/ and /openssl-tools/.github/ to reuse shared workflows",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 4,
+          "dependencies": ["task_007_002", "task_007_003", "task_007_004"],
+          "files_to_update": ["/home/sparrow/projects/openssl-devenv/openssl/.github/", "/home/sparrow/projects/openssl-devenv/openssl-tools/.github/"],
+          "priority": "high"
+        },
+        {
+          "id": "task_007_006",
+          "title": "Create Security & Scanning Workflows",
+          "description": "Create SBOM generation, dependency scanning, vulnerability detection workflows",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 3,
+          "dependencies": ["task_007_001"],
+          "files_to_create": ["sparetools/.github/workflows/security-scan.yml"],
+          "priority": "high"
+        },
+        {
+          "id": "task_007_007",
+          "title": "Create Release & Tag Workflows",
+          "description": "Create workflow for version bumping, git tagging, GitHub releases",
+          "status": "pending",
+          "owner": "agent_006",
+          "estimated_hours": 2,
+          "dependencies": ["task_007_001"],
+          "files_to_create": ["sparetools/.github/workflows/create-release.yml"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_007_008",
+          "title": "Create Status Dashboard Workflow",
+          "description": "Create workflow that generates status badges, build history, metrics dashboard",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_007_001"],
+          "files_to_create": ["sparetools/.github/workflows/update-status-dashboard.yml"],
+          "priority": "low"
+        },
+        {
+          "id": "task_007_009",
+          "title": "Document Workflow Usage",
+          "description": "Create comprehensive documentation for all workflows, triggers, parameters, outputs",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 2,
+          "dependencies": ["task_007_008"],
+          "files_to_create": [".github/WORKFLOWS.md", ".github/workflows/README.md"],
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "group_id": "group_008_versioning_release",
+      "title": "🚀 Objective 7: Package Versioning & Cloudsmith Upload",
+      "description": "Create bumped version, upload updated packages to Cloudsmith",
+      "priority": "high",
+      "status": "pending",
+      "estimated_hours": 12,
+      "dependencies": ["group_002_unify_packages", "group_003_build_profiles", "group_004_package_consolidation"],
+      "tasks": [
+        {
+          "id": "task_008_001",
+          "title": "Determine Version Bump Strategy",
+          "description": "Decide on version numbering (major.minor.patch), semantic versioning for breaking changes",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 1,
+          "deliverables": ["VERSION_STRATEGY.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_008_002",
+          "title": "Create Version Bump Script",
+          "description": "Create Python script to automatically bump versions in conanfile.py, documentation, etc.",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 2,
+          "dependencies": ["task_008_001"],
+          "files_to_create": ["sparetools/tools/bump_version.py"],
+          "priority": "high"
+        },
+        {
+          "id": "task_008_003",
+          "title": "Update Package Versions",
+          "description": "Bump versions for unified openssl, openssl-tools, shared-dev-tools, and dependent packages",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 2,
+          "dependencies": ["task_008_002"],
+          "priority": "high"
+        },
+        {
+          "id": "task_008_004",
+          "title": "Update CHANGELOG",
+          "description": "Write comprehensive changelog documenting all changes, consolidations, new features",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 2,
+          "dependencies": ["task_008_003"],
+          "files_to_create": ["CHANGELOG.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_008_005",
+          "title": "Create Cloudsmith Upload Configuration",
+          "description": "Configure Cloudsmith repository, API credentials, package settings",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 1,
+          "deliverables": ["CLOUDSMITH_CONFIG.md"],
+          "priority": "high"
+        },
+        {
+          "id": "task_008_006",
+          "title": "Upload Packages to Cloudsmith",
+          "description": "Build and upload unified openssl, openssl-tools, shared-dev-tools to Cloudsmith",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 2,
+          "dependencies": ["task_008_005"],
+          "test_strategy": "Verify packages installable from Cloudsmith",
+          "priority": "high"
+        },
+        {
+          "id": "task_008_007",
+          "title": "Create GitHub Release",
+          "description": "Create GitHub release with changelog, upload artifacts, tag commit",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 1,
+          "dependencies": ["task_008_006"],
+          "priority": "medium"
+        }
+      ]
+    },
+    {
+      "group_id": "group_009_distributed_tasks",
+      "title": "📝 Objective 8-9: TODO Management & Cross-Repo Issues",
+      "description": "Create distributed TODO.json files, identify remaining BASELINE.md tasks, create GitHub issues",
+      "priority": "medium",
+      "status": "pending",
+      "estimated_hours": 18,
+      "dependencies": [],
+      "tasks": [
+        {
+          "id": "task_009_001",
+          "title": "Create TODO.json Template",
+          "description": "Design standard TODO.json format for task tracking in each directory",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 1,
+          "deliverables": ["TODO_TEMPLATE.json"],
+          "priority": "high"
+        },
+        {
+          "id": "task_009_002",
+          "title": "Generate TODO.json Files",
+          "description": "Create TODO.json files for each major directory in sparetools, tracking this consolidation project",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 3,
+          "dependencies": ["task_009_001"],
+          "files_to_create": [
+            "sparetools/TODO.json",
+            "sparetools/packages/TODO.json",
+            "sparetools/.github/workflows/TODO.json",
+            "sparetools/docs/TODO.json"
+          ],
+          "priority": "high"
+        },
+        {
+          "id": "task_009_003",
+          "title": "Analyze BASELINE.md for Remaining Tasks",
+          "description": "Review BASELINE.md in docs/, identify all unimplemented items, dependencies",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 3,
+          "dependencies": [],
+          "deliverables": ["BASELINE_ANALYSIS.md", "REMAINING_TASKS.json"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_009_004",
+          "title": "Map Tasks to Repositories",
+          "description": "Map remaining BASELINE.md tasks to appropriate repositories (sparetools, openssl, openssl-tools, etc.)",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 2,
+          "dependencies": ["task_009_003"],
+          "deliverables": ["TASKS_TO_REPOS_MAPPING.md"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_009_005",
+          "title": "Create GitHub Issues - sparetools",
+          "description": "Create GitHub issues in sparesparrow/sparetools for sparetools-related remaining tasks",
+          "status": "pending",
+          "owner": "agent_001",
+          "estimated_hours": 2,
+          "dependencies": ["task_009_004"],
+          "priority": "high"
+        },
+        {
+          "id": "task_009_006",
+          "title": "Create GitHub Issues - OpenSSL Fork",
+          "description": "Create GitHub issues in sparesparrow/openssl, sparesparrow/openssl-tools for openssl tasks",
+          "status": "pending",
+          "owner": "agent_002",
+          "estimated_hours": 2,
+          "dependencies": ["task_009_004"],
+          "priority": "high"
+        },
+        {
+          "id": "task_009_007",
+          "title": "Create GitHub Issues - Supporting Repos",
+          "description": "Create GitHub issues in sparesparrow/openssl-profiles, sparesparrow/openssl-test, sparesparrow/cpy, etc.",
+          "status": "pending",
+          "owner": "agent_003",
+          "estimated_hours": 2,
+          "dependencies": ["task_009_004"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_009_008",
+          "title": "Create GitHub Issues - MCP Projects",
+          "description": "Create issues in sparesparrow/mcp-prompts and sparesparrow/mcp-project-orchestrator",
+          "status": "pending",
+          "owner": "agent_004",
+          "estimated_hours": 1,
+          "dependencies": ["task_009_004"],
+          "priority": "medium"
+        },
+        {
+          "id": "task_009_009",
+          "title": "Push TODO.json to Repositories",
+          "description": "Commit and push all TODO.json files to respective repositories",
+          "status": "pending",
+          "owner": "agent_005",
+          "estimated_hours": 1,
+          "dependencies": ["task_009_002"],
+          "priority": "medium"
+        }
+      ]
+    }
+  ],
+  "critical_path_analysis": {
+    "critical_path": [
+      "task_001_001",
+      "task_001_003",
+      "task_002_001",
+      "task_002_002",
+      "task_002_003",
+      "task_003_001",
+      "task_003_007",
+      "task_006_002",
+      "task_006_003",
+      "task_007_002",
+      "task_008_003"
+    ],
+    "total_critical_hours": 42,
+    "bottlenecks": [
+      "Analysis phase (task_001_*)",
+      "Package unification (task_002_*)",
+      "Workspace implementation (task_006_*)"
+    ]
+  },
+  "execution_strategy": {
+    "phase_1": {
+      "name": "Analysis & Planning",
+      "duration_days": 2,
+      "tasks": ["group_001_analysis"],
+      "parallelization": "4 concurrent agents",
+      "agents_needed": 4
+    },
+    "phase_2": {
+      "name": "Package Consolidation",
+      "duration_days": 5,
+      "tasks": ["group_002_unify_packages", "group_004_package_consolidation"],
+      "parallelization": "3-4 concurrent agents",
+      "agents_needed": 4,
+      "dependencies": ["phase_1"]
+    },
+    "phase_3": {
+      "name": "Build Infrastructure",
+      "duration_days": 4,
+      "tasks": ["group_003_build_profiles", "group_005_package_readmes"],
+      "parallelization": "4 concurrent agents",
+      "agents_needed": 6,
+      "dependencies": ["phase_2"]
+    },
+    "phase_4": {
+      "name": "Workspace & Workflows",
+      "duration_days": 6,
+      "tasks": ["group_006_workspace_infrastructure", "group_007_github_workflows"],
+      "parallelization": "4-6 concurrent agents",
+      "agents_needed": 6,
+      "dependencies": ["phase_3"]
+    },
+    "phase_5": {
+      "name": "Release & Documentation",
+      "duration_days": 2,
+      "tasks": ["group_008_versioning_release", "group_009_distributed_tasks"],
+      "parallelization": "3 concurrent agents",
+      "agents_needed": 5,
+      "dependencies": ["phase_4"]
+    }
+  },
+  "resource_requirements": {
+    "agents": 8,
+    "estimated_total_hours": 78,
+    "estimated_calendar_days": 15,
+    "parallel_speedup": "6.2x",
+    "cost_estimation": "HIGH (168 agent-hours equivalent)"
+  },
+  "success_criteria": {
+    "completion": [
+      "✅ Single unified openssl package with all variants",
+      "✅ Conan 2 profiles for all build configurations",
+      "✅ Package consolidation complete, mini package removed",
+      "✅ All packages documented with READMEs",
+      "✅ VS Code workspace for openssl-3.6.0 integration testing",
+      "✅ Parallel build infrastructure for profile matrix",
+      "✅ Consolidated GitHub workflows across repositories",
+      "✅ Packages uploaded to Cloudsmith with version bumped",
+      "✅ TODO.json files distributed across repositories",
+      "✅ GitHub issues created for remaining BASELINE.md tasks"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+[settings]
+os=Windows
+arch=armv8
+compiler=msvc
+compiler.version=193
+compiler.runtime=dynamic
+compiler.cppstd=17
+build_type=Release
+
+[options]
+# OpenSSL options for Windows ARM64 MSVC build
+sparetools-openssl/*:shared=False
+sparetools-openssl/*:build_method=perl
+sparetools-openssl/*:enable_threads=True
+sparetools-openssl/*:enable_asm=True
+sparetools-openssl/*:enable_neon=True
+sparetools-openssl/*:enable_avx=False
+sparetools-openssl/*:enable_avx2=False
+sparetools-openssl/*:enable_zlib=True
+
+[conf]
+# ARM64 MSVC/Visual Studio configuration
+tools.cmake.cmaketoolchain:generator=Visual Studio 17 2022
+tools.microsoft.msbuild:max_cpu_count=8

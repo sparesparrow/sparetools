@@ -1,0 +1,144 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-matrix:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Tier 1: Production-Critical
+          - name: Linux-GCC11-Perl-Default
+            os: ubuntu-22.04
+            base_profile: base/linux-gcc11
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+            package: sparetools-openssl
+          
+          - name: Linux-GCC11-Perl-FIPS
+            os: ubuntu-22.04
+            base_profile: base/linux-gcc11
+            method_profile: build-methods/perl-configure
+            feature_profile: features/fips-enabled
+            package: sparetools-openssl
+          
+          - name: Linux-Clang14-Perl-Default
+            os: ubuntu-22.04
+            base_profile: base/linux-clang14
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+            package: sparetools-openssl
+          
+          - name: Windows-MSVC2022-Perl-Default
+            os: windows-2022
+            base_profile: base/windows-msvc2022
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+            package: sparetools-openssl
+          
+          - name: macOS-ARM64-Perl-Default
+            os: macos-14
+            base_profile: base/darwin-clang-arm64
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+            package: sparetools-openssl
+          
+          # Base Packages
+          - name: sparetools-base
+            os: ubuntu-22.04
+            package: sparetools-base
+          
+          - name: sparetools-cpython
+            os: ubuntu-22.04
+            package: sparetools-cpython
+          
+          - name: sparetools-shared-dev-tools
+            os: ubuntu-22.04
+            package: sparetools-shared-dev-tools
+          
+          - name: sparetools-bootstrap
+            os: ubuntu-22.04
+            package: sparetools-bootstrap
+          
+          - name: sparetools-openssl-tools
+            os: ubuntu-22.04
+            package: sparetools-openssl-tools
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install Conan
+        run: |
+          pip install conan==2.21.0
+          conan --version
+      
+      - name: Detect Conan Profile
+        run: conan profile detect --force
+      
+      - name: Build Package (With Profiles)
+        if: matrix.base_profile != ''
+        run: |
+          PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
+          PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          if [ -n "${{ matrix.feature_profile }}" ]; then
+            PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+          fi
+          conan create packages/${{ matrix.package }} --version=2.0.0 $PROFILES --build=missing
+        shell: bash
+      
+      - name: Build Package (Simple)
+        if: matrix.base_profile == ''
+        run: |
+          if [ "${{ matrix.package }}" == "sparetools-base" ] || \
+             [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
+             [ "${{ matrix.package }}" == "sparetools-bootstrap" ] || \
+             [ "${{ matrix.package }}" == "sparetools-openssl-tools" ]; then
+            conan export packages/${{ matrix.package }} --version=2.0.0
+          else
+            conan create packages/${{ matrix.package }} --version=2.0.0 --build=missing
+          fi
+        shell: bash
+      
+      - name: Test Package
+        if: matrix.package == 'sparetools-openssl'
+        run: |
+          conan test packages/sparetools-openssl/test_package sparetools-openssl/2.0.0@
+      
+      - name: Upload Build Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.name }}
+          path: |
+            ~/.conan2/p/*/b/*/build.log
+            ~/.conan2/p/*/b/*/test.log
+
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: build-matrix
+    if: always()
+    steps:
+      - name: Check Build Status
+        run: |
+          if [ "${{ needs.build-matrix.result }}" == "success" ]; then
+            echo "✅ All builds passed successfully!"
+          else
+            echo "❌ Some builds failed. Check the logs above."
+            exit 1
+          fi
+

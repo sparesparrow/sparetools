@@ -1,0 +1,26 @@
+# Assembly Optimization Profile - Minimal/Disabled
+#
+# Disables assembly optimizations entirely
+# Performance impact: 5-10% slower than optimized builds
+#
+# Recommended for:
+# - Debug builds and testing
+# - Portability (some SIMD instructions unavailable)
+# - Systems with assembly compatibility issues
+# - Cryptographic validation (pure C implementation)
+# - Embedded systems with minimal memory
+# - Source code analysis and verification
+
+[options]
+sparetools-openssl/*:enable_asm=False
+sparetools-openssl/*:enable_avx=False
+sparetools-openssl/*:enable_avx2=False
+sparetools-openssl/*:enable_neon=False
+sparetools-openssl/*:enable_sve=False
+
+[settings]
+build_type=Release
+
+[conf]
+tools.build:skip_test=False
+tools.cmake.cmaketoolchain:generator=Ninja
