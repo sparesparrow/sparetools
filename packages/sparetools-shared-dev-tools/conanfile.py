@@ -10,7 +10,9 @@ class SpareToolsSharedDevToolsConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
     
     exports_sources = "shared_dev_tools/**", "scripts/**"
-    
+
+    python_requires = "sparetools-base/2.0.0"
+
     def package(self):
         copy(self, "*.py", src=self.source_folder, dst=self.package_folder, keep_path=True)
         copy(self, "*.sh", src=self.source_folder, dst=self.package_folder, keep_path=True)

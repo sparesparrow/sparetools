@@ -14,7 +14,7 @@ class CPythonToolConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
     
     # Use sparetools-base utilities
-    python_requires = "sparetools-base/1.0.0"
+    python_requires = "sparetools-base/2.0.0"
     
     settings = "os", "arch", "compiler", "build_type"
     
@@ -24,7 +24,8 @@ class CPythonToolConan(ConanFile):
     
     def package(self):
         """Package prebuilt CPython from staging directory"""
-        staging = "/tmp/cpython-3.12.7-staging/usr/local"
+        staging_dir = os.environ.get("CPYTHON_STAGING_DIR", "/tmp/cpython-3.12.7-staging/usr/local")
+        staging = staging_dir
         
         if not os.path.exists(staging):
             raise Exception(
