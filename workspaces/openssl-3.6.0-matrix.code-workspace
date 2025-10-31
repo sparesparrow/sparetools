@@ -2,7 +2,7 @@
   "folders": [
     {
       "name": "🔷 SpareTools - Build System & Tools",
-      "path": ".",
+      "path": "..",
       "description": "Complete SpareTools ecosystem (Conan packages, scripts, workflows)"
     },
     {
@@ -12,13 +12,23 @@
     },
     {
       "name": "🟢 Build Profiles - Configuration Matrix",
-      "path": "packages/sparetools-openssl-tools/openssl_tools/profiles",
+      "path": "../packages/sparetools-openssl-tools/openssl_tools/profiles",
       "description": "Conan profiles (linux-gcc, darwin-clang, windows-msvc, hybrid)"
     },
     {
       "name": "🟡 Matrix Logs - Build Output",
       "path": "${env:HOME}/.openssl-matrix/logs",
       "description": "Aggregated build logs and summaries from matrix builds"
+    },
+    {
+      "name": "🔨 _Build - Zero-Copy Artifacts",
+      "path": "../_Build",
+      "description": "Build artifacts and symlinks to Conan cache (zero-copy pattern)"
+    },
+    {
+      "name": "📊 Build Results & Reviews",
+      "path": "../build_results",
+      "description": "Build reports and validation results"
     }
   ],
   "settings": {

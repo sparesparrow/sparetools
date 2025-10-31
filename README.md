@@ -89,14 +89,37 @@ conan create packages/sparetools-openssl --version=2.0.0 \
 ## 📚 Documentation
 
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and breaking changes
+- **[CLAUDE.md](CLAUDE.md)** - Developer guidance and architecture overview
 - **[Migration Guide](docs/MIGRATION-GUIDE.md)** - Upgrading from v1.x to v2.0.0
 - **[Package READMEs](packages/)** - Individual package documentation
 - **[Profiles Guide](packages/sparetools-openssl-tools/profiles/README.md)** - Profile system documentation
-- **[Progress Report](PROGRESS-REPORT.md)** - Current project status
+- **[_Build Directory](_Build/README.md)** - Zero-copy build artifacts explanation
+- **[Build Results](build_results/)** - Build reports and validation output
+- **[Reviews](reviews/)** - Release reviews and comprehensive summaries
 
 ---
 
 ## 🏗️ Architecture
+
+### Directory Structure
+
+```
+sparetools/
+├── packages/                 # Conan packages (source)
+├── _Build/                   # Build artifacts (zero-copy symlinks)
+│   ├── openssl-builds/       # OpenSSL build results
+│   ├── packages/             # Symlinks to Conan cache
+│   └── conan-cache -> ~/.conan2
+├── build_results/            # Build reports
+├── reviews/                  # Release reviews
+├── test_results/             # Test reports
+├── test/integration/         # Integration test suite
+├── scripts/                  # Automation scripts
+├── docs/                     # Documentation
+└── workspaces/               # VS Code workspace configs
+```
+
+**Zero-Copy Pattern**: The `_Build/` directory uses symlinks to `~/.conan2/` to avoid duplicating binaries, saving 80%+ disk space. See [_Build/README.md](_Build/README.md) for details.
 
 ### Package Dependencies
 

@@ -24,3 +24,16 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+# OpenSSL source directories (embedded git repos)
+test_results/openssl-builds/*/python/src/
+test_results/openssl-builds/*/vanilla/src/
+
+# Build artifacts and zero-copy symlinks
+_Build/openssl-builds/*/install/
+_Build/openssl-builds/*/src/
+_Build/packages/
+_Build/conan-cache
+
+# Build results (keep structure, ignore individual reports if needed)
+# build_results/*.md can be committed for release tracking

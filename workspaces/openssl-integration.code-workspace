@@ -2,23 +2,35 @@
   "folders": [
     {
       "name": "SpareTools",
-      "path": "."
+      "path": ".."
     },
     {
       "name": "Packages",
-      "path": "packages"
+      "path": "../packages"
     },
     {
       "name": "OpenSSL Tooling",
-      "path": "packages/sparetools-openssl-tools"
+      "path": "../packages/sparetools-openssl-tools"
     },
     {
       "name": "Documentation",
-      "path": "docs"
+      "path": "../docs"
     },
     {
       "name": "Workflows",
-      "path": ".github/workflows"
+      "path": "../.github/workflows"
+    },
+    {
+      "name": "_Build (Zero-Copy)",
+      "path": "../_Build"
+    },
+    {
+      "name": "Build Results",
+      "path": "../build_results"
+    },
+    {
+      "name": "Reviews",
+      "path": "../reviews"
     },
     {
       "name": "Conan Cache",
@@ -48,12 +60,16 @@
     "files.watcherExclude": {
       "**/.conan2/**": true,
       "**/build/**": true,
-      "**/.openssl-bootstrap/logs/**": true
+      "**/.openssl-bootstrap/logs/**": true,
+      "**/_Build/openssl-builds/**": true,
+      "**/_Build/packages/**": true
     },
     "search.exclude": {
       "**/.conan2/**": true,
       "**/build/**": true,
-      "**/.openssl-bootstrap/logs/**": true
+      "**/.openssl-bootstrap/logs/**": true,
+      "**/_Build/openssl-builds/**/install/**": true,
+      "**/_Build/openssl-builds/**/src/**": true
     },
     "files.trimTrailingWhitespace": true,
     "files.insertFinalNewline": true,
