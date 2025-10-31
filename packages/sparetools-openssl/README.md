@@ -47,6 +47,10 @@ conan install --requires=sparetools-openssl/3.3.2 \
   -pr:h default \
   -pr:b sparetools-openssl-tools/profiles/base/linux-gcc11 \
   -pr:b sparetools-openssl-tools/profiles/build-methods/perl-configure
+
+# Or using option directly (use 'perl', not 'perl-configure' or 'perl_configure'):
+conan create . --version=3.3.2 \
+  -o sparetools-openssl/*:build_method=perl
 ```
 
 ## Configuration Options

@@ -1,28 +1,33 @@
 name: Publish Packages
 
 on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
     inputs:
       version:
         description: "OpenSSL version to publish"
         required: true
         default: "3.3.2"
+      registry:
+        description: "Registry to publish to"
+        required: true
+        type: choice
+        options:
+          - both
+          - cloudsmith
+          - github
+        default: "both"
 
 jobs:
-  publish:
+  build-all-packages:
     runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+    
     steps:
       - uses: actions/checkout@v4
-
-      - name: Verify Cloudsmith token
-        run: |
-          if [ -z "${CLOUDSMITH_API_KEY}" ]; then
-            echo "CLOUDSMITH_API_KEY secret missing"
-            exit 1
-          fi
-        shell: bash
-        env:
-          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -39,6 +44,7 @@ jobs:
           conan profile detect --force
           conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
 
+      # Build packages in dependency order
       - name: Build sparetools-base
         run: conan create packages/sparetools-base --version=2.0.0 --build=missing
 
@@ -55,7 +61,66 @@ jobs:
         run: conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
 
       - name: Build sparetools-openssl
-        run: conan create packages/sparetools-openssl --version=${{ github.event.inputs.version }} --build=missing
+        run: |
+          VERSION="${{ github.event.inputs.version || '3.3.2' }}"
+          conan create packages/sparetools-openssl --version=$VERSION --build=missing
+
+      - name: List built packages
+        id: list
+        run: |
+          echo "📦 Built packages:"
+          conan list "sparetools-*/*"
+          
+          # Create package list for publishing
+          PACKAGES=$(conan list "sparetools-*/*" --format=compact | grep -v "^$" | tr '\n' ' ')
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+
+  publish-cloudsmith:
+    needs: build-all-packages
+    if: |
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) ||
+      (github.event_name == 'workflow_dispatch' && (inputs.registry == 'cloudsmith' || inputs.registry == 'both'))
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install conan==2.21.0
+          
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+
+      - name: Verify Cloudsmith credentials
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          if [ -z "$CLOUDSMITH_API_KEY" ]; then
+            echo "❌ CLOUDSMITH_API_KEY secret not configured"
+            exit 1
+          fi
+          echo "✅ Cloudsmith credentials verified"
+
+      - name: Restore built packages
+        run: |
+          # Rebuild packages (they're cached)
+          conan create packages/sparetools-base --version=2.0.0 --build=missing
+          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
+          conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
+          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
+          
+          VERSION="${{ github.event.inputs.version || '3.3.2' }}"
+          conan create packages/sparetools-openssl --version=$VERSION --build=missing
 
       - name: Authenticate with Cloudsmith
         env:
@@ -63,7 +128,105 @@ jobs:
         run: |
           conan remote login sparesparrow-conan sparesparrow --password "$CLOUDSMITH_API_KEY"
 
-      - name: Upload packages
+      - name: Upload packages to Cloudsmith
         run: |
+          echo "📤 Uploading packages to Cloudsmith..."
           conan upload "sparetools-*/*" -r sparesparrow-conan --confirm --retry 3 --retry-wait 5
+          echo "✅ Packages published to Cloudsmith"
 
+  publish-github:
+    needs: build-all-packages
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
+      (github.event_name == 'workflow_dispatch' && (inputs.registry == 'github' || inputs.registry == 'both'))
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install conan==2.21.0
+          
+      - name: Configure Conan with GitHub Packages
+        run: |
+          conan profile detect --force
+          conan remote add --force github-packages https://maven.pkg.github.com/${{ github.repository_owner }}/sparetools
+
+      - name: Restore built packages
+        run: |
+          # Rebuild packages (they're cached)
+          conan create packages/sparetools-base --version=2.0.0 --build=missing
+          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
+          conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
+          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
+          
+          VERSION="${{ github.event.inputs.version || '3.3.2' }}"
+          conan create packages/sparetools-openssl --version=$VERSION --build=missing
+
+      - name: Authenticate with GitHub Packages
+        run: |
+          conan remote login github-packages ${{ github.actor }} --password "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Upload packages to GitHub Packages
+        run: |
+          echo "📤 Uploading packages to GitHub Packages..."
+          conan upload "sparetools-*/*" -r github-packages --confirm --retry 3 --retry-wait 5
+          echo "✅ Packages published to GitHub Packages"
+
+  create-github-release:
+    needs: [build-all-packages, publish-github]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: SpareTools ${{ steps.version.outputs.tag }}
+          body: |
+            ## SpareTools OpenSSL ${{ steps.version.outputs.version }}
+            
+            ### Packages Published
+            - sparetools-base/2.0.0
+            - sparetools-cpython/3.12.7
+            - sparetools-shared-dev-tools/2.0.0
+            - sparetools-bootstrap/2.0.0
+            - sparetools-openssl-tools/2.0.0
+            - sparetools-openssl/${{ steps.version.outputs.version }}
+            
+            ### Installation
+            ```bash
+            conan remote add sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+            conan install --requires=sparetools-openssl/${{ steps.version.outputs.version }}
+            ```
+            
+            ### Registries
+            - **Cloudsmith**: https://cloudsmith.io/~sparesparrow-conan/repos/openssl-conan/
+            - **GitHub Packages**: https://github.com/${{ github.repository }}/packages
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

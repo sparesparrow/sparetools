@@ -1,0 +1,164 @@
+name: Build Package (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      package_name:
+        description: "Package name (e.g., sparetools-openssl)"
+        required: true
+        type: string
+      package_version:
+        description: "Package version (e.g., 3.3.2)"
+        required: true
+        type: string
+      profile_base:
+        description: "Base profile path (e.g., packages/sparetools-openssl-tools/profiles/base/linux-gcc11)"
+        required: false
+        type: string
+        default: ""
+      profile_build_method:
+        description: "Build method profile path"
+        required: false
+        type: string
+        default: ""
+      build_missing:
+        description: "Build missing dependencies"
+        required: false
+        type: boolean
+        default: true
+      run_tests:
+        description: "Run test_package after build"
+        required: false
+        type: boolean
+        default: true
+      os:
+        description: "Operating system"
+        required: false
+        type: string
+        default: "ubuntu-22.04"
+      python_version:
+        description: "Python version"
+        required: false
+        type: string
+        default: "3.12"
+    outputs:
+      package_ref:
+        description: "Conan package reference (name/version)"
+        value: ${{ jobs.build.outputs.package_ref }}
+      build_status:
+        description: "Build status (success/failure)"
+        value: ${{ jobs.build.outputs.build_status }}
+
+jobs:
+  build:
+    runs-on: ${{ inputs.os }}
+    outputs:
+      package_ref: ${{ steps.build.outputs.package_ref }}
+      build_status: ${{ steps.build.outputs.build_status }}
+      
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ inputs.python_version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+          cache: 'pip'
+      
+      - name: Install Conan
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install conan==2.21.0
+          
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+          
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ inputs.os }}-${{ inputs.package_name }}-${{ inputs.package_version }}-${{ hashFiles('packages/**/conanfile.py') }}
+          restore-keys: |
+            conan-${{ inputs.os }}-${{ inputs.package_name }}-
+            conan-${{ inputs.os }}-
+            
+      - name: Build dependencies (if needed)
+        run: |
+          # Build foundation packages first
+          if [ -d "packages/sparetools-base" ]; then
+            conan create packages/sparetools-base --version=2.0.0 --build=missing || true
+          fi
+          
+          if [ -d "packages/sparetools-cpython" ]; then
+            conan create packages/sparetools-cpython --version=3.12.7 --build=missing || true
+          fi
+          
+          if [ -d "packages/sparetools-shared-dev-tools" ]; then
+            conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing || true
+          fi
+          
+          if [ -d "packages/sparetools-openssl-tools" ]; then
+            conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing || true
+          fi
+        shell: bash
+          
+      - name: Build package
+        id: build
+        run: |
+          PACKAGE_PATH="packages/${{ inputs.package_name }}"
+          BUILD_CMD="conan create $PACKAGE_PATH --version=${{ inputs.package_version }}"
+          
+          # Add profiles if specified
+          if [ -n "${{ inputs.profile_base }}" ]; then
+            BUILD_CMD="$BUILD_CMD -pr:b ${{ inputs.profile_base }}"
+          fi
+          
+          if [ -n "${{ inputs.profile_build_method }}" ]; then
+            BUILD_CMD="$BUILD_CMD -pr:b ${{ inputs.profile_build_method }}"
+          fi
+          
+          # Add build missing flag
+          if [ "${{ inputs.build_missing }}" == "true" ]; then
+            BUILD_CMD="$BUILD_CMD --build=missing"
+          fi
+          
+          echo "🔨 Running: $BUILD_CMD"
+          $BUILD_CMD
+          
+          # Set outputs
+          PACKAGE_REF="${{ inputs.package_name }}/${{ inputs.package_version }}"
+          echo "package_ref=$PACKAGE_REF" >> $GITHUB_OUTPUT
+          echo "build_status=success" >> $GITHUB_OUTPUT
+          echo "✅ Package built: $PACKAGE_REF"
+        shell: bash
+          
+      - name: Run tests
+        if: inputs.run_tests && success()
+        run: |
+          PACKAGE_PATH="packages/${{ inputs.package_name }}"
+          if [ -d "$PACKAGE_PATH/test_package" ]; then
+            echo "🧪 Running test_package for ${{ inputs.package_name }}"
+            cd $PACKAGE_PATH
+            conan test test_package ${{ inputs.package_name }}/${{ inputs.package_version }}@
+            echo "✅ Tests passed"
+          else
+            echo "⚠️ No test_package found, skipping tests"
+          fi
+        shell: bash
+          
+      - name: Display package info
+        if: success() || failure()
+        run: |
+          echo "📦 Package information:"
+          conan list "${{ inputs.package_name }}/${{ inputs.package_version }}"
+          conan cache path ${{ inputs.package_name }}/${{ inputs.package_version }} || true
+        shell: bash
+          
+      - name: Set failure status
+        if: failure()
+        run: |
+          echo "build_status=failure" >> $GITHUB_OUTPUT
+        shell: bash
+

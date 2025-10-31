@@ -365,6 +365,9 @@ class SpareToolsOpenSSLConan(ConanFile):
         self.cpp_info.set_property("cmake_target_name", "OpenSSL::OpenSSL")
         self.cpp_info.set_property("pkg_config_name", "openssl")
         
+        # Dynamically detect lib vs lib64 directory
+        libdir = "lib64" if os.path.exists(os.path.join(self.package_folder, "lib64")) else "lib"
+        
         # Libraries
         self.cpp_info.components["ssl"].set_property("cmake_target_name", "OpenSSL::SSL")
         self.cpp_info.components["ssl"].set_property("pkg_config_name", "libssl")
@@ -381,12 +384,12 @@ class SpareToolsOpenSSLConan(ConanFile):
         elif self.settings.os == "Windows":
             self.cpp_info.components["crypto"].system_libs.extend(["ws2_32", "crypt32"])
         
-        # Directories
-        self.cpp_info.components["ssl"].libdirs = ["lib"]
+        # Directories (use detected libdir)
+        self.cpp_info.components["ssl"].libdirs = [libdir]
         self.cpp_info.components["ssl"].includedirs = ["include"]
         self.cpp_info.components["ssl"].bindirs = ["bin"]
         
-        self.cpp_info.components["crypto"].libdirs = ["lib"]
+        self.cpp_info.components["crypto"].libdirs = [libdir]
         self.cpp_info.components["crypto"].includedirs = ["include"]
         self.cpp_info.components["crypto"].bindirs = ["bin"]
 

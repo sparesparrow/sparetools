@@ -86,7 +86,7 @@ conan install . \
 ```
 
 Available build methods:
-- `perl_configure` (default, most stable)
+- `perl` (default, most stable)
 - `cmake` (modern, IDE-friendly)
 - `autotools` (Unix standard)
 - `python_configure` (experimental, Python-based)
@@ -342,7 +342,7 @@ conan install --tool-requires=sparetools-openssl-tools/2.0.0
 
 ```bash
 # Valid options
--o sparetools-openssl/*:build_method=perl_configure  # Default
+-o sparetools-openssl/*:build_method=perl  # Default
 -o sparetools-openssl/*:build_method=cmake
 -o sparetools-openssl/*:build_method=autotools
 -o sparetools-openssl/*:build_method=python_configure  # Experimental

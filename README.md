@@ -54,7 +54,7 @@ conan install --requires=sparetools-openssl/2.0.0 \
 ```bash
 # Using Perl Configure (default, most stable)
 conan create packages/sparetools-openssl --version=2.0.0 \
-  -o sparetools-openssl/*:build_method=perl_configure \
+  -o sparetools-openssl/*:build_method=perl \
   --build=missing
 
 # Using CMake (modern, IDE-friendly)
@@ -140,7 +140,7 @@ sparetools-shared-dev-tools
 
 The unified `sparetools-openssl` package supports multiple build methods:
 
-1. **perl_configure** (default) - Standard OpenSSL Perl Configure
+1. **perl** (default) - Standard OpenSSL Perl Configure
 2. **cmake** - Modern CMake build system
 3. **autotools** - Unix Autotools integration
 4. **python_configure** - Experimental Python-based configuration

@@ -27,7 +27,7 @@ This is a major version with significant architectural changes. Migration requir
 #### Package Consolidation
 - **Unified OpenSSL Package**: Single `sparetools-openssl` package with multiple build methods
   - Build method selection via `-o sparetools-openssl/*:build_method=<method>`
-  - Supported methods: `perl_configure`, `cmake`, `autotools`, `python_configure`
+  - Supported methods: `perl`, `cmake`, `autotools`, `python_configure`
 - **27,621-byte configure.py**: Python replacement for Perl Configure (experimental)
   - Functional for Makefile generation
   - Platform detection for Linux, macOS, Windows, BSD

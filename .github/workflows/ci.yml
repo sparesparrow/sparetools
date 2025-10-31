@@ -1,94 +1,182 @@
-name: OpenSSL CI Matrix
+name: CI - Build and Test
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, develop, 'release/*' ]
   pull_request:
-    branches:
-      - main
+    branches: [ main, develop ]
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: ${{ matrix.name }}
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure }}
+  # Detect what changed to avoid unnecessary rebuilds
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages-changed: ${{ steps.changes.outputs.packages }}
+      profiles-changed: ${{ steps.changes.outputs.profiles }}
+      docs-changed: ${{ steps.changes.outputs.docs }}
+      ci-changed: ${{ steps.changes.outputs.ci }}
+      skip-build: ${{ steps.skip.outputs.skip-build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            packages:
+              - 'packages/**/*.py'
+              - 'packages/**/conanfile.py'
+              - 'packages/**/test_package/**'
+            profiles:
+              - 'packages/sparetools-openssl-tools/profiles/**'
+            docs:
+              - 'docs/**'
+              - '*.md'
+              - 'CHANGELOG.md'
+            ci:
+              - '.github/workflows/**'
+              
+      - name: Determine if build can be skipped
+        id: skip
+        run: |
+          if [[ "${{ steps.changes.outputs.packages }}" == "false" && 
+                "${{ steps.changes.outputs.profiles }}" == "false" && 
+                "${{ steps.changes.outputs.ci }}" == "false" ]]; then
+            echo "skip-build=true" >> $GITHUB_OUTPUT
+            echo "✅ Only docs changed, skipping build"
+          else
+            echo "skip-build=false" >> $GITHUB_OUTPUT
+            echo "🔨 Source changes detected, running build"
+          fi
+
+  # Build and test packages
+  build-test:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.skip-build == 'false'
+    
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: linux-gcc-shared
-            os: ubuntu-latest
-            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-std.profile
-            allow_failure: false
-          - name: linux-gcc-fips
-            os: ubuntu-latest
-            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-lin-x86_64-gcc-shared-fips.profile
-            allow_failure: false
-          - name: macos-clang-shared
-            os: macos-latest
-            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-mac-arm64-clang-shared-std.profile
-            allow_failure: true
-          - name: windows-msvc-shared
-            os: windows-latest
-            profile: packages/sparetools-openssl-tools/openssl_tools/profiles/conan/perl-win-x86_64-msvc-shared-std.profile
-            allow_failure: true
-
-    defaults:
-      run:
-        shell: bash
-
+          # Linux builds
+          - name: "Linux GCC 11"
+            os: ubuntu-22.04
+            profile: linux-gcc11
+            python: "3.12"
+            
+          - name: "Linux Clang 18"
+            os: ubuntu-22.04
+            profile: linux-clang18
+            python: "3.12"
+            
+          # macOS build
+          - name: "macOS Clang"
+            os: macos-13
+            profile: darwin-clang
+            python: "3.12"
+            
+          # Windows build
+          - name: "Windows MSVC 2022"
+            os: windows-2022
+            profile: windows-msvc2022
+            python: "3.12"
+            
+    runs-on: ${{ matrix.os }}
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-
-      - name: Install system dependencies (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential perl ninja-build cmake
-
-      - name: Install system dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          brew update
-          brew install perl ninja cmake || true
-
-      - name: Install system dependencies (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          choco install -y strawberryperl cmake ninja
-
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+      
       - name: Install Conan
         run: |
           python -m pip install --upgrade pip
           python -m pip install conan==2.21.0
-
+          
       - name: Configure Conan
         run: |
           conan profile detect --force
           conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
-
-      - name: Create OpenSSL package
+          
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ matrix.profile }}-${{ hashFiles('packages/**/conanfile.py') }}
+          restore-keys: |
+            conan-${{ matrix.os }}-${{ matrix.profile }}-
+            conan-${{ matrix.os }}-
+            
+      - name: Build sparetools-base
         run: |
-          conan create packages/sparetools-openssl --version=3.3.2 --build=missing \
-            -pr:h=${{ matrix.profile }}
-
-      - name: Run test_package
+          conan create packages/sparetools-base --version=2.0.0 --build=missing
+          
+      - name: Build sparetools-cpython
+        run: |
+          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+          
+      - name: Build sparetools-shared-dev-tools
+        run: |
+          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
+          
+      - name: Build sparetools-openssl-tools
+        run: |
+          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
+          
+      - name: Build sparetools-openssl (Perl Configure)
+        run: |
+          conan create packages/sparetools-openssl --version=3.3.2 \
+            -pr:b packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile }} \
+            -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure \
+            --build=missing
+          
+      - name: Test sparetools-openssl
         run: |
           cd packages/sparetools-openssl
-          conan test test_package sparetools-openssl/3.3.2@ -pr:h=${{ matrix.profile }}
-
-      - name: Upload build summary
-        if: always()
+          conan test test_package sparetools-openssl/3.3.2@
+          
+      - name: Display Conan info
+        if: success() || failure()
+        run: |
+          conan list "sparetools-*/*"
+          conan cache path sparetools-openssl/3.3.2
+          
+      - name: Save build artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.name }}-logs
-          path: ~/.conan2/logs
-          if-no-files-found: ignore
+          name: packages-${{ matrix.os }}-${{ matrix.profile }}
+          path: |
+            ~/.conan2/p/*/p/lib/
+            ~/.conan2/p/*/p/bin/
+          retention-days: 7
 
+  # Summary job to check all builds passed
+  ci-summary:
+    needs: [detect-changes, build-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check build results
+        run: |
+          if [ "${{ needs.build-test.result }}" == "success" ] || [ "${{ needs.detect-changes.outputs.skip-build }}" == "true" ]; then
+            echo "✅ CI passed"
+            exit 0
+          else
+            echo "❌ CI failed"
+            exit 1
+          fi
