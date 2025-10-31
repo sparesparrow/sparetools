@@ -119,52 +119,109 @@ Deprecated Packages (to be removed):
 
 ### Dependency Graph
 
+```mermaid
+graph TD
+    %% Main deliverable
+    openssl[sparetools-openssl/3.3.2<br/>MAIN DELIVERABLE]
+    
+    %% Direct dependencies
+    openssl -.->|tool_requires| tools[sparetools-openssl-tools/2.0.0]
+    openssl -.->|tool_requires| cpython[sparetools-cpython/3.12.7]
+    openssl -->|python_requires| base[sparetools-base/2.0.0<br/>FOUNDATION]
+    
+    %% Tools dependencies
+    tools -->|python_requires| base
+    
+    %% Other packages
+    shared[sparetools-shared-dev-tools/2.0.0] -->|python_requires| base
+    cpython -->|python_requires| base
+    bootstrap[sparetools-bootstrap/2.0.0] -.->|should add| base
+    
+    %% Styling
+    classDef mainPkg fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+    classDef toolPkg fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    classDef basePkg fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    classDef utilPkg fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:2px
+    
+    class openssl mainPkg
+    class tools,cpython toolPkg
+    class base basePkg
+    class shared,bootstrap utilPkg
 ```
-sparetools-openssl/3.3.2 (MAIN DELIVERABLE)
-├── tool_requires: sparetools-openssl-tools/2.0.0
-├── tool_requires: sparetools-cpython/3.12.7 (optional)
-└── python_requires: sparetools-base/2.0.0
 
-sparetools-openssl-tools/2.0.0
-└── python_requires: sparetools-base/2.0.0
-
-sparetools-shared-dev-tools/2.0.0
-└── python_requires: sparetools-base/2.0.0
-
-sparetools-cpython/3.12.7
-└── python_requires: sparetools-base/2.0.0
-
-sparetools-base/2.0.0 (FOUNDATION)
-└── (no dependencies)
-```
+**Legend:**
+- Solid arrows (→): `python_requires` (recipe dependencies)
+- Dashed arrows (-.->): `tool_requires` (build-time tools)
 
 ### Multi-Build System
 
-The sparetools-openssl package supports four build methods via the build_method option:
-- perl (default, proven)
-- cmake (modern)
-- autotools (Unix)
-- python (experimental)
-
-Selection (excerpt):
-
+```mermaid
+graph LR
+    A[sparetools-openssl] --> B{build_method option}
+    
+    B -->|perl<br/>default| C[Perl Configure<br/>✅ Production Ready]
+    B -->|cmake| D[CMake Build<br/>✅ Modern]
+    B -->|autotools| E[Autotools<br/>✅ Unix Standard]
+    B -->|python| F[Python configure.py<br/>⚠️ Experimental]
+    
+    C --> G[OpenSSL Binary]
+    D --> G
+    E --> G
+    F --> G
+    
+    style C fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style D fill:#2196F3,stroke:#1565C0,color:#fff
+    style E fill:#FF9800,stroke:#E65100,color:#fff
+    style F fill:#FFC107,stroke:#F57C00,color:#000
+    style A fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style G fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
 ```
-def build(self):
-    build_methods = {
-        "perl": self._build_with_perl,
-        "cmake": self._build_with_cmake,
-        "autotools": self._build_with_autotools,
-        "python": self._build_with_python,
-    }
-    build_func = build_methods.get(str(self.options.build_method))
-    if build_func:
-        build_func()
+
+**Profile Composition System:**
+
+```mermaid
+graph TD
+    subgraph "Base Profiles"
+        B1[linux-gcc11]
+        B2[linux-clang14]
+        B3[darwin-clang-arm64]
+        B4[windows-msvc2022]
+    end
+    
+    subgraph "Build Methods"
+        M1[perl-configure]
+        M2[cmake-build]
+        M3[autotools]
+        M4[python-configure]
+    end
+    
+    subgraph "Features"
+        F1[fips-enabled]
+        F2[shared-libs]
+        F3[static-only]
+        F4[minimal]
+        F5[performance]
+    end
+    
+    B1 --> M1
+    M1 --> F1
+    F1 --> R[Final Build Configuration]
+    
+    B2 --> M2
+    M2 --> F5
+    F5 --> R
+    
+    B3 --> M1
+    M1 --> F2
+    F2 --> R
+    
+    style R fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
 ```
 
-Profiles in packages/sparetools-openssl-tools/profiles/ compose across:
-- base (platform/compiler)
-- build-methods (perl-configure, cmake-build, autotools, python-configure)
-- features (fips-enabled, shared-libs, static-only, minimal, performance)
+**Profiles Location:** `packages/sparetools-openssl-tools/profiles/`
+- **base/** — Platform + compiler (6 profiles)
+- **build-methods/** — Build system selection (4 profiles)
+- **features/** — Feature toggles (5 profiles)
 
 ---
 
@@ -215,14 +272,63 @@ sparetools/
 
 ## Zero-Copy Symlink Strategy
 
-This repository uses a zero-copy deployment pattern: artifacts are stored once in the Conan cache and exposed to all projects via OS-level symlinks instead of copying files. This reduces disk space, speeds up environment setup, and ensures one source of truth for binaries.
+This repository uses a zero-copy deployment pattern: artifacts are stored once in the Conan cache and exposed to all projects via OS-level symlinks instead of copying files.
+
+```mermaid
+graph LR
+    subgraph "Conan Cache (~/.conan2/p/)"
+        C1[sparetools-base<br/>Package Folder]
+        C2[sparetools-cpython<br/>Package Folder]
+        C3[sparetools-openssl<br/>Package Folder]
+    end
+    
+    subgraph "_Build/packages/ (Symlinks)"
+        S1[sparetools-base]
+        S2[sparetools-cpython]
+        S3[sparetools-openssl]
+    end
+    
+    subgraph "Workspace Projects"
+        W1[Project A]
+        W2[Project B]
+        W3[Project C]
+    end
+    
+    C1 -.->|symlink| S1
+    C2 -.->|symlink| S2
+    C3 -.->|symlink| S3
+    
+    S1 -.->|symlink| W1
+    S2 -.->|symlink| W1
+    S3 -.->|symlink| W1
+    
+    S1 -.->|symlink| W2
+    S2 -.->|symlink| W2
+    
+    S1 -.->|symlink| W3
+    S3 -.->|symlink| W3
+    
+    style C1 fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:2px
+    style C2 fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style C3 fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+    
+    style S1 fill:#FFE0B2,stroke:#E65100,color:#000
+    style S2 fill:#BBDEFB,stroke:#1565C0,color:#000
+    style S3 fill:#C8E6C9,stroke:#2E7D32,color:#000
+```
+
+**Benefits:**
+- ✅ **99% disk space savings** (symlinks ~50KB vs binaries ~500MB)
+- ✅ **Instant environment setup** (no binary copying)
+- ✅ **Atomic updates** (change symlink target = instant upgrade)
+- ✅ **Single source of truth** (all binaries in Conan cache)
 
 ### Principles
 
-- Single Source of Truth: All built artifacts live in ~/.conan2/p/.../p/ (Conan cache package_folder).  
-- No Copies: Projects never duplicate binaries; they create symlinks into the cache.  
-- Atomic Updates: Upgrades swap symlink targets, making environment switches instantaneous.  
-- Portable Layout: Workspaces expose bin/lib/include via consistent symlinked folders.
+- **Single Source of Truth**: All built artifacts live in `~/.conan2/p/.../p/` (Conan cache package_folder)
+- **No Copies**: Projects never duplicate binaries; they create symlinks into the cache
+- **Atomic Updates**: Upgrades swap symlink targets, making environment switches instantaneous
+- **Portable Layout**: Workspaces expose bin/lib/include via consistent symlinked folders
 
 ### Workspace Layout (SpareTools Repository)
 
@@ -330,25 +436,97 @@ du -sh python-env/conan/cpython-built  # should be tiny (link)
 
 ## Security Integration
 
-Location: packages/sparetools-base/security-gates.py
+```mermaid
+graph TD
+    A[Build Artifacts] --> B{Security Gates}
+    
+    B --> C[Trivy Scanner<br/>Vulnerability Detection]
+    B --> D[Syft<br/>SBOM Generation]
+    B --> E[FIPS Validator<br/>Compliance Check]
+    
+    C -->|Scan| F{Findings?}
+    D -->|Generate| G[SBOM Report<br/>CycloneDX/SPDX]
+    E -->|Validate| H{Compliant?}
+    
+    F -->|CRITICAL| I[❌ Block Promotion]
+    F -->|OK| J[✅ Continue]
+    
+    H -->|No| I
+    H -->|Yes| J
+    
+    G --> J
+    J --> K[Package Promotion]
+    
+    style C fill:#E91E63,stroke:#880E4F,color:#fff
+    style D fill:#2196F3,stroke:#1565C0,color:#fff
+    style E fill:#FF9800,stroke:#E65100,color:#fff
+    style I fill:#F44336,stroke:#B71C1C,color:#fff,stroke-width:3px
+    style K fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
 
-Integrated Tools:
-- Trivy: Filesystem vulnerability scanning (run_trivy_scan)
-- Syft: SBOM generation (generate_sbom)
-- FIPS Validator: Compliance checks (packages/sparetools-bootstrap/bootstrap/openssl/fips_validator.py)
+**Location:** `packages/sparetools-base/security-gates.py`
 
-Gates run in package steps and CI workflows; CRITICAL findings block promotions.
+**Integrated Tools:**
+- **Trivy**: Filesystem vulnerability scanning (`run_trivy_scan`)
+- **Syft**: SBOM generation in CycloneDX/SPDX formats (`generate_sbom`)
+- **FIPS Validator**: Compliance checks (`packages/sparetools-bootstrap/bootstrap/openssl/fips_validator.py`)
+
+**Policy:** Gates run in package steps and CI workflows. CRITICAL findings block promotions.
 
 ---
 
 ## Bootstrap Orchestration
 
-Location: packages/sparetools-bootstrap/bootstrap/
+```mermaid
+graph TD
+    O[ORCHESTRATOR<br/>Coordinates Workflows] --> E[EXECUTOR<br/>Builds & Packages]
+    E --> V[VALIDATOR<br/>Verifies Artifacts]
+    V -->|Pass| O
+    V -->|Fail| E
+    
+    subgraph "EXECUTOR Tasks"
+        E1[Build OpenSSL]
+        E2[Package with Conan]
+        E3[Generate Artifacts]
+    end
+    
+    subgraph "VALIDATOR Tasks"
+        V1[Run Tests]
+        V2[Security Scans<br/>Trivy/Syft]
+        V3[Generate SBOM]
+        V4[FIPS Validation]
+    end
+    
+    subgraph "ORCHESTRATOR Tasks"
+        O1[Manage Build Queue]
+        O2[Coordinate Agents]
+        O3[Report Results]
+    end
+    
+    E --> E1
+    E --> E2
+    E --> E3
+    
+    V --> V1
+    V --> V2
+    V --> V3
+    V --> V4
+    
+    O --> O1
+    O --> O2
+    O --> O3
+    
+    style O fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:3px
+    style E fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:3px
+    style V fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
 
-3-Agent System:
-1. EXECUTOR — executes builds and packaging
-2. VALIDATOR — verifies artifacts (tests, SBOM, scans)
-3. ORCHESTRATOR — coordinates multi-package workflows
+**Location:** `packages/sparetools-bootstrap/bootstrap/`
+
+**3-Agent System:**
+1. **EXECUTOR** — Executes builds and packaging
+2. **VALIDATOR** — Verifies artifacts (tests, SBOM, scans)
+3. **ORCHESTRATOR** — Coordinates multi-package workflows
 
 ---
 
@@ -365,8 +543,22 @@ Location: packages/sparetools-bootstrap/bootstrap/
 ## Common Gotchas
 
 ### Build Order Matters
-Due to dependencies, build packages in this order:
-1. sparetools-base → 2. sparetools-cpython → 3. sparetools-shared-dev-tools → 4. sparetools-openssl-tools → 5. sparetools-openssl
+
+```mermaid
+graph LR
+    A[1. sparetools-base<br/>2.0.0] --> B[2. sparetools-cpython<br/>3.12.7]
+    B --> C[3. sparetools-shared-dev-tools<br/>2.0.0]
+    C --> D[4. sparetools-openssl-tools<br/>2.0.0]
+    D --> E[5. sparetools-openssl<br/>3.3.2]
+    
+    style A fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style B fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style C fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:2px
+    style D fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style E fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
+
+**Critical:** Dependencies require packages to be built in sequence. Building out of order will fail.
 
 ### Profile Composition Order
 Profiles stack - later profiles override earlier ones:
@@ -424,14 +616,54 @@ Consumers can require components: --requires=sparetools-openssl/3.3.2:ssl
 
 ## Development Workflow
 
+```mermaid
+graph TD
+    A[Start] --> B[Create Package Directory<br/>packages/sparetools-name/]
+    B --> C[Write conanfile.py<br/>+ dependencies]
+    C --> D[Create test_package/<br/>integration test]
+    D --> E[Write README.md<br/>documentation]
+    E --> F[Local Build<br/>conan create]
+    
+    F -->|Success| G[Run Integration Tests]
+    F -->|Fail| C
+    
+    G -->|Pass| H[Update CI Workflows<br/>.github/workflows/]
+    G -->|Fail| D
+    
+    H --> I[Commit & Push]
+    I --> J{CI/CD Pipeline}
+    
+    J -->|Build| K[Multi-Platform Build]
+    J -->|Test| L[Integration Tests]
+    J -->|Security| M[Security Scans]
+    
+    K --> N{All Pass?}
+    L --> N
+    M --> N
+    
+    N -->|Yes| O[Merge to Main]
+    N -->|No| P[Fix Issues]
+    P --> C
+    
+    O --> Q[Publish to Cloudsmith]
+    Q --> R[Production Ready ✅]
+    
+    style A fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style F fill:#2196F3,stroke:#1565C0,color:#fff
+    style G fill:#FF9800,stroke:#E65100,color:#fff
+    style M fill:#E91E63,stroke:#880E4F,color:#fff
+    style O fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style R fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
+
 ### Adding a New Package
 
-1. mkdir packages/sparetools-<name>  
-2. conanfile.py with proper python_requires/tool_requires  
-3. test_package with integration test  
-4. README.md with usage  
-5. conan create . --version=X.Y.Z  
-6. Wire into CI workflows
+1. **Create directory**: `mkdir packages/sparetools-<name>`
+2. **Write recipe**: `conanfile.py` with proper `python_requires`/`tool_requires`
+3. **Add tests**: `test_package/` with integration test
+4. **Document**: `README.md` with usage
+5. **Build locally**: `conan create . --version=X.Y.Z`
+6. **Integrate**: Wire into CI workflows
 
 ### Modifying OpenSSL Build
 
@@ -449,12 +681,68 @@ syft packages . -o cyclonedx-json > sbom.json
 
 ---
 
-## CI/CD Notes
+## CI/CD Workflows
 
-- ci.yml: multi-platform matrix (Linux, macOS, Windows) using profiles  
-- security.yml: Trivy, Syft, CodeQL, dependency review  
-- release.yml: gated versioning — minor/patch by default, major only after full green checks and manual approval  
-- publish.yml: Cloudsmith staging → production promotions with approvals
+```mermaid
+graph TD
+    subgraph "Continuous Integration (ci.yml)"
+        CI1[Build Matrix<br/>Linux/macOS/Windows]
+        CI2[Multi-Profile Tests]
+        CI3[Integration Tests]
+    end
+    
+    subgraph "Security Scanning (security.yml)"
+        S1[Trivy Scan]
+        S2[Syft SBOM]
+        S3[CodeQL Analysis]
+        S4[Dependency Review]
+    end
+    
+    subgraph "Release Management (release.yml)"
+        R1[Version Bump]
+        R2[Full Test Suite]
+        R3[Manual Approval<br/>for Major]
+        R4[Create Release]
+    end
+    
+    subgraph "Publishing (publish.yml)"
+        P1[Build All Packages]
+        P2[Run Tests]
+        P3[Cloudsmith Staging]
+        P4[Manual Approval]
+        P5[Production Deploy]
+    end
+    
+    CI1 --> CI2
+    CI2 --> CI3
+    CI3 -->|Pass| S1
+    
+    S1 --> S2
+    S2 --> S3
+    S3 --> S4
+    S4 -->|Pass| R1
+    
+    R1 --> R2
+    R2 --> R3
+    R3 -->|Approved| R4
+    R4 --> P1
+    
+    P1 --> P2
+    P2 --> P3
+    P3 --> P4
+    P4 -->|Approved| P5
+    
+    style CI3 fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style S4 fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style R4 fill:#FF9800,stroke:#E65100,color:#fff
+    style P5 fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
+
+**Workflow Summary:**
+- **ci.yml**: Multi-platform matrix (Linux, macOS, Windows) using profiles
+- **security.yml**: Trivy, Syft, CodeQL, dependency review
+- **release.yml**: Gated versioning — minor/patch by default, major only after full green checks + manual approval
+- **publish.yml**: Cloudsmith staging → production promotions with approvals
 
 ---
 
