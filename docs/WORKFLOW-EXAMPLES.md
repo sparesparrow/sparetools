@@ -12,6 +12,7 @@ This document provides reusable workflow fragments for integrating SpareTools pa
 4. [FIPS-Enabled Builds](#fips-enabled-builds)
 5. [Cross-Platform Builds](#cross-platform-builds)
 6. [Package Publishing](#package-publishing)
+7. [Preconfigured OpenSSL Source (Perl)](#preconfigured-openssl-source-perl)
 
 ---
 
@@ -407,6 +408,65 @@ jobs:
           files: release-notes.md
           body_path: release-notes.md
 ```
+
+## Preconfigured OpenSSL Source (Perl)
+
+Generate a tarball that already contains the results of `perl ./Configure` so developers can build
+OpenSSL without installing Perl locally. The reusable workflow lives at
+`./.github/workflows/openssl-perl-preconfigure.yml`.
+
+### Trigger inside this repository
+
+```yaml
+name: OpenSSL Perl Configure Bundle
+
+on:
+  workflow_dispatch:
+    inputs:
+      configure-target:
+        description: 'OpenSSL Configure target'
+        default: linux-x86_64
+      config-options:
+        description: 'Additional Configure arguments'
+        default: 'enable-fips'
+
+jobs:
+  configure:
+    uses: ./.github/workflows/openssl-perl-preconfigure.yml
+    with:
+      configure-target: ${{ inputs.configure-target }}
+      config-options: ${{ inputs.config-options }}
+      openssl-ref: openssl-3.3.2
+      artifact-name: openssl-${{ inputs.configure-target }}
+      use-cpython-tools: true
+    secrets:
+      gh_token: ${{ secrets.GH_PAT }}
+```
+
+### Reuse from another repository
+
+```yaml
+jobs:
+  preconfigure-openssl:
+    uses: sparesparrow/sparetools/.github/workflows/openssl-perl-preconfigure.yml@main
+    with:
+      openssl-repository: ${{ github.repository }}
+      openssl-ref: ${{ github.ref_name }}
+      configure-target: linux-x86_64
+      config-options: enable-fips no-shared
+      artifact-name: openssl-${{ github.ref_name }}-perl
+      make-depend: true
+    secrets:
+      gh_token: ${{ secrets.GH_PAT }}
+```
+
+The workflow optionally pulls helper assets from
+[sparesparrow/cpy](https://github.com/sparesparrow/cpy) and
+[sparesparrow/cpython-tools](https://github.com/sparesparrow/cpython-tools) when `use-cpython-tools`
+is enabled, allowing richer bootstrap logic (for example, to mirror the environment used by
+sparesparrow/openssl triggers). Every run uploads a tarball plus metadata (configdata dumps,
+configure logs, SHA256 checks) that developers can unpack and build immediately with platform
+toolchains.
 
 ---
 
