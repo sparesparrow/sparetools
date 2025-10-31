@@ -34,6 +34,10 @@ _Build/openssl-builds/*/install/
 _Build/openssl-builds/*/src/
 _Build/packages/
 _Build/conan-cache
+_Build/openssl-builds
+_Build/openssl-builds/*/python/src/
+_Build/openssl-builds/*/vanilla/src/
 
 # Build results (keep structure, ignore individual reports if needed)
 # build_results/*.md can be committed for release tracking
+_Build/

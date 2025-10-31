@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
 from ..execute_command import execute_command
+from .provider_ordering import ProviderOrderer, get_provider_exclusions_for_version
 
 LOG = logging.getLogger(__name__)
 
@@ -31,19 +32,56 @@ class HybridBuildConfig:
     environment: Optional[Mapping[str, str]] = None
     configure_script: Optional[Path] = None
     run_tests: bool = True
+    openssl_version: str = "3.6.0"  # For provider ordering
+    enable_legacy: bool = False  # Enable legacy provider
 
 
 def run_hybrid_build(config: HybridBuildConfig) -> None:
-    """Execute the three-stage hybrid build.
+    """Execute the four-stage hybrid build.
 
-    1. Perl Configure (authoritative dependency ordering)
-    2. Python enhancement script (optional)
-    3. make / make test / make install_sw
+    1. Provider ordering analysis (OpenSSL 3.6+)
+    2. Perl Configure (authoritative dependency ordering)
+    3. Python enhancement script (optional)
+    4. make / make test / make install_sw
     """
 
+    _analyze_provider_ordering(config)
     _run_perl_configure(config)
     _run_python_enhancement(config)
     _run_make_targets(config)
+
+
+def _analyze_provider_ordering(config: HybridBuildConfig) -> None:
+    """Analyze and optimize provider build order for OpenSSL 3.6+."""
+    LOG.info("Analyzing provider dependencies for OpenSSL %s", config.openssl_version)
+    
+    # Get recommended exclusions
+    exclusions = get_provider_exclusions_for_version(config.openssl_version)
+    
+    # Create provider orderer
+    orderer = ProviderOrderer(
+        openssl_version=config.openssl_version,
+        enable_fips=config.enable_fips,
+        enable_legacy=config.enable_legacy,
+        excluded_algorithms=exclusions
+    )
+    
+    # Get build order
+    build_order = orderer.get_build_order()
+    LOG.info("Provider build order: %s", " -> ".join(build_order))
+    
+    # Validate provider availability
+    availability = orderer.validate_provider_availability(str(config.source_dir))
+    missing = [name for name, avail in availability.items() if not avail]
+    if missing:
+        LOG.warning("Missing provider sources: %s", ", ".join(missing))
+    
+    # Generate Makefile fragment for provider dependencies
+    makefile_fragment = orderer.get_make_dependencies()
+    fragment_path = config.source_dir / "providers.mk"
+    with open(fragment_path, "w") as f:
+        f.write(makefile_fragment)
+    LOG.info("Provider Makefile fragment written to %s", fragment_path)
 
 
 def _run_perl_configure(config: HybridBuildConfig) -> None:

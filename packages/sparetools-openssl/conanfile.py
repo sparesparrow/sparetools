@@ -92,11 +92,11 @@ class SpareToolsOpenSSLConan(ConanFile):
             f"https://github.com/openssl/openssl/archive/refs/tags/openssl-{self.version}.tar.gz",
             strip_root=True)
         
-        # Copy Python configure.py if using python build method
-        if self.options.build_method == "python":
-            configure_py = os.path.join(self.recipe_folder, "configure.py")
-            if os.path.exists(configure_py):
-                copy(self, "configure.py", self.recipe_folder, self.source_folder)
+        # Copy Python configure.py (will be used if build_method is python)
+        # Note: source() must not access self.options (Conan 2.x requirement)
+        configure_py = os.path.join(self.recipe_folder, "configure.py")
+        if os.path.exists(configure_py):
+            copy(self, "configure.py", self.recipe_folder, self.source_folder)
     
     def _get_target(self):
         """
