@@ -105,7 +105,6 @@ jobs:
     name: Preconfigure (${{ matrix.target }})
     needs: monitor-upstream
     if: needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true'
-    runs-on: ubuntu-22.04
     strategy:
       matrix:
         target: ${{ fromJson(needs.monitor-upstream.outputs.targets) }}
