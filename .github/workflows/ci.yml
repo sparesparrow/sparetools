@@ -187,9 +187,9 @@ jobs:
       - name: Test sparetools-openssl
         run: |
           cd packages/sparetools-openssl
-          # ✅ Conan 2.x: Use --requires instead of positional reference
+          # ✅ Conan 2.x: conan test uses positional reference
           conan test test_package \
-            --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
+            sparetools-openssl/${{ env.VERSION_OPENSSL }}
         shell: bash
       
       - name: Display Build Info
