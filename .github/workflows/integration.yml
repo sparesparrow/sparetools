@@ -26,16 +26,19 @@ jobs:
         run: |
           pip install conan==2.21.0
           conan --version
-      
-      - name: Configure Conan Remote
+
+      - name: Configure Conan Remote with Authentication
         run: |
           conan remote add sparesparrow-conan-openssl-conan \
             https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force
-      
+          # Authenticate with Cloudsmith for package access
+          conan remote login sparesparrow-conan-openssl-conan spare-sparrow \
+            -p "${{ secrets.CLOUDSMITH_API_KEY }}" || echo "Warning: Cloudsmith authentication failed, continuing with anonymous access"
+
       - name: Detect Conan Profile
         run: conan profile detect --force
-      
+
       - name: Create Test Consumer Project
         run: |
           mkdir -p test-consumer
@@ -119,16 +122,19 @@ jobs:
         run: |
           pip install conan==2.21.0
           conan --version
-      
-      - name: Configure Conan Remote
+
+      - name: Configure Conan Remote with Authentication
         run: |
           conan remote add sparesparrow-conan-openssl-conan \
             https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force
-      
+          # Authenticate with Cloudsmith for package access
+          conan remote login sparesparrow-conan-openssl-conan spare-sparrow \
+            -p "${{ secrets.CLOUDSMITH_API_KEY }}" || echo "Warning: Cloudsmith authentication failed, continuing with anonymous access"
+
       - name: Detect Conan Profile
         run: conan profile detect --force
-      
+
       - name: Install OpenSSL with FIPS
         run: |
           conan install --requires=sparetools-openssl/3.3.2 \
@@ -166,16 +172,19 @@ jobs:
         run: |
           pip install conan==2.21.0
           conan --version
-      
-      - name: Configure Conan Remote
+
+      - name: Configure Conan Remote with Authentication
         run: |
           conan remote add sparesparrow-conan-openssl-conan \
             https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force
-      
+          # Authenticate with Cloudsmith for package access
+          conan remote login sparesparrow-conan-openssl-conan spare-sparrow \
+            -p "${{ secrets.CLOUDSMITH_API_KEY }}" || echo "Warning: Cloudsmith authentication failed, continuing with anonymous access"
+
       - name: Detect Conan Profile
         run: conan profile detect --force
-      
+
       - name: Test Profile Combination
         run: |
           # Export tool packages first

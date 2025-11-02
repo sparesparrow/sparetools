@@ -2,6 +2,7 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 #include <openssl/crypto.h>
+#include <openssl/core_names.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -18,11 +19,12 @@
 int test_fips_mode(void) {
     printf("Testing FIPS mode...\n");
 
-    int fips_mode = FIPS_mode();
+    /* OpenSSL 3.x: Use EVP_default_properties_is_fips_enabled() instead of deprecated FIPS_mode() */
+    int fips_mode = EVP_default_properties_is_fips_enabled(NULL);
     if (fips_mode) {
         printf("✓ FIPS mode is ENABLED\n");
     } else {
-        printf("⚠ FIPS mode is DISABLED (build may not include FIPS)\n");
+        printf("⚠ FIPS mode is DISABLED (build may not include FIPS provider)\n");
     }
 
     return 0;  /* Non-fatal if FIPS not enabled */
