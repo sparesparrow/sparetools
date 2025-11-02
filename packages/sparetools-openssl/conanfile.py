@@ -1,3 +1,4 @@
+# Validation test marker - CI/CD pipeline validation 2025-11-02
 from conan import ConanFile
 from conan.tools.files import copy, get, save, load, rm, rmdir
 from conan.tools.gnu import Autotools, AutotoolsToolchain
