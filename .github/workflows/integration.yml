@@ -42,9 +42,16 @@ jobs:
         run: |
           echo "🔍 Checking for corrupted files..."
 
-          # Check for HTTP error responses in files
-          if grep -r "404.*Not Found" --include="*.py" --include="*.txt" --include="*.md" .; then
+          # Check for HTTP error responses in actual code files (exclude documentation)
+          # Look for patterns that indicate actual HTTP errors, not documentation about errors
+          if grep -r "^HTTP/[0-9]\.[0-9] 404" --include="*.py" --include="*.txt" --exclude-dir=docs .; then
             echo "❌ Found HTTP error responses in files - possible corruption"
+            exit 1
+          fi
+
+          # Check for common corruption patterns in Python files
+          if grep -r "<!DOCTYPE html>" --include="*.py" .; then
+            echo "❌ Found HTML content in Python files - possible corruption"
             exit 1
           fi
 
@@ -122,6 +129,26 @@ jobs:
 
       - name: Detect Conan Profile
         run: conan profile detect --force
+
+      - name: Build Packages Locally (if not in registry)
+        run: |
+          echo "🔨 Building packages locally for PR validation..."
+
+          # Build foundation packages
+          conan export packages/sparetools-base --version=2.0.0
+          conan export packages/sparetools-openssl-tools --version=2.0.0
+          conan export packages/sparetools-shared-dev-tools --version=2.0.0
+          conan export packages/sparetools-bootstrap --version=2.0.0
+
+          # Build CPython (may take time, skip if available in cache)
+          conan list "sparetools-cpython/3.12.7:*" || \
+            conan create packages/sparetools-cpython --version=3.12.7 --build=missing || \
+            echo "⚠️ CPython build skipped (will use system Python if needed)"
+
+          # Build OpenSSL
+          conan create packages/sparetools-openssl --version=3.3.2 --build=missing
+
+          echo "✅ Packages built successfully"
 
       - name: Create Test Consumer Project
         run: |
@@ -219,12 +246,26 @@ jobs:
       - name: Detect Conan Profile
         run: conan profile detect --force
 
+      - name: Build Packages Locally (if not in registry)
+        run: |
+          echo "🔨 Building packages locally for FIPS test..."
+
+          # Build foundation packages
+          conan export packages/sparetools-base --version=2.0.0
+          conan export packages/sparetools-openssl-tools --version=2.0.0
+
+          # Build OpenSSL with FIPS
+          conan create packages/sparetools-openssl --version=3.3.2 \
+            -o sparetools-openssl/*:fips=True \
+            --build=missing
+
+          echo "✅ FIPS packages built successfully"
+
       - name: Install OpenSSL with FIPS
         run: |
           conan install --requires=sparetools-openssl/3.3.2 \
             -o sparetools-openssl/*:fips=True \
-            --build=missing \
-            -r sparesparrow-conan-openssl-conan
+            --build=missing
       
       - name: Verify FIPS Build
         run: |

@@ -1,5 +1,9 @@
 name: Build and Test
 
+# ⚠️ DEPRECATED: This workflow is being replaced by ci.yml
+# This workflow will be removed in a future release.
+# Please refer to ci.yml for the current CI/CD pipeline.
+
 on:
   push:
     branches: [ main, develop ]
@@ -123,7 +127,13 @@ jobs:
       always() &&
       (needs.build-foundation.result == 'success' || needs.build-foundation.result == 'skipped') &&
       (needs.detect-changes.outputs.cpython_changed == 'true' || github.event_name == 'workflow_dispatch')
-    
+
+    env:
+      CONAN_VERSION: "2.21.0"
+      VERSION_BASE: "2.0.0"
+      VERSION_CPYTHON: "3.12.7"
+      VERSION_OPENSSL: "3.3.2"
+
     strategy:
       fail-fast: false
       matrix:
@@ -134,17 +144,17 @@ jobs:
             platform: macos-x86_64
           - os: macos-14
             platform: macos-arm64
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install Conan
-        run: pip install conan==${{ env.CONAN_VERSION }}
+        run: pip install conan==2.21.0
       
       - name: Configure Conan
         run: |
@@ -204,10 +214,16 @@ jobs:
       always() &&
       (needs.build-foundation.result == 'success' || needs.build-foundation.result == 'skipped') &&
       (needs.build-cpython.result == 'success' || needs.build-cpython.result == 'skipped') &&
-      (needs.detect-changes.outputs.openssl_changed == 'true' || 
+      (needs.detect-changes.outputs.openssl_changed == 'true' ||
        needs.detect-changes.outputs.profiles_changed == 'true' ||
        github.event_name == 'workflow_dispatch')
-    
+
+    env:
+      CONAN_VERSION: "2.21.0"
+      VERSION_BASE: "2.0.0"
+      VERSION_CPYTHON: "3.12.7"
+      VERSION_OPENSSL: "3.3.2"
+
     strategy:
       fail-fast: false
       matrix:
@@ -218,41 +234,41 @@ jobs:
             base_profile: base/linux-gcc11
             method_profile: build-methods/perl-configure
             feature_profile: ""
-          
+
           - name: Linux-GCC11-Perl-FIPS
             os: ubuntu-22.04
             base_profile: base/linux-gcc11
             method_profile: build-methods/perl-configure
             feature_profile: features/fips-enabled
-          
+
           - name: Linux-Clang18-Perl-Default
             os: ubuntu-22.04
             base_profile: base/linux-clang18
             method_profile: build-methods/perl-configure
             feature_profile: ""
-          
+
           - name: Windows-MSVC2022-Perl-Default
             os: windows-2022
             base_profile: base/windows-msvc2022
             method_profile: build-methods/perl-configure
             feature_profile: ""
-          
+
           - name: macOS-ARM64-Perl-Default
             os: macos-14
             base_profile: base/darwin-clang-arm64
             method_profile: build-methods/perl-configure
             feature_profile: ""
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install Conan
-        run: pip install conan==${{ env.CONAN_VERSION }}
+        run: pip install conan==2.21.0
       
       - name: Configure Conan
         run: |
