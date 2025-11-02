@@ -73,7 +73,9 @@ jobs:
       - name: Configure Conan
         run: |
           conan profile detect --force
-          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
           
       - name: Cache Conan artifacts
         uses: actions/cache@v4
@@ -141,7 +143,9 @@ jobs:
           if [ -d "$PACKAGE_PATH/test_package" ]; then
             echo "🧪 Running test_package for ${{ inputs.package_name }}"
             cd $PACKAGE_PATH
-            conan test test_package ${{ inputs.package_name }}/${{ inputs.package_version }}@
+            # ✅ Conan 2.x syntax
+            conan test test_package \
+              --requires=${{ inputs.package_name }}/${{ inputs.package_version }}
             echo "✅ Tests passed"
           else
             echo "⚠️ No test_package found, skipping tests"

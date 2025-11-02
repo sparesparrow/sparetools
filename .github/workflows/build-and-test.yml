@@ -1,0 +1,357 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests (faster CI)'
+        type: boolean
+        default: false
+
+# Cancel in-progress runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CONAN_VERSION: "2.21.0"
+  # Centralized version management
+  VERSION_BASE: "2.0.0"
+  VERSION_CPYTHON: "3.12.7"
+  VERSION_OPENSSL: "3.3.2"
+
+jobs:
+  # Change detection
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      base_changed: ${{ steps.filter.outputs.base }}
+      cpython_changed: ${{ steps.filter.outputs.cpython }}
+      openssl_changed: ${{ steps.filter.outputs.openssl }}
+      tools_changed: ${{ steps.filter.outputs.tools }}
+      profiles_changed: ${{ steps.filter.outputs.profiles }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            base:
+              - 'packages/sparetools-base/**'
+            cpython:
+              - 'packages/sparetools-cpython/**'
+            openssl:
+              - 'packages/sparetools-openssl/**'
+            tools:
+              - 'packages/sparetools-*-tools/**'
+            profiles:
+              - 'packages/sparetools-openssl-tools/profiles/**'
+
+  # Build foundation packages (parallel where possible)
+  build-foundation:
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.base_changed == 'true' ||
+      needs.detect-changes.outputs.tools_changed == 'true' ||
+      github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install Conan
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan --version
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+      
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: conan-foundation-${{ runner.os }}-${{ hashFiles('packages/sparetools-base/**', 'packages/sparetools-*-tools/**') }}
+          restore-keys: |
+            conan-foundation-${{ runner.os }}-
+      
+      # Build foundation packages (python_requires)
+      - name: Export sparetools-base
+        run: |
+          cd packages/sparetools-base
+          conan export . --version=${{ env.VERSION_BASE }}
+      
+      - name: Export sparetools-bootstrap
+        run: |
+          cd packages/sparetools-bootstrap
+          conan export . --version=${{ env.VERSION_BASE }}
+      
+      - name: Export sparetools-shared-dev-tools
+        run: |
+          cd packages/sparetools-shared-dev-tools
+          conan export . --version=${{ env.VERSION_BASE }}
+      
+      - name: Export sparetools-openssl-tools
+        run: |
+          cd packages/sparetools-openssl-tools
+          conan export . --version=${{ env.VERSION_BASE }}
+      
+      - name: Verify exports
+        run: |
+          conan list "sparetools-base/*"
+          conan list "sparetools-*-tools/*"
+
+  # Build CPython (tool_requires)
+  build-cpython:
+    runs-on: ${{ matrix.os }}
+    needs: [detect-changes, build-foundation]
+    if: |
+      always() &&
+      (needs.build-foundation.result == 'success' || needs.build-foundation.result == 'skipped') &&
+      (needs.detect-changes.outputs.cpython_changed == 'true' || github.event_name == 'workflow_dispatch')
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+          - os: macos-latest
+            platform: macos-x86_64
+          - os: macos-14
+            platform: macos-arm64
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install Conan
+        run: pip install conan==${{ env.CONAN_VERSION }}
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+      
+      - name: Install Build Dependencies
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y build-essential libssl-dev zlib1g-dev \
+              libbz2-dev libreadline-dev libsqlite3-dev libffi-dev
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            brew install openssl readline sqlite3 xz zlib
+          fi
+        shell: bash
+      
+      - name: Import foundation packages
+        run: |
+          # Download from remote or use from previous job
+          conan download "sparetools-base/${{ env.VERSION_BASE }}" \
+            -r sparesparrow-conan || \
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+      
+      - name: Build sparetools-cpython
+        run: |
+          cd packages/sparetools-cpython
+          conan create . \
+            --version=${{ env.VERSION_CPYTHON }} \
+            --build=missing \
+            -s build_type=Release
+        shell: bash
+      
+      - name: Verify Package
+        run: |
+          conan list "sparetools-cpython/*"
+          PKG_PATH=$(conan cache path "sparetools-cpython/${{ env.VERSION_CPYTHON }}:*" | head -1)
+          echo "Package location: $PKG_PATH"
+          
+          # Verify Python executable
+          if [[ -f "$PKG_PATH/bin/python3" ]]; then
+            echo "✅ Python found"
+            "$PKG_PATH/bin/python3" --version
+          else
+            echo "⚠️ Python not found in expected location"
+          fi
+        shell: bash
+
+  # Build OpenSSL (main library)
+  build-openssl:
+    name: OpenSSL-${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    needs: [detect-changes, build-foundation, build-cpython]
+    if: |
+      always() &&
+      (needs.build-foundation.result == 'success' || needs.build-foundation.result == 'skipped') &&
+      (needs.build-cpython.result == 'success' || needs.build-cpython.result == 'skipped') &&
+      (needs.detect-changes.outputs.openssl_changed == 'true' || 
+       needs.detect-changes.outputs.profiles_changed == 'true' ||
+       github.event_name == 'workflow_dispatch')
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Tier 1: Production-Critical
+          - name: Linux-GCC11-Perl-Default
+            os: ubuntu-22.04
+            base_profile: base/linux-gcc11
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+          
+          - name: Linux-GCC11-Perl-FIPS
+            os: ubuntu-22.04
+            base_profile: base/linux-gcc11
+            method_profile: build-methods/perl-configure
+            feature_profile: features/fips-enabled
+          
+          - name: Linux-Clang18-Perl-Default
+            os: ubuntu-22.04
+            base_profile: base/linux-clang18
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+          
+          - name: Windows-MSVC2022-Perl-Default
+            os: windows-2022
+            base_profile: base/windows-msvc2022
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+          
+          - name: macOS-ARM64-Perl-Default
+            os: macos-14
+            base_profile: base/darwin-clang-arm64
+            method_profile: build-methods/perl-configure
+            feature_profile: ""
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install Conan
+        run: pip install conan==${{ env.CONAN_VERSION }}
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+      
+      - name: Install Build Dependencies
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y build-essential perl
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            brew install perl
+          fi
+        shell: bash
+      
+      - name: Import dependencies
+        run: |
+          # Import foundation packages
+          conan download "sparetools-base/${{ env.VERSION_BASE }}" -r sparesparrow-conan || \
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          
+          conan download "sparetools-openssl-tools/${{ env.VERSION_BASE }}" -r sparesparrow-conan || \
+          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+          
+          # Import CPython if available
+          conan download "sparetools-cpython/${{ env.VERSION_CPYTHON }}" -r sparesparrow-conan || true
+        shell: bash
+      
+      - name: Build OpenSSL
+        run: |
+          cd packages/sparetools-openssl
+          
+          # Build profile arguments
+          PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
+          PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          
+          if [ -n "${{ matrix.feature_profile }}" ]; then
+            PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+          fi
+          
+          # ✅ Conan 2.x syntax
+          conan create . \
+            --version=${{ env.VERSION_OPENSSL }} \
+            $PROFILES \
+            --build=missing \
+            -s build_type=Release
+        shell: bash
+      
+      - name: Test OpenSSL
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          cd packages/sparetools-openssl
+          # ✅ Conan 2.x: No @ symbol
+          conan test test_package \
+            --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
+        shell: bash
+      
+      - name: Display Package Info
+        if: success() || failure()
+        run: |
+          conan list "sparetools-openssl/*"
+          PKG_PATH=$(conan cache path "sparetools-openssl/${{ env.VERSION_OPENSSL }}:*" | head -1)
+          echo "Package location: $PKG_PATH"
+        shell: bash
+      
+      - name: Upload Build Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.name }}
+          path: |
+            ~/.conan2/p/*/b/*/build.log
+            ~/.conan2/p/*/b/*/install.log
+          retention-days: 7
+
+  # Summary
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-latest
+    needs: [build-foundation, build-cpython, build-openssl]
+    if: always()
+    steps:
+      - name: Check Build Status
+        run: |
+          echo "## 🎯 Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Foundation | ${{ needs.build-foundation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CPython | ${{ needs.build-cpython.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| OpenSSL | ${{ needs.build-openssl.result }} |" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.build-openssl.result }}" == "success" ]]; then
+            echo "✅ All builds passed successfully!"
+            exit 0
+          else
+            echo "❌ Some builds failed. Check the logs above."
+            exit 1
+          fi

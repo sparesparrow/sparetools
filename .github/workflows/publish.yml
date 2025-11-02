@@ -42,7 +42,9 @@ jobs:
       - name: Configure Conan remotes
         run: |
           conan profile detect --force
-          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
 
       # Build packages in dependency order
       - name: Build sparetools-base
@@ -98,7 +100,9 @@ jobs:
       - name: Configure Conan
         run: |
           conan profile detect --force
-          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
 
       - name: Verify Cloudsmith credentials
         env:
@@ -160,7 +164,9 @@ jobs:
       - name: Configure Conan with GitHub Packages
         run: |
           conan profile detect --force
-          conan remote add --force github-packages https://maven.pkg.github.com/${{ github.repository_owner }}/sparetools
+          conan remote add github-packages \
+            https://maven.pkg.github.com/${{ github.repository_owner }}/sparetools \
+            --force || true
 
       - name: Restore built packages
         run: |
@@ -219,7 +225,9 @@ jobs:
             
             ### Installation
             ```bash
-            conan remote add sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+            conan remote add sparesparrow-conan \
+              https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+              --force || true
             conan install --requires=sparetools-openssl/${{ steps.version.outputs.version }}
             ```
             

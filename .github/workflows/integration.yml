@@ -114,7 +114,7 @@ jobs:
       - name: Configure Conan Remote with Authentication
         run: |
           conan remote add sparesparrow-conan-openssl-conan \
-            https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/ \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force
           # Authenticate with Cloudsmith for package access
           conan remote login sparesparrow-conan-openssl-conan sparesparrow \
@@ -210,7 +210,7 @@ jobs:
       - name: Configure Conan Remote with Authentication
         run: |
           conan remote add sparesparrow-conan-openssl-conan \
-            https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/ \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force
           # Authenticate with Cloudsmith for package access
           conan remote login sparesparrow-conan-openssl-conan sparesparrow \
@@ -260,7 +260,7 @@ jobs:
       - name: Configure Conan Remote with Authentication
         run: |
           conan remote add sparesparrow-conan-openssl-conan \
-            https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/ \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force
           # Authenticate with Cloudsmith for package access
           conan remote login sparesparrow-conan-openssl-conan sparesparrow \

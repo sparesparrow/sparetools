@@ -83,7 +83,7 @@ jobs:
       
       - name: Install Conan
         run: |
-          pip install conan==2.21.0
+          pip install conan==${{ env.CONAN_VERSION }}
           conan --version
       
       - name: Detect Conan Profile
@@ -92,15 +92,12 @@ jobs:
       - name: Build Package (With Profiles)
         if: matrix.base_profile != ''
         run: |
-          # Determine version based on package type
-          case "${{ matrix.package }}" in
-            sparetools-openssl)
-              VERSION="3.3.2"
-              ;;
-            *)
-              VERSION="2.0.0"
-              ;;
-          esac
+          # Use centralized version management
+          if [ "${{ matrix.package }}" == "sparetools-openssl" ]; then
+            VERSION="${{ env.VERSION_OPENSSL }}"
+          else
+            VERSION="${{ env.VERSION_BASE }}"
+          fi
 
           PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
           PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
@@ -113,15 +110,12 @@ jobs:
       - name: Build Package (Simple)
         if: matrix.base_profile == ''
         run: |
-          # Determine version based on package type
-          case "${{ matrix.package }}" in
-            sparetools-cpython)
-              VERSION="3.12.7"
-              ;;
-            *)
-              VERSION="2.0.0"
-              ;;
-          esac
+          # Use centralized version management
+          if [ "${{ matrix.package }}" == "sparetools-cpython" ]; then
+            VERSION="${{ env.VERSION_CPYTHON }}"
+          else
+            VERSION="${{ env.VERSION_BASE }}"
+          fi
 
           if [ "${{ matrix.package }}" == "sparetools-base" ] || \
              [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
@@ -136,7 +130,9 @@ jobs:
       - name: Test Package
         if: matrix.package == 'sparetools-openssl'
         run: |
-          conan test packages/sparetools-openssl/test_package sparetools-openssl/3.3.2@
+          # ✅ Conan 2.x syntax
+          conan test packages/sparetools-openssl/test_package \
+            --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
       
       - name: Upload Build Artifacts
         if: failure()

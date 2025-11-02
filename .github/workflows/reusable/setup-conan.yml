@@ -1,0 +1,74 @@
+name: Setup Conan (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      conan_version:
+        description: "Conan version to install"
+        required: false
+        type: string
+        default: "2.21.0"
+      python_version:
+        description: "Python version"
+        required: false
+        type: string
+        default: "3.12"
+      cache_enabled:
+        description: "Enable Conan cache"
+        required: false
+        type: boolean
+        default: true
+      cache_key_suffix:
+        description: "Additional cache key suffix"
+        required: false
+        type: string
+        default: ""
+    outputs:
+      conan_version:
+        description: "Installed Conan version"
+        value: ${{ steps.setup.outputs.conan_version }}
+      cache_path:
+        description: "Conan cache path"
+        value: ${{ steps.setup.outputs.cache_path }}
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      conan_version: ${{ steps.setup.outputs.conan_version }}
+      cache_path: ${{ steps.setup.outputs.cache_path }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+          cache: 'pip'
+      
+      - name: Install Conan
+        id: setup
+        run: |
+          pip install conan==${{ inputs.conan_version }}
+          CONAN_VER=$(conan --version | awk '{print $NF}')
+          echo "conan_version=$CONAN_VER" >> $GITHUB_OUTPUT
+          echo "cache_path=~/.conan2/p" >> $GITHUB_OUTPUT
+          echo "✅ Conan $CONAN_VER installed"
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+          echo "✅ Conan configured with Cloudsmith remote"
+      
+      - name: Cache Conan packages
+        if: inputs.cache_enabled
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: conan-${{ runner.os }}-${{ inputs.cache_key_suffix }}-${{ hashFiles('packages/**/conanfile.py') }}
+          restore-keys: |
+            conan-${{ runner.os }}-${{ inputs.cache_key_suffix }}-
+            conan-${{ runner.os }}-

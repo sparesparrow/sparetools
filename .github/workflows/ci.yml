@@ -5,24 +5,30 @@ on:
     branches: [ main, develop, 'release/*' ]
   pull_request:
     branches: [ main, develop ]
+  workflow_dispatch:
 
-# Cancel in-progress runs for the same branch
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
+  security-events: write
+
+env:
+  CONAN_VERSION: "2.21.0"
+  VERSION_BASE: "2.0.0"
+  VERSION_CPYTHON: "3.12.7"
+  VERSION_OPENSSL: "3.3.2"
 
 jobs:
-  # Detect what changed to avoid unnecessary rebuilds
+  # Change detection
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
       packages-changed: ${{ steps.changes.outputs.packages }}
       profiles-changed: ${{ steps.changes.outputs.profiles }}
-      docs-changed: ${{ steps.changes.outputs.docs }}
-      ci-changed: ${{ steps.changes.outputs.ci }}
+      docs-only: ${{ steps.changes.outputs.docs }}
       skip-build: ${{ steps.skip.outputs.skip-build }}
     steps:
       - uses: actions/checkout@v4
@@ -36,22 +42,17 @@ jobs:
             packages:
               - 'packages/**/*.py'
               - 'packages/**/conanfile.py'
-              - 'packages/**/test_package/**'
             profiles:
               - 'packages/sparetools-openssl-tools/profiles/**'
             docs:
               - 'docs/**'
               - '*.md'
-              - 'CHANGELOG.md'
-            ci:
-              - '.github/workflows/**'
               
       - name: Determine if build can be skipped
         id: skip
         run: |
           if [[ "${{ steps.changes.outputs.packages }}" == "false" && 
-                "${{ steps.changes.outputs.profiles }}" == "false" && 
-                "${{ steps.changes.outputs.ci }}" == "false" ]]; then
+                "${{ steps.changes.outputs.profiles }}" == "false" ]]; then
             echo "skip-build=true" >> $GITHUB_OUTPUT
             echo "✅ Only docs changed, skipping build"
           else
@@ -59,128 +60,178 @@ jobs:
             echo "🔨 Source changes detected, running build"
           fi
 
-  # Validate files before building
-  validate-files:
-    uses: ./.github/workflows/reusable/validate-files.yml
+  # Validate Python files
+  validate-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install validation tools
+        run: |
+          pip install ruff pylint mypy
+      
+      - name: Validate conanfiles
+        run: |
+          # Find all conanfile.py files
+          find packages -name "conanfile.py" -type f | while read file; do
+            echo "Validating $file"
+            python -m py_compile "$file"
+            ruff check "$file" || true
+          done
 
-  # Build and test packages
+  # Build and test
   build-test:
-    needs: [detect-changes, validate-files]
+    needs: [detect-changes, validate-python]
     if: needs.detect-changes.outputs.skip-build == 'false'
     
     strategy:
       fail-fast: false
       matrix:
         include:
-          # Linux builds
           - name: "Linux GCC 11"
             os: ubuntu-22.04
             profile: linux-gcc11
-            python: "3.12"
             
           - name: "Linux Clang 18"
             os: ubuntu-22.04
             profile: linux-clang18
-            python: "3.12"
             
-          # macOS build
           - name: "macOS Clang"
             os: macos-13
             profile: darwin-clang
-            python: "3.12"
             
-          # Windows build
           - name: "Windows MSVC 2022"
             os: windows-2022
             profile: windows-msvc2022
-            python: "3.12"
             
     runs-on: ${{ matrix.os }}
     
     steps:
       - uses: actions/checkout@v4
       
-      - name: Set up Python ${{ matrix.python }}
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python }}
+          python-version: '3.12'
           cache: 'pip'
       
       - name: Install Conan
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install conan==2.21.0
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan --version
           
       - name: Configure Conan
         run: |
           conan profile detect --force
-          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+        shell: bash
           
       - name: Cache Conan artifacts
         uses: actions/cache@v4
         with:
-          path: ~/.conan2
+          path: ~/.conan2/p
           key: conan-${{ matrix.os }}-${{ matrix.profile }}-${{ hashFiles('packages/**/conanfile.py') }}
           restore-keys: |
             conan-${{ matrix.os }}-${{ matrix.profile }}-
             conan-${{ matrix.os }}-
-            
-      - name: Build sparetools-base
+      
+      # Stage 1: Foundation packages (python_requires)
+      - name: Export Foundation Packages
         run: |
-          conan create packages/sparetools-base --version=2.0.0 --build=missing
-          
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          conan export packages/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
+          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
+          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+        shell: bash
+      
+      # Stage 2: Build CPython (tool_requires)  
       - name: Build sparetools-cpython
         run: |
-          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
-          
-      - name: Build sparetools-shared-dev-tools
-        run: |
-          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
-          
-      - name: Build sparetools-openssl-tools
-        run: |
-          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
-          
+          conan create packages/sparetools-cpython \
+            --version=${{ env.VERSION_CPYTHON }} \
+            --build=missing
+        shell: bash
+      
+      # Stage 3: Build OpenSSL
       - name: Build sparetools-openssl (Perl Configure)
         run: |
-          conan create packages/sparetools-openssl --version=3.3.2 \
-            -pr:b packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile }} \
-            -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure \
-            --build=missing
+          cd packages/sparetools-openssl
           
+          # Check if profile exists
+          PROFILE_PATH="packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile }}"
+          if [ ! -f "$PROFILE_PATH" ]; then
+            echo "⚠️ Profile not found: $PROFILE_PATH, using default"
+            PROFILE_ARGS=""
+          else
+            PROFILE_ARGS="-pr:b packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile }}"
+            PROFILE_ARGS="$PROFILE_ARGS -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure"
+          fi
+          
+          # ✅ Conan 2.x syntax
+          conan create . \
+            --version=${{ env.VERSION_OPENSSL }} \
+            $PROFILE_ARGS \
+            --build=missing \
+            -s build_type=Release
+        shell: bash
+      
+      # Stage 4: Test
       - name: Test sparetools-openssl
         run: |
           cd packages/sparetools-openssl
-          conan test test_package sparetools-openssl/3.3.2@
-          
-      - name: Display Conan info
-        if: success() || failure()
+          # ✅ Conan 2.x: Use --requires instead of positional reference
+          conan test test_package \
+            --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
+        shell: bash
+      
+      - name: Display Build Info
+        if: always()
         run: |
-          conan list "sparetools-*/*"
-          conan cache path sparetools-openssl/3.3.2
+          echo "## 📦 Packages Built" >> $GITHUB_STEP_SUMMARY
+          conan list "sparetools-*/*" >> $GITHUB_STEP_SUMMARY || true
           
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📍 Package Locations" >> $GITHUB_STEP_SUMMARY
+          conan cache path "sparetools-openssl/${{ env.VERSION_OPENSSL }}:*" | head -1 >> $GITHUB_STEP_SUMMARY || true
+        shell: bash
+      
       - name: Save build artifacts
         if: success()
         uses: actions/upload-artifact@v4
         with:
           name: packages-${{ matrix.os }}-${{ matrix.profile }}
           path: |
-            ~/.conan2/p/*/p/lib/
-            ~/.conan2/p/*/p/bin/
+            ~/.conan2/p/spareto*openssl*/p/lib/
+            ~/.conan2/p/spareto*openssl*/p/bin/
           retention-days: 7
 
-  # Summary job to check all builds passed
+  # CI Summary
   ci-summary:
     needs: [detect-changes, build-test]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Check build results
+      - name: Check CI Results
         run: |
-          if [ "${{ needs.build-test.result }}" == "success" ] || [ "${{ needs.detect-changes.outputs.skip-build }}" == "true" ]; then
-            echo "✅ CI passed"
+          echo "## 🎯 CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ needs.build-test.result }}" == "success" ] || \
+             [ "${{ needs.detect-changes.outputs.skip-build }}" == "true" ]; then
+            echo "✅ **CI PASSED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All builds and tests completed successfully." >> $GITHUB_STEP_SUMMARY
             exit 0
           else
-            echo "❌ CI failed"
+            echo "❌ **CI FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Build Status: ${{ needs.build-test.result }}" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi

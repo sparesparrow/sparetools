@@ -1,0 +1,107 @@
+name: Export Foundation Packages (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      version_base:
+        description: "Base package version"
+        required: false
+        type: string
+        default: "2.0.0"
+      remote_name:
+        description: "Remote name for downloading packages"
+        required: false
+        type: string
+        default: "sparesparrow-conan"
+      download_if_available:
+        description: "Try to download from remote first"
+        required: false
+        type: boolean
+        default: true
+    outputs:
+      base_exported:
+        description: "Whether sparetools-base was exported"
+        value: ${{ steps.export.outputs.base_exported }}
+      tools_exported:
+        description: "Whether tools packages were exported"
+        value: ${{ steps.export.outputs.tools_exported }}
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    outputs:
+      base_exported: ${{ steps.export.outputs.base_exported }}
+      tools_exported: ${{ steps.export.outputs.tools_exported }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Conan
+        run: |
+          pip install conan==2.21.0
+          conan --version
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add ${{ inputs.remote_name }} \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+      
+      - name: Export Foundation Packages
+        id: export
+        run: |
+          BASE_EXPORTED="false"
+          TOOLS_EXPORTED="false"
+          
+          # Try to download from remote first, fall back to export
+          if [ "${{ inputs.download_if_available }}" == "true" ]; then
+            echo "📥 Attempting to download foundation packages from remote..."
+            
+            # Try to download base
+            if conan download "sparetools-base/${{ inputs.version_base }}" -r ${{ inputs.remote_name }} 2>/dev/null; then
+              echo "✅ Downloaded sparetools-base from remote"
+              BASE_EXPORTED="true"
+            else
+              echo "📦 Exporting sparetools-base locally..."
+              cd packages/sparetools-base
+              conan export . --version=${{ inputs.version_base }}
+              BASE_EXPORTED="true"
+              cd ../..
+            fi
+            
+            # Export other foundation packages
+            cd packages/sparetools-bootstrap
+            conan export . --version=${{ inputs.version_base }} || true
+            
+            cd ../sparetools-shared-dev-tools
+            conan export . --version=${{ inputs.version_base }} || true
+            
+            cd ../sparetools-openssl-tools
+            conan export . --version=${{ inputs.version_base }} || true
+            TOOLS_EXPORTED="true"
+            cd ../..
+          else
+            # Direct export without trying remote
+            echo "📦 Exporting foundation packages locally..."
+            cd packages/sparetools-base
+            conan export . --version=${{ inputs.version_base }}
+            BASE_EXPORTED="true"
+            
+            cd ../sparetools-bootstrap
+            conan export . --version=${{ inputs.version_base }} || true
+            
+            cd ../sparetools-shared-dev-tools
+            conan export . --version=${{ inputs.version_base }} || true
+            
+            cd ../sparetools-openssl-tools
+            conan export . --version=${{ inputs.version_base }} || true
+            TOOLS_EXPORTED="true"
+            cd ../..
+          fi
+          
+          echo "base_exported=$BASE_EXPORTED" >> $GITHUB_OUTPUT
+          echo "tools_exported=$TOOLS_EXPORTED" >> $GITHUB_OUTPUT
+          
+          echo "✅ Foundation packages ready"
+          conan list "sparetools-base/*"
+          conan list "sparetools-*-tools/*"

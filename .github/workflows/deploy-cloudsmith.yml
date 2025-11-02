@@ -1,0 +1,374 @@
+name: Deploy to Cloudsmith
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_openssl:
+        description: 'OpenSSL version to deploy'
+        type: string
+        default: '3.3.2'
+      version_base:
+        description: 'Base package version'
+        type: string
+        default: '2.0.0'
+      version_cpython:
+        description: 'CPython version'
+        type: string
+        default: '3.12.7'
+      dry_run:
+        description: 'Dry run (validate without uploading)'
+        type: boolean
+        default: false
+      force_rebuild:
+        description: 'Force rebuild all packages'
+        type: boolean
+        default: false
+      packages:
+        description: 'Specific packages to deploy (comma-separated)'
+        type: string
+        default: 'all'
+  push:
+    branches: [main]
+    tags: ['v*']
+
+env:
+  CONAN_VERSION: "2.21.0"
+  CLOUDSMITH_REPO: "sparesparrow-conan/openssl-conan"
+  CLOUDSMITH_REMOTE: "sparesparrow-conan"
+  CLOUDSMITH_URL: "https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/"
+
+jobs:
+  # Validate prerequisites
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check Cloudsmith credentials
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          if [ -z "$CLOUDSMITH_API_KEY" ]; then
+            echo "❌ CLOUDSMITH_API_KEY secret not configured"
+            echo "Please set it in: Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "✅ Cloudsmith API key configured"
+      
+      - name: Validate versions
+        run: |
+          VERSION_BASE="${{ inputs.version_base || '2.0.0' }}"
+          VERSION_CPYTHON="${{ inputs.version_cpython || '3.12.7' }}"
+          VERSION_OPENSSL="${{ inputs.version_openssl || '3.3.2' }}"
+          
+          echo "📦 Package versions:"
+          echo "  Base: $VERSION_BASE"
+          echo "  CPython: $VERSION_CPYTHON"
+          echo "  OpenSSL: $VERSION_OPENSSL"
+          
+          # Validate version format
+          if ! [[ "$VERSION_BASE" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid base version format: $VERSION_BASE"
+            exit 1
+          fi
+          if ! [[ "$VERSION_CPYTHON" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid CPython version format: $VERSION_CPYTHON"
+            exit 1
+          fi
+          if ! [[ "$VERSION_OPENSSL" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "❌ Invalid OpenSSL version format: $VERSION_OPENSSL"
+            exit 1
+          fi
+          
+          echo "✅ All versions valid"
+
+  # Build packages
+  build-packages:
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: sparetools-base
+            version_var: version_base
+            export_only: true
+          - name: sparetools-bootstrap
+            version_var: version_base
+            export_only: true
+          - name: sparetools-shared-dev-tools
+            version_var: version_base
+            export_only: true
+          - name: sparetools-openssl-tools
+            version_var: version_base
+            export_only: true
+          - name: sparetools-cpython
+            version_var: version_cpython
+            export_only: false
+          - name: sparetools-openssl
+            version_var: version_openssl
+            export_only: false
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      
+      - name: Install Conan
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan --version
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add ${{ env.CLOUDSMITH_REMOTE }} \
+            ${{ env.CLOUDSMITH_URL }} \
+            --force || true
+      
+      - name: Cache Conan packages
+        if: ${{ !inputs.force_rebuild }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: conan-deploy-${{ matrix.package.name }}-${{ hashFiles(format('packages/{0}/**', matrix.package.name)) }}
+          restore-keys: |
+            conan-deploy-${{ matrix.package.name }}-
+      
+      # Export foundation packages
+      - name: Export foundation packages
+        if: matrix.package.export_only == true
+        run: |
+          PACKAGE_VERSION="${{ matrix.package.version_var == 'version_base' && inputs.version_base || (matrix.package.version_var == 'version_cpython' && inputs.version_cpython || inputs.version_openssl) }}"
+          
+          # Export foundation packages first
+          if [ "${{ matrix.package.name }}" == "sparetools-base" ]; then
+            conan export packages/sparetools-base --version=$PACKAGE_VERSION
+          elif [ "${{ matrix.package.name }}" == "sparetools-bootstrap" ]; then
+            conan export packages/sparetools-bootstrap --version=$PACKAGE_VERSION
+          elif [ "${{ matrix.package.name }}" == "sparetools-shared-dev-tools" ]; then
+            conan export packages/sparetools-shared-dev-tools --version=$PACKAGE_VERSION
+          elif [ "${{ matrix.package.name }}" == "sparetools-openssl-tools" ]; then
+            conan export packages/sparetools-openssl-tools --version=$PACKAGE_VERSION
+          fi
+          
+          echo "✅ Exported ${{ matrix.package.name }}/$PACKAGE_VERSION"
+      
+      # Build binary packages
+      - name: Build binary packages
+        if: matrix.package.export_only == false
+        run: |
+          PACKAGE_VERSION="${{ matrix.package.version_var == 'version_base' && inputs.version_base || (matrix.package.version_var == 'version_cpython' && inputs.version_cpython || inputs.version_openssl) }}"
+          
+          if [ "${{ matrix.package.name }}" == "sparetools-cpython" ]; then
+            conan create packages/sparetools-cpython \
+              --version=$PACKAGE_VERSION \
+              --build=missing \
+              -s build_type=Release
+          elif [ "${{ matrix.package.name }}" == "sparetools-openssl" ]; then
+            conan create packages/sparetools-openssl \
+              --version=$PACKAGE_VERSION \
+              -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
+              -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure \
+              --build=missing \
+              -s build_type=Release
+          fi
+          
+          echo "✅ Built ${{ matrix.package.name }}/$PACKAGE_VERSION"
+      
+      - name: Verify package
+        run: |
+          PACKAGE_VERSION="${{ matrix.package.version_var == 'version_base' && inputs.version_base || (matrix.package.version_var == 'version_cpython' && inputs.version_cpython || inputs.version_openssl) }}"
+          
+          conan list "${{ matrix.package.name }}/$PACKAGE_VERSION:*"
+          
+          # Get package path
+          PKG_PATH=$(conan cache path "${{ matrix.package.name }}/$PACKAGE_VERSION:*" | head -1)
+          if [ -n "$PKG_PATH" ]; then
+            echo "📦 Package location: $PKG_PATH"
+            du -sh "$PKG_PATH"
+          fi
+
+  # Security scan before deployment
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build-packages
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install security tools
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          # Trivy will be installed via action
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add ${{ env.CLOUDSMITH_REMOTE }} \
+            ${{ env.CLOUDSMITH_URL }} \
+            --force || true
+      
+      - name: Restore packages
+        run: |
+          # Rebuild to get packages in cache
+          conan export packages/sparetools-base --version=${{ inputs.version_base || '2.0.0' }}
+          conan create packages/sparetools-openssl \
+            --version=${{ inputs.version_openssl || '3.3.2' }} \
+            -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
+            --build=missing || true
+      
+      - name: Trivy Security Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: ~/.conan2/p/spareto*openssl*/p
+          exit-code: '1'  # Fail on CRITICAL vulnerabilities
+          severity: 'CRITICAL'
+          format: 'sarif'
+          output: 'trivy-deploy.sarif'
+      
+      - name: Upload security results
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-scan-results
+          path: trivy-deploy.sarif
+          retention-days: 90
+
+  # Deploy to Cloudsmith
+  deploy:
+    needs: [build-packages, security-scan]
+    runs-on: ubuntu-latest
+    if: |
+      always() &&
+      needs.security-scan.result == 'success' &&
+      github.event.inputs.dry_run != 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install Conan
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan --version
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add ${{ env.CLOUDSMITH_REMOTE }} \
+            ${{ env.CLOUDSMITH_URL }} \
+            --force || true
+      
+      - name: Authenticate with Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          # Authenticate Conan remote
+          conan remote login ${{ env.CLOUDSMITH_REMOTE }} sparesparrow \
+            --password "$CLOUDSMITH_API_KEY"
+          
+          echo "✅ Authenticated with Cloudsmith"
+      
+      - name: Restore packages
+        run: |
+          # Rebuild packages (from cache or rebuild)
+          if [ "${{ inputs.force_rebuild }}" == "true" ]; then
+            echo "🔄 Force rebuilding all packages..."
+            BUILD_FLAG="--build=all"
+          else
+            BUILD_FLAG="--build=missing"
+          fi
+          
+          # Foundation packages
+          conan export packages/sparetools-base --version=${{ inputs.version_base || '2.0.0' }}
+          conan export packages/sparetools-bootstrap --version=${{ inputs.version_base || '2.0.0' }}
+          conan export packages/sparetools-shared-dev-tools --version=${{ inputs.version_base || '2.0.0' }}
+          conan export packages/sparetools-openssl-tools --version=${{ inputs.version_base || '2.0.0' }}
+          
+          # Binary packages
+          conan create packages/sparetools-cpython \
+            --version=${{ inputs.version_cpython || '3.12.7' }} \
+            $BUILD_FLAG
+          
+          conan create packages/sparetools-openssl \
+            --version=${{ inputs.version_openssl || '3.3.2' }} \
+            -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
+            -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure \
+            $BUILD_FLAG
+      
+      - name: Upload packages to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          echo "📤 Uploading packages to Cloudsmith..."
+          
+          # Determine which packages to upload
+          if [ "${{ inputs.packages }}" == "all" ]; then
+            PACKAGE_FILTER="sparetools-*/*"
+          else
+            # Convert comma-separated list to filter
+            PACKAGE_FILTER=$(echo "${{ inputs.packages }}" | sed 's/,/\|/g')
+          fi
+          
+          # Upload with retry logic
+          RETRY_COUNT=3
+          RETRY_WAIT=5
+          
+          for i in $(seq 1 $RETRY_COUNT); do
+            if conan upload "$PACKAGE_FILTER" \
+              -r ${{ env.CLOUDSMITH_REMOTE }} \
+              --confirm \
+              --retry $RETRY_COUNT \
+              --retry-wait $RETRY_WAIT; then
+              echo "✅ Upload successful"
+              break
+            else
+              if [ $i -eq $RETRY_COUNT ]; then
+                echo "❌ Upload failed after $RETRY_COUNT attempts"
+                exit 1
+              fi
+              echo "⚠️ Upload failed, retrying in ${RETRY_WAIT}s... (attempt $i/$RETRY_COUNT)"
+              sleep $RETRY_WAIT
+            fi
+          done
+      
+      - name: Verify uploaded packages
+        run: |
+          echo "🔍 Verifying uploaded packages..."
+          
+          # List packages from remote
+          conan search "sparetools-*/*" -r ${{ env.CLOUDSMITH_REMOTE }} || true
+          
+          # Check specific versions
+          for PKG in "sparetools-base" "sparetools-openssl"; do
+            VERSION="${{ inputs.version_base || '2.0.0' }}"
+            if [ "$PKG" == "sparetools-openssl" ]; then
+              VERSION="${{ inputs.version_openssl || '3.3.2' }}"
+            fi
+            
+            if conan search "$PKG/$VERSION" -r ${{ env.CLOUDSMITH_REMOTE }} 2>/dev/null; then
+              echo "✅ $PKG/$VERSION found on remote"
+            else
+              echo "⚠️ $PKG/$VERSION not found on remote"
+            fi
+          done
+      
+      - name: Deployment summary
+        run: |
+          echo "## 🎯 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| sparetools-base | ${{ inputs.version_base || '2.0.0' }} | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| sparetools-cpython | ${{ inputs.version_cpython || '3.12.7' }} | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| sparetools-openssl | ${{ inputs.version_openssl || '3.3.2' }} | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **Cloudsmith Repository**: https://cloudsmith.io/~${{ env.CLOUDSMITH_REPO }}/" >> $GITHUB_STEP_SUMMARY

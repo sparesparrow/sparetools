@@ -19,6 +19,12 @@ permissions:
   contents: read
   issues: write  # For creating issues on failures
 
+env:
+  CONAN_VERSION: "2.21.0"
+  VERSION_BASE: "2.0.0"
+  VERSION_CPYTHON: "3.12.7"
+  VERSION_OPENSSL: "3.3.2"
+
 jobs:
   prepare-matrix:
     name: Prepare Build Matrix
@@ -75,23 +81,25 @@ jobs:
       - name: Install Conan
         run: |
           python -m pip install --upgrade pip
-          python -m pip install conan==2.21.0
+          python -m pip install conan==${{ env.CONAN_VERSION }}
           
       - name: Configure Conan
         run: |
           conan profile detect --force
-          conan remote add --force sparesparrow-conan https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
           
       - name: Build all packages
         run: |
           echo "🔨 Building all packages for ${{ matrix.name }}..."
           
           # Build in dependency order
-          conan create packages/sparetools-base --version=2.0.0 --build=missing
-          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
-          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
-          conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
-          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          conan create packages/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
+          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
+          conan export packages/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
+          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
           
       - name: Build OpenSSL with profile
         run: |
@@ -117,7 +125,9 @@ jobs:
           
           # Test each package
           cd packages/sparetools-openssl
-          conan test test_package sparetools-openssl/3.3.2@ || echo "⚠️ Tests failed"
+          # ✅ Conan 2.x syntax
+          conan test test_package \
+            --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }} || echo "⚠️ Tests failed"
         shell: bash
         continue-on-error: true
           
@@ -163,7 +173,7 @@ jobs:
       - name: Install Conan
         run: |
           python -m pip install --upgrade pip
-          python -m pip install conan==2.21.0
+          python -m pip install conan==${{ env.CONAN_VERSION }}
           
       - name: Build and benchmark
         run: |
@@ -174,9 +184,9 @@ jobs:
           # Time the build
           START_TIME=$(date +%s)
           
-          conan create packages/sparetools-base --version=2.0.0 --build=missing
-          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
-          conan create packages/sparetools-openssl --version=3.3.2 --build=missing
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+          conan create packages/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
           
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))
