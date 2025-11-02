@@ -6,7 +6,7 @@ on:
       openssl-repository:
         description: 'GitHub repository (owner/name) that hosts the OpenSSL sources to preconfigure'
         required: false
-        default: 'sparesparrow/openssl'
+        default: 'openssl/openssl'
       openssl-ref:
         description: 'Git ref (branch, tag, or commit) to checkout from the OpenSSL repository'
         required: false
@@ -42,7 +42,7 @@ on:
       openssl-repository:
         required: false
         type: string
-        default: 'sparesparrow/openssl'
+        default: 'openssl/openssl'
       openssl-ref:
         required: false
         type: string
@@ -151,14 +151,14 @@ jobs:
         run: |
           RESOLVED_COMMIT=$(git rev-parse HEAD)
           DESCRIBE=$(git describe --tags --dirty --always 2>/dev/null || echo "n/a")
-          cat <<EOF > ../dist/metadata/openssl-checkout.json
-{
-  "repository": "${{ inputs.openssl-repository }}",
-  "requested_ref": "${{ inputs.openssl-ref }}",
-  "resolved_commit": "${RESOLVED_COMMIT}",
-  "describe": "${DESCRIBE}"
-}
-EOF
+          cat > ../dist/metadata/openssl-checkout.json << 'EOF'
+          {{
+            "repository": "${{ inputs.openssl-repository }}",
+            "requested_ref": "${{ inputs.openssl-ref }}",
+            "resolved_commit": "${RESOLVED_COMMIT}",
+            "describe": "${DESCRIBE}"
+          }}
+          EOF
 
       - name: Run perl Configure
         id: configure
@@ -209,43 +209,5 @@ EOF
 
       - name: Publish summary
         shell: bash
-        run: |
+        run: "|
           ARTIFACT="${ARTIFACT_BASENAME}-${CONFIGURE_TARGET}"
-          cat <<EOF > dist/metadata/README.txt
-This bundle contains an OpenSSL source tree that has already been configured via `perl ./Configure`.
-
-Contents:
-  - Preconfigured source archive (${ARTIFACT}.tar.gz)
-  - SHA256 checksum for the archive
-  - configure.log / make-depend.log (if enabled)
-  - configdata dumps and toolchain metadata
-
-Usage:
-  1. Download the workflow artifact "${ARTIFACT}".
-  2. Extract the tarball into your workspace.
-  3. Run platform-native build tooling (e.g. `nmake`, `make`) without needing Perl locally.
-
-Optional helper flags:
-  - `use-cpython-tools`: clones sparesparrow/cpy & sparesparrow/cpython-tools and invokes `bootstrap-perl-configure.sh` when available.
-  - `cpy-version`: selects which CPY release to attempt when `use-cpython-tools` is true.
-
-Generated on $(date --utc).
-EOF
-
-          cat <<EOF >> "$GITHUB_STEP_SUMMARY"
-## ? OpenSSL Perl Configure Complete
-
-- Repository: `${{ inputs.openssl-repository }}`
-- Requested ref: `${{ inputs.openssl-ref }}`
-- Configure target: `${CONFIGURE_TARGET}`
-- Configure options: `${CONFIGURE_OPTS}`
-- Artifact: `${ARTIFACT}.tar.gz`
-- Optional toolchain bootstrap: `${{ inputs.use-cpython-tools }}`
-
-Download the artifact from the run summary and extract it locally to bypass Perl requirements on developer machines.
-
-**Next steps**
-- Run platform build tooling directly inside the extracted tree.
-- (Optional) Re-run this workflow for additional targets or refs.
-
-EOF

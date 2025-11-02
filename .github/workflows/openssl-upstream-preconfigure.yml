@@ -1,0 +1,158 @@
+name: Monitor OpenSSL Upstream (Preconfigure)
+
+on:
+  schedule:
+    # Run hourly to monitor upstream changes
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      force_run:
+        description: 'Force preconfiguration even if SHA unchanged'
+        required: false
+        type: boolean
+        default: false
+      targets:
+        description: 'Configure targets (comma-separated: linux-x86_64,darwin64-arm64-cc,VC-WIN64A)'
+        required: false
+        default: 'linux-x86_64,darwin64-arm64-cc,VC-WIN64A'
+      skip_commit:
+        description: 'Skip committing SHA changes (for testing)'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  monitor-upstream:
+    name: Monitor OpenSSL Upstream
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write  # Required to commit SHA updates
+      actions: read    # Required to trigger workflows
+    outputs:
+      sha_changed: ${{ steps.check-sha.outputs.sha_changed }}
+      current_sha: ${{ steps.check-sha.outputs.current_sha }}
+      targets: ${{ steps.parse-targets.outputs.targets }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check upstream SHA
+        id: check-sha
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read current stored SHA
+            const shaFile = '.github/upstream/openssl-master.sha';
+            let storedSha = '0000000000000000000000000000000000000000';
+            try {
+              storedSha = fs.readFileSync(shaFile, 'utf8').trim();
+            } catch (error) {
+              console.log('SHA file not found, using default:', storedSha);
+            }
+
+            // Get current upstream SHA
+            const response = await github.rest.repos.getBranch({
+              owner: 'openssl',
+              repo: 'openssl',
+              branch: 'master'
+            });
+
+            const currentSha = response.data.commit.sha;
+            const shaChanged = storedSha !== currentSha;
+
+            console.log('Stored SHA:', storedSha);
+            console.log('Current SHA:', currentSha);
+            console.log('SHA changed:', shaChanged);
+
+            // Write new SHA to file
+            const shaDir = path.dirname(shaFile);
+            if (!fs.existsSync(shaDir)) {
+              fs.mkdirSync(shaDir, { recursive: true });
+            }
+            fs.writeFileSync(shaFile, currentSha + '\n');
+
+            core.setOutput('sha_changed', shaChanged.toString());
+            core.setOutput('current_sha', currentSha);
+
+      - name: Parse targets
+        id: parse-targets
+        run: |
+          # Default targets for upstream monitoring
+          TARGETS="${{ github.event.inputs.targets || 'linux-x86_64,darwin64-arm64-cc,VC-WIN64A' }}"
+
+          # Convert to JSON array for matrix
+          TARGETS_JSON=$(echo "$TARGETS" | jq -R 'split(",") | map(. | sub("^\\s+|\\s+$"; "")) | .[] | select(. != "")')
+          echo "targets=$TARGETS_JSON" >> $GITHUB_OUTPUT
+
+          echo "Parsed targets: $TARGETS_JSON"
+
+      - name: Commit SHA update
+        if: steps.check-sha.outputs.sha_changed == 'true' && github.event.inputs.skip_commit != 'true'
+        uses: EndBug/add-and-commit@v9
+        with:
+          author_name: 'GitHub Actions'
+          author_email: 'actions@github.com'
+          message: 'chore: update OpenSSL master branch SHA ${{ steps.check-sha.outputs.current_sha }}'
+          add: '.github/upstream/openssl-master.sha'
+          push: true
+
+  preconfigure-matrix:
+    name: Preconfigure (${{ matrix.target }})
+    needs: monitor-upstream
+    if: needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true'
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target: ${{ fromJson(needs.monitor-upstream.outputs.targets) }}
+    uses: ./.github/workflows/openssl-perl-preconfigure.yml
+    with:
+      openssl-repository: 'openssl/openssl'
+      openssl-ref: 'master'
+      configure-target: ${{ matrix.target }}
+      config-options: 'no-shared'
+      make-depend: true
+      artifact-name: 'openssl-upstream-master'
+      use-cpython-tools: false
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  summary:
+    name: Summary
+    needs: [monitor-upstream, preconfigure-matrix]
+    if: always() && (needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true')
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Generate summary
+        run: |
+          echo "# OpenSSL Upstream Preconfiguration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.monitor-upstream.outputs.sha_changed }}" == "true" ]; then
+            echo "✅ **SHA Changed**: New upstream commit detected" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🔄 **Forced Run**: Preconfiguration triggered manually" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Details:**" >> $GITHUB_STEP_SUMMARY
+          echo "- Repository: openssl/openssl" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: master" >> $GITHUB_STEP_SUMMARY
+          echo "- Commit: ${{ needs.monitor-upstream.outputs.current_sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Targets: linux-x86_64, darwin64-arm64-cc, VC-WIN64A" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Generated Artifacts:**" >> $GITHUB_STEP_SUMMARY
+          echo "- openssl-upstream-master-linux-x86_64" >> $GITHUB_STEP_SUMMARY
+          echo "- openssl-upstream-master-darwin64-arm64-cc" >> $GITHUB_STEP_SUMMARY
+          echo "- openssl-upstream-master-VC-WIN64A" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Next Steps:**" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download preconfigured bundles from workflow artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "2. Use bundles for local builds without Perl installation" >> $GITHUB_STEP_SUMMARY
+          echo "3. Verify configdata.pm generation in logs" >> $GITHUB_STEP_SUMMARY
