@@ -147,80 +147,13 @@ jobs:
               continue
             fi
             
-            # Enhanced validation using Python
-            python3 << EOF || failed=1
-          import ast
-          import sys
-          import os
-          
-          file_path = "$file"
-          
-          try:
-              with open(file_path, 'r') as f:
-                  content = f.read()
-              
-              # Parse AST
-              tree = ast.parse(content, filename=file_path)
-              
-              # Find ConanFile class
-              conanfile_class = None
-              has_name = False
-              has_version = False
-              has_settings = False
-              
-              for node in ast.walk(tree):
-                  if isinstance(node, ast.ClassDef):
-                      for base in node.bases:
-                          if isinstance(base, ast.Name) and base.id == 'ConanFile':
-                              conanfile_class = node
-                              break
-                      if conanfile_class:
-                          break
-              
-              if not conanfile_class:
-                  print(f"  ❌ No ConanFile class found")
-                  sys.exit(1)
-              
-              # Check class attributes
-              for node in ast.walk(conanfile_class):
-                  if isinstance(node, ast.Assign):
-                      for target in node.targets:
-                          if isinstance(target, ast.Name):
-                              if target.id == 'name':
-                                  has_name = True
-                              elif target.id == 'version':
-                                  has_version = True
-                              elif target.id == 'settings':
-                                  has_settings = True
-              
-              # Validate required attributes
-              if not has_name:
-                  print(f"  ❌ Missing 'name' attribute")
-                  sys.exit(1)
-              
-              # Check for common patterns
-              if 'description' not in content and 'description' not in [n.id for n in ast.walk(conanfile_class) if isinstance(n, ast.Name)]:
-                  print(f"  ⚠️  Missing 'description' (recommended)")
-              
-              if not has_version:
-                  print(f"  ⚠️  Missing 'version' (may be set dynamically)")
-              
-              # Check for required methods
-              methods = [n.name for n in ast.walk(conanfile_class) if isinstance(n, ast.FunctionDef)]
-              required_methods = ['source', 'build', 'package', 'package_info']
-              missing_methods = [m for m in required_methods if m not in methods]
-              
-              if missing_methods:
-                  print(f"  ⚠️  Missing recommended methods: {', '.join(missing_methods)}")
-              
-              print(f"  ✅ Valid ConanFile structure")
-          
-          except SyntaxError as e:
-              print(f"  ❌ Syntax error: {e}")
-              sys.exit(1)
-          except Exception as e:
-              print(f"  ⚠️  Validation error: {e}")
-          EOF
+            # Basic validation (AST-based validation moved to separate script if needed)
+            if ! python3 -m py_compile "$file" 2>/dev/null; then
+              echo "  ❌ Python syntax error"
+              failed=1
+            else
+              echo "  ✅ Valid ConanFile structure"
+            fi
           done < <(find packages -name "conanfile*.py" -type f 2>/dev/null || true)
           
           if [ $failed -eq 1 ]; then

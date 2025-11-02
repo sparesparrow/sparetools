@@ -71,43 +71,9 @@ jobs:
             exit 0
           fi
           
-          # Count CRITICAL vulnerabilities from JSON
-          CRITICAL_COUNT=$(python3 << 'EOF'
-          import json
-          import sys
-          
-          try:
-              with open('trivy-results.json', 'r') as f:
-                  data = json.load(f)
-                  
-              critical_count = 0
-              critical_vulns = []
-              
-              for result in data.get('Results', []):
-                  if 'Vulnerabilities' in result:
-                      for vuln in result['Vulnerabilities']:
-                          if vuln.get('Severity') == 'CRITICAL':
-                              critical_count += 1
-                              critical_vulns.append({
-                                  'pkg': vuln.get('PkgName', 'unknown'),
-                                  'id': vuln.get('VulnerabilityID', 'unknown'),
-                                  'title': vuln.get('Title', 'No title')
-                              })
-              
-              print(f"{critical_count}")
-              
-              if critical_count > 0:
-                  print("\nCRITICAL Vulnerabilities Found:", file=sys.stderr)
-                  for v in critical_vulns[:10]:  # Show first 10
-                      print(f"  - {v['pkg']}: {v['id']} - {v['title']}", file=sys.stderr)
-                  
-          except Exception as e:
-              print(f"Error parsing Trivy results: {e}", file=sys.stderr)
-              print("0")
-          EOF
-          )
-          
-          CRITICAL_COUNT=$(echo "$CRITICAL_COUNT" | tail -1)
+          # Count CRITICAL vulnerabilities from JSON using script
+          CRITICAL_COUNT=$(python3 scripts/check-trivy-critical.py 2>&1 | grep -E '^[0-9]+$' | tail -1 || echo "0")
+          CRITICAL_COUNT=${CRITICAL_COUNT:-0}
           
           echo "📊 CRITICAL vulnerabilities found: $CRITICAL_COUNT"
           
