@@ -81,8 +81,9 @@ class CPythonToolConan(ConanFile):
         
         autotools.make(args=[f"-j{nproc}"])
         
-        # Install directly to package_folder (no DESTDIR needed)
-        autotools.install()
+        # Install directly to package_folder (no DESTDIR since we used --prefix)
+        # Run make install without DESTDIR to avoid double-prefixing
+        self.run("make install")
         
         self.output.info(f"✅ CPython built directly to: {self.package_folder}")
     
