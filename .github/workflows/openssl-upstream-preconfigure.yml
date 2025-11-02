@@ -86,7 +86,7 @@ jobs:
           TARGETS="${{ github.event.inputs.targets || 'linux-x86_64,darwin64-arm64-cc,VC-WIN64A' }}"
 
           # Convert to JSON array for matrix
-          TARGETS_JSON=$(echo "$TARGETS" | jq -R 'split(",") | map(. | sub("^\\s+|\\s+$"; "")) | .[] | select(. != "")')
+          TARGETS_JSON=$(echo "$TARGETS" | jq -R 'split(",") | map(. | sub("^\\s+|\\s+$"; "")) | map(select(. != ""))')
           echo "targets=$TARGETS_JSON" >> $GITHUB_OUTPUT
 
           echo "Parsed targets: $TARGETS_JSON"
