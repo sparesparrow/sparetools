@@ -1,0 +1,251 @@
+name: Preconfigure OpenSSL (Perl)
+
+on:
+  workflow_dispatch:
+    inputs:
+      openssl-repository:
+        description: 'GitHub repository (owner/name) that hosts the OpenSSL sources to preconfigure'
+        required: false
+        default: 'sparesparrow/openssl'
+      openssl-ref:
+        description: 'Git ref (branch, tag, or commit) to checkout from the OpenSSL repository'
+        required: false
+        default: 'master'
+      configure-target:
+        description: 'OpenSSL Configure target (e.g. linux-x86_64, darwin64-arm64-cc, VC-WIN64A)'
+        required: true
+        default: 'linux-x86_64'
+      config-options:
+        description: 'Additional arguments passed to `perl ./Configure` (space separated)'
+        required: false
+        default: ''
+      make-depend:
+        description: 'Run `make depend` after Configure to prime dependency files'
+        required: false
+        type: boolean
+        default: true
+      artifact-name:
+        description: 'Logical name for the generated artifact bundle'
+        required: false
+        default: 'openssl-preconfigured'
+      use-cpython-tools:
+        description: 'Bootstrap optional CPython/Perl helpers from sparesparrow/cpy and sparesparrow/cpython-tools'
+        required: false
+        type: boolean
+        default: false
+      cpy-version:
+        description: 'Version identifier used when attempting to download sparesparrow/cpy release assets'
+        required: false
+        default: '3.12.7'
+  workflow_call:
+    inputs:
+      openssl-repository:
+        required: false
+        type: string
+        default: 'sparesparrow/openssl'
+      openssl-ref:
+        required: false
+        type: string
+        default: 'master'
+      configure-target:
+        required: true
+        type: string
+        default: 'linux-x86_64'
+      config-options:
+        required: false
+        type: string
+      make-depend:
+        required: false
+        type: boolean
+        default: true
+      artifact-name:
+        required: false
+        type: string
+        default: 'openssl-preconfigured'
+      use-cpython-tools:
+        required: false
+        type: boolean
+        default: false
+      cpy-version:
+        required: false
+        type: string
+        default: '3.12.7'
+    secrets:
+      gh_token:
+        required: false
+
+jobs:
+  perl-configure:
+    name: Preconfigure (${{ inputs.configure-target }})
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      actions: read
+    env:
+      OPENSSL_SRC_DIR: openssl-src
+      ARTIFACT_BASENAME: ${{ inputs.artifact-name }}
+      CONFIGURE_TARGET: ${{ inputs.configure-target }}
+      CONFIGURE_OPTS: ${{ inputs.config-options }}
+    steps:
+      - name: Checkout orchestrator repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prepare workspace directories
+        run: |
+          mkdir -p dist/logs
+          mkdir -p dist/metadata
+
+      - name: Checkout OpenSSL sources
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ inputs.openssl-repository }}
+          ref: ${{ inputs.openssl-ref }}
+          path: ${{ env.OPENSSL_SRC_DIR }}
+          fetch-depth: 0
+          token: ${{ secrets.gh_token || github.token }}
+
+      - name: Optional toolchain bootstrap (cpy & cpython-tools)
+        if: inputs.use-cpython-tools
+        env:
+          CPY_VERSION: ${{ inputs.cpy-version }}
+          GH_TOKEN: ${{ secrets.gh_token || github.token }}
+        run: |
+          set -u
+          echo "Bootstrapping optional CPython/Perl helpers via sparesparrow/cpy (${CPY_VERSION}) and sparesparrow/cpython-tools"
+          mkdir -p toolchain
+          if command -v gh >/dev/null 2>&1; then
+            echo "Attempting to download CPY release artifacts"
+            gh release download --repo sparesparrow/cpy --dir toolchain --pattern "cpy-${CPY_VERSION}-*.tar.gz" || echo "::warning::Unable to locate CPY release for ${CPY_VERSION}; continuing with system toolchain"
+            ARCHIVE=$(ls toolchain/cpy-${CPY_VERSION}-*.tar.gz 2>/dev/null | head -n1)
+            if [ -n "$ARCHIVE" ]; then
+              mkdir -p toolchain/cpy
+              tar -xzf "$ARCHIVE" -C toolchain/cpy --strip-components=1 || echo "::warning::Failed to extract ${ARCHIVE}; continuing"
+            fi
+          else
+            echo "::warning::GitHub CLI not available; skipping CPY release download"
+          fi
+
+          git clone --depth 1 https://github.com/sparesparrow/cpy.git toolchain/cpy-src || echo "::warning::Unable to clone sparesparrow/cpy (optional)"
+          git clone --depth 1 https://github.com/sparesparrow/cpython-tools.git toolchain/cpython-tools || echo "::warning::Unable to clone sparesparrow/cpython-tools (optional)"
+
+          if [ -x toolchain/cpython-tools/scripts/bootstrap-perl-configure.sh ]; then
+            OPENSSL_DIR="$(pwd)/${OPENSSL_SRC_DIR}"
+            CPY_ROOT="$(pwd)/toolchain/cpy"
+            echo "Invoking optional bootstrap script with --openssl ${OPENSSL_DIR} --cpy-root ${CPY_ROOT}"
+            toolchain/cpython-tools/scripts/bootstrap-perl-configure.sh \
+              --openssl "${OPENSSL_DIR}" \
+              --cpy-root "${CPY_ROOT}" || echo "::warning::bootstrap-perl-configure.sh exited with a non-zero status; continuing"
+          else
+            echo "Optional bootstrap script not found; skipping helper execution"
+          fi
+
+      - name: Capture toolchain details
+        run: |
+          perl --version | tee dist/metadata/perl-version.txt
+          perl -V | tee dist/metadata/perl-config.txt >/dev/null
+
+      - name: Record OpenSSL checkout metadata
+        working-directory: ${{ env.OPENSSL_SRC_DIR }}
+        run: |
+          RESOLVED_COMMIT=$(git rev-parse HEAD)
+          DESCRIBE=$(git describe --tags --dirty --always 2>/dev/null || echo "n/a")
+          cat <<EOF > ../dist/metadata/openssl-checkout.json
+{
+  "repository": "${{ inputs.openssl-repository }}",
+  "requested_ref": "${{ inputs.openssl-ref }}",
+  "resolved_commit": "${RESOLVED_COMMIT}",
+  "describe": "${DESCRIBE}"
+}
+EOF
+
+      - name: Run perl Configure
+        id: configure
+        working-directory: ${{ env.OPENSSL_SRC_DIR }}
+        shell: bash
+        env:
+          CONFIGURE_TARGET: ${{ env.CONFIGURE_TARGET }}
+          CONFIGURE_OPTS: ${{ env.CONFIGURE_OPTS }}
+        run: |
+          set -euxo pipefail
+          printf '%s\n' "perl ./Configure ${CONFIGURE_TARGET} ${CONFIGURE_OPTS}" > ../dist/metadata/configure-command.txt
+          if [ -n "${CONFIGURE_OPTS}" ]; then
+            perl ./Configure "${CONFIGURE_TARGET}" ${CONFIGURE_OPTS} 2>&1 | tee ../dist/logs/configure.log
+          else
+            perl ./Configure "${CONFIGURE_TARGET}" 2>&1 | tee ../dist/logs/configure.log
+          fi
+          ./configdata.pm --dump > ../dist/metadata/configdata-dump.txt
+
+      - name: Run make depend (optional)
+        if: inputs.make-depend
+        working-directory: ${{ env.OPENSSL_SRC_DIR }}
+        shell: bash
+        run: |
+          set -euxo pipefail
+          make depend 2>&1 | tee ../dist/logs/make-depend.log
+
+      - name: Package preconfigured source tree
+        shell: bash
+        run: |
+          set -euxo pipefail
+          ARTIFACT="${ARTIFACT_BASENAME}-${CONFIGURE_TARGET}"
+          pushd "${OPENSSL_SRC_DIR}" >/dev/null
+          ./configdata.pm --dump > ../dist/metadata/configdata-dump-final.txt
+          popd >/dev/null
+          tar --exclude='.git' -czf "dist/${ARTIFACT}.tar.gz" -C "${OPENSSL_SRC_DIR}" .
+          sha256sum "dist/${ARTIFACT}.tar.gz" > "dist/${ARTIFACT}.sha256"
+
+      - name: Upload preconfigured bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}-${{ inputs.configure-target }}
+          path: |
+            dist/${{ env.ARTIFACT_BASENAME }}-${{ env.CONFIGURE_TARGET }}.tar.gz
+            dist/${{ env.ARTIFACT_BASENAME }}-${{ env.CONFIGURE_TARGET }}.sha256
+            dist/logs
+            dist/metadata
+          retention-days: 14
+
+      - name: Publish summary
+        shell: bash
+        run: |
+          ARTIFACT="${ARTIFACT_BASENAME}-${CONFIGURE_TARGET}"
+          cat <<EOF > dist/metadata/README.txt
+This bundle contains an OpenSSL source tree that has already been configured via `perl ./Configure`.
+
+Contents:
+  - Preconfigured source archive (${ARTIFACT}.tar.gz)
+  - SHA256 checksum for the archive
+  - configure.log / make-depend.log (if enabled)
+  - configdata dumps and toolchain metadata
+
+Usage:
+  1. Download the workflow artifact "${ARTIFACT}".
+  2. Extract the tarball into your workspace.
+  3. Run platform-native build tooling (e.g. `nmake`, `make`) without needing Perl locally.
+
+Optional helper flags:
+  - `use-cpython-tools`: clones sparesparrow/cpy & sparesparrow/cpython-tools and invokes `bootstrap-perl-configure.sh` when available.
+  - `cpy-version`: selects which CPY release to attempt when `use-cpython-tools` is true.
+
+Generated on $(date --utc).
+EOF
+
+          cat <<EOF >> "$GITHUB_STEP_SUMMARY"
+## ? OpenSSL Perl Configure Complete
+
+- Repository: `${{ inputs.openssl-repository }}`
+- Requested ref: `${{ inputs.openssl-ref }}`
+- Configure target: `${CONFIGURE_TARGET}`
+- Configure options: `${CONFIGURE_OPTS}`
+- Artifact: `${ARTIFACT}.tar.gz`
+- Optional toolchain bootstrap: `${{ inputs.use-cpython-tools }}`
+
+Download the artifact from the run summary and extract it locally to bypass Perl requirements on developer machines.
+
+**Next steps**
+- Run platform build tooling directly inside the extracted tree.
+- (Optional) Re-run this workflow for additional targets or refs.
+
+EOF
