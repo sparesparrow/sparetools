@@ -59,9 +59,14 @@ jobs:
             echo "🔨 Source changes detected, running build"
           fi
 
+  # Validate files before building
+  validate-files:
+    runs-on: ubuntu-latest
+    uses: ./.github/workflows/reusable/validate-files.yml
+
   # Build and test packages
   build-test:
-    needs: detect-changes
+    needs: [detect-changes, validate-files]
     if: needs.detect-changes.outputs.skip-build == 'false'
     
     strategy:

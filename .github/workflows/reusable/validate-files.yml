@@ -1,0 +1,142 @@
+name: Validate Files
+
+on:
+  workflow_call:
+    inputs:
+      check_python:
+        description: 'Validate Python syntax'
+        required: false
+        type: boolean
+        default: true
+      check_yaml:
+        description: 'Validate YAML syntax'
+        required: false
+        type: boolean
+        default: true
+      check_corruption:
+        description: 'Check for corrupted files'
+        required: false
+        type: boolean
+        default: true
+      check_conanfile:
+        description: 'Validate Conanfile structure'
+        required: false
+        type: boolean
+        default: true
+      python_version:
+        description: 'Python version to use'
+        required: false
+        type: string
+        default: '3.12'
+
+jobs:
+  validate:
+    name: File Integrity & Syntax Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version }}
+
+      - name: Validate Python Syntax
+        if: inputs.check_python
+        run: |
+          echo "🔍 Validating Python syntax across all .py files..."
+          failed=0
+          while IFS= read -r file; do
+            if ! python3 -m py_compile "$file" 2>&1; then
+              echo "❌ Syntax error in $file"
+              failed=1
+            fi
+          done < <(find . -name "*.py" -type f)
+          if [ $failed -eq 1 ]; then
+            echo "❌ Python syntax validation failed"
+            exit 1
+          fi
+          echo "✅ All Python files passed syntax validation"
+
+      - name: Check for Corrupted Files
+        if: inputs.check_corruption
+        run: |
+          echo "🔍 Checking for corrupted files..."
+
+          # Check for HTTP error responses in files
+          corrupted=$(grep -r "404.*Not Found" --include="*.py" --include="*.txt" --include="*.md" . || true)
+          if [ -n "$corrupted" ]; then
+            echo "❌ Found HTTP error responses in files - possible corruption:"
+            echo "$corrupted"
+            exit 1
+          fi
+
+          # Check for other common error patterns
+          error_patterns=("500.*Internal Server Error" "403.*Forbidden" "401.*Unauthorized")
+          for pattern in "${error_patterns[@]}"; do
+            found=$(grep -r "$pattern" --include="*.py" --include="*.txt" --include="*.md" . || true)
+            if [ -n "$found" ]; then
+              echo "❌ Found HTTP error pattern '$pattern' in files:"
+              echo "$found"
+              exit 1
+            fi
+          done
+
+          # Check for empty Python files (except __init__.py)
+          empty_files=$(find . -name "*.py" -type f -not -name "__init__.py" -exec sh -c 'if [ ! -s "$1" ]; then echo "$1"; fi' _ {} \;)
+          if [ -n "$empty_files" ]; then
+            echo "❌ Found empty Python files:"
+            echo "$empty_files"
+            exit 1
+          fi
+
+          echo "✅ No corrupted files detected"
+
+      - name: Validate YAML Syntax
+        if: inputs.check_yaml
+        run: |
+          echo "🔍 Validating YAML syntax in workflows..."
+          failed=0
+          while IFS= read -r file; do
+            if ! python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>&1; then
+              echo "❌ YAML syntax error in $file"
+              failed=1
+            fi
+          done < <(find .github/workflows -name "*.yml" -o -name "*.yaml" 2>/dev/null || true)
+          if [ $failed -eq 1 ]; then
+            echo "❌ YAML validation failed"
+            exit 1
+          fi
+          echo "✅ All YAML files passed syntax validation"
+
+      - name: Validate Conanfile Structure
+        if: inputs.check_conanfile
+        run: |
+          echo "🔍 Validating Conanfile structure..."
+          failed=0
+          while IFS= read -r file; do
+            if ! grep -q "class.*ConanFile" "$file"; then
+              echo "❌ $file missing ConanFile class"
+              failed=1
+            elif ! grep -q "name.*=" "$file"; then
+              echo "❌ $file missing name attribute"
+              failed=1
+            fi
+          done < <(find packages -name "conanfile*.py" -type f 2>/dev/null || true)
+          if [ $failed -eq 1 ]; then
+            echo "❌ Conanfile structure validation failed"
+            exit 1
+          fi
+          echo "✅ All Conanfiles passed structure validation"
+
+      - name: Validation Summary
+        if: always()
+        run: |
+          echo "## 📋 Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "### ✅ All validation checks passed!" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "### ❌ Validation checks failed" >> $GITHUB_STEP_SUMMARY
+          fi
