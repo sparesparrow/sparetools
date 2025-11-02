@@ -26,15 +26,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
-      - name: Run Trivy filesystem scan
+      - name: Run Trivy filesystem scan (JSON for parsing)
+        id: trivy-json
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'trivy-results.json'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          exit-code: '0'  # Don't fail yet, we'll check manually
+          
+      - name: Run Trivy filesystem scan (SARIF for GitHub Security)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM'
-          exit-code: '0'  # Don't fail the build
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          exit-code: '0'
           
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3
@@ -49,21 +60,78 @@ jobs:
           scan-ref: '.'
           format: 'table'
           severity: 'CRITICAL,HIGH'
+          exit-code: '0'
           
-      - name: Check for CRITICAL vulnerabilities
+      - name: Analyze and block on CRITICAL vulnerabilities
         run: |
-          echo "🔍 Checking for CRITICAL vulnerabilities..."
-          CRITICAL_COUNT=$(grep -c "CRITICAL" trivy-results.sarif || echo "0")
+          echo "🔍 Analyzing Trivy results for CRITICAL vulnerabilities..."
+          
+          if [ ! -f "trivy-results.json" ]; then
+            echo "⚠️  Trivy JSON results not found"
+            exit 0
+          fi
+          
+          # Count CRITICAL vulnerabilities from JSON
+          CRITICAL_COUNT=$(python3 << 'EOF'
+          import json
+          import sys
+          
+          try:
+              with open('trivy-results.json', 'r') as f:
+                  data = json.load(f)
+                  
+              critical_count = 0
+              critical_vulns = []
+              
+              for result in data.get('Results', []):
+                  if 'Vulnerabilities' in result:
+                      for vuln in result['Vulnerabilities']:
+                          if vuln.get('Severity') == 'CRITICAL':
+                              critical_count += 1
+                              critical_vulns.append({
+                                  'pkg': vuln.get('PkgName', 'unknown'),
+                                  'id': vuln.get('VulnerabilityID', 'unknown'),
+                                  'title': vuln.get('Title', 'No title')
+                              })
+              
+              print(f"{critical_count}")
+              
+              if critical_count > 0:
+                  print("\nCRITICAL Vulnerabilities Found:", file=sys.stderr)
+                  for v in critical_vulns[:10]:  # Show first 10
+                      print(f"  - {v['pkg']}: {v['id']} - {v['title']}", file=sys.stderr)
+                  
+          except Exception as e:
+              print(f"Error parsing Trivy results: {e}", file=sys.stderr)
+              print("0")
+          EOF
+          )
+          
+          CRITICAL_COUNT=$(echo "$CRITICAL_COUNT" | tail -1)
+          
+          echo "📊 CRITICAL vulnerabilities found: $CRITICAL_COUNT"
           
           if [ "$CRITICAL_COUNT" -gt "0" ]; then
             echo "❌ Found $CRITICAL_COUNT CRITICAL vulnerabilities"
-            echo "::warning::CRITICAL vulnerabilities detected - review required"
-            # Don't fail on PR, just warn
-            if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "::error::CRITICAL vulnerabilities detected - blocking build"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ❌ Security Gate: CRITICAL Vulnerabilities Blocking" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Found **$CRITICAL_COUNT CRITICAL** vulnerabilities that must be resolved before proceeding." >> $GITHUB_STEP_SUMMARY
+            echo "Please review the Trivy scan results above and address all CRITICAL findings." >> $GITHUB_STEP_SUMMARY
+            
+            # Block on main/develop branches, warn on PRs
+            if [ "${{ github.event_name }}" == "pull_request" ]; then
+              echo "::warning::CRITICAL vulnerabilities will block merge"
+              exit 1
+            else
+              echo "::error::CRITICAL vulnerabilities blocking deployment"
               exit 1
             fi
           else
             echo "✅ No CRITICAL vulnerabilities found"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ✅ Security Gate: No CRITICAL Vulnerabilities" >> $GITHUB_STEP_SUMMARY
           fi
 
   sbom-generation:
@@ -90,6 +158,27 @@ jobs:
           syft packages . -o spdx-json > sbom-spdx.json
           echo "✅ SPDX SBOM generated"
           
+      - name: Validate SBOM files
+        run: |
+          echo "🔍 Validating generated SBOM files..."
+          
+          if [ ! -f "sbom-cyclonedx.json" ] || [ ! -f "sbom-spdx.json" ]; then
+            echo "❌ SBOM files not generated"
+            exit 1
+          fi
+          
+          # Check if files are valid JSON
+          python3 -c "import json; json.load(open('sbom-cyclonedx.json'))" || exit 1
+          python3 -c "import json; json.load(open('sbom-spdx.json'))" || exit 1
+          
+          # Get package counts
+          CYCLONEDX_COUNT=$(python3 -c "import json; data=json.load(open('sbom-cyclonedx.json')); print(len(data.get('components', [])))" 2>/dev/null || echo "0")
+          SPDX_COUNT=$(python3 -c "import json; data=json.load(open('sbom-spdx.json')); print(len(data.get('packages', [])))" 2>/dev/null || echo "0")
+          
+          echo "📦 CycloneDX SBOM: $CYCLONEDX_COUNT components"
+          echo "📦 SPDX SBOM: $SPDX_COUNT packages"
+          echo "✅ SBOM files validated"
+          
       - name: Upload SBOM artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -98,6 +187,15 @@ jobs:
             sbom-cyclonedx.json
             sbom-spdx.json
           retention-days: 90
+          
+      - name: Add SBOM to security summary
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Software Bill of Materials" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "SBOM files generated successfully:" >> $GITHUB_STEP_SUMMARY
+          echo "- CycloneDX JSON: Available as artifact" >> $GITHUB_STEP_SUMMARY
+          echo "- SPDX JSON: Available as artifact" >> $GITHUB_STEP_SUMMARY
 
   fips-validation:
     name: FIPS Validation

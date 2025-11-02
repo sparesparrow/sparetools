@@ -42,6 +42,12 @@ jobs:
         with:
           python-version: ${{ inputs.python_version }}
 
+      - name: Install Python dependencies
+        if: inputs.check_yaml
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pyyaml
+
       - name: Validate Python Syntax
         if: inputs.check_python
         run: |
@@ -99,9 +105,11 @@ jobs:
           echo "🔍 Validating YAML syntax in workflows..."
           failed=0
           while IFS= read -r file; do
-            if ! python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>&1; then
-              echo "❌ YAML syntax error in $file"
-              failed=1
+            if [ -f "$file" ]; then
+              if ! python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>&1; then
+                echo "❌ YAML syntax error in $file"
+                failed=1
+              fi
             fi
           done < <(find .github/workflows -name "*.yml" -o -name "*.yaml" 2>/dev/null || true)
           if [ $failed -eq 1 ]; then
@@ -114,16 +122,107 @@ jobs:
         if: inputs.check_conanfile
         run: |
           echo "🔍 Validating Conanfile structure..."
+          
+          # Install required packages for validation
+          pip install pyyaml || true
+          
           failed=0
           while IFS= read -r file; do
-            if ! grep -q "class.*ConanFile" "$file"; then
-              echo "❌ $file missing ConanFile class"
-              failed=1
-            elif ! grep -q "name.*=" "$file"; then
-              echo "❌ $file missing name attribute"
-              failed=1
+            if [ ! -f "$file" ]; then
+              continue
             fi
+            
+            echo "Checking $file..."
+            
+            # Check basic structure
+            if ! grep -q "class.*ConanFile" "$file"; then
+              echo "  ❌ Missing ConanFile class"
+              failed=1
+              continue
+            fi
+            
+            if ! grep -q "name.*=" "$file"; then
+              echo "  ❌ Missing name attribute"
+              failed=1
+              continue
+            fi
+            
+            # Enhanced validation using Python
+            python3 << EOF || failed=1
+          import ast
+          import sys
+          import os
+          
+          file_path = "$file"
+          
+          try:
+              with open(file_path, 'r') as f:
+                  content = f.read()
+              
+              # Parse AST
+              tree = ast.parse(content, filename=file_path)
+              
+              # Find ConanFile class
+              conanfile_class = None
+              has_name = False
+              has_version = False
+              has_settings = False
+              
+              for node in ast.walk(tree):
+                  if isinstance(node, ast.ClassDef):
+                      for base in node.bases:
+                          if isinstance(base, ast.Name) and base.id == 'ConanFile':
+                              conanfile_class = node
+                              break
+                      if conanfile_class:
+                          break
+              
+              if not conanfile_class:
+                  print(f"  ❌ No ConanFile class found")
+                  sys.exit(1)
+              
+              # Check class attributes
+              for node in ast.walk(conanfile_class):
+                  if isinstance(node, ast.Assign):
+                      for target in node.targets:
+                          if isinstance(target, ast.Name):
+                              if target.id == 'name':
+                                  has_name = True
+                              elif target.id == 'version':
+                                  has_version = True
+                              elif target.id == 'settings':
+                                  has_settings = True
+              
+              # Validate required attributes
+              if not has_name:
+                  print(f"  ❌ Missing 'name' attribute")
+                  sys.exit(1)
+              
+              # Check for common patterns
+              if 'description' not in content and 'description' not in [n.id for n in ast.walk(conanfile_class) if isinstance(n, ast.Name)]:
+                  print(f"  ⚠️  Missing 'description' (recommended)")
+              
+              if not has_version:
+                  print(f"  ⚠️  Missing 'version' (may be set dynamically)")
+              
+              # Check for required methods
+              methods = [n.name for n in ast.walk(conanfile_class) if isinstance(n, ast.FunctionDef)]
+              required_methods = ['source', 'build', 'package', 'package_info']
+              missing_methods = [m for m in required_methods if m not in methods]
+              
+              if missing_methods:
+                  print(f"  ⚠️  Missing recommended methods: {', '.join(missing_methods)}")
+              
+              print(f"  ✅ Valid ConanFile structure")
+          
+          except SyntaxError as e:
+              print(f"  ❌ Syntax error: {e}")
+              sys.exit(1)
+          except Exception as e:
+              print(f"  ⚠️  Validation error: {e}")
+          EOF
           done < <(find packages -name "conanfile*.py" -type f 2>/dev/null || true)
+          
           if [ $failed -eq 1 ]; then
             echo "❌ Conanfile structure validation failed"
             exit 1
@@ -137,6 +236,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ "${{ job.status }}" == "success" ]; then
             echo "### ✅ All validation checks passed!" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Validated:" >> $GITHUB_STEP_SUMMARY
+            echo "- Python syntax: ${{ inputs.check_python && '✅' || '⏭️ Skipped' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- YAML syntax: ${{ inputs.check_yaml && '✅' || '⏭️ Skipped' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- File corruption: ${{ inputs.check_corruption && '✅' || '⏭️ Skipped' }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Conanfile structure: ${{ inputs.check_conanfile && '✅' || '⏭️ Skipped' }}" >> $GITHUB_STEP_SUMMARY
           else
             echo "### ❌ Validation checks failed" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Please check the logs above for details." >> $GITHUB_STEP_SUMMARY
           fi

@@ -22,6 +22,11 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pyyaml
+
       - name: Validate Python Syntax
         run: |
           echo "🔍 Validating Python syntax across all .py files..."
@@ -56,10 +61,20 @@ jobs:
       - name: Validate YAML Syntax
         run: |
           echo "🔍 Validating YAML syntax in workflows..."
-          find .github/workflows -name "*.yml" -o -name "*.yaml" | while read file; do
-            echo "Checking $file..."
-            python3 -c "import yaml; yaml.safe_load(open('$file'))" || exit 1
-          done
+          failed=0
+          while IFS= read -r file; do
+            if [ -f "$file" ]; then
+              echo "Checking $file..."
+              if ! python3 -c "import yaml; yaml.safe_load(open('$file'))" 2>&1; then
+                echo "❌ YAML syntax error in $file"
+                failed=1
+              fi
+            fi
+          done < <(find .github/workflows -name "*.yml" -o -name "*.yaml" 2>/dev/null || true)
+          if [ $failed -eq 1 ]; then
+            echo "❌ YAML validation failed"
+            exit 1
+          fi
           echo "✅ All YAML files passed syntax validation"
 
       - name: Validate Conanfile Structure
