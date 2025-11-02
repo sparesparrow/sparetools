@@ -1,0 +1,215 @@
+name: Build CPython Matrix (Zero-Copy)
+
+on:
+  workflow_dispatch:
+    inputs:
+      python_version:
+        type: string
+        default: '3.12.7'
+      build_missing:
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - 'packages/sparetools-cpython/**'
+      - '.github/workflows/build-cpython-matrix.yml'
+    tags: ['v*']
+
+env:
+  CONAN_VERSION: "2.21.0"
+
+jobs:
+  # Change detection for smart matrix
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      source_changed: ${{ steps.filter.outputs.src }}
+      docs_only: ${{ steps.filter.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'packages/sparetools-cpython/**'
+              - '.github/workflows/build-cpython-matrix.yml'
+            docs:
+              - 'docs/**'
+              - '*.md'
+
+  # Security scan (runs always)
+  security-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Conan
+        uses: conan-io/setup-conan@v1
+        with:
+          version: ${{ env.CONAN_VERSION }}
+      
+      - name: CodeQL Analysis
+        uses: github/codeql-action/init@v3
+        with:
+          languages: python
+          
+      - uses: github/codeql-action/autobuild@v3
+      - uses: github/codeql-action/analyze@v3
+
+  # Build matrix (conditional on changes)
+  build-cpython:
+    needs: detect-changes
+    if: github.event_name == 'workflow_dispatch' || needs.detect-changes.outputs.source_changed == 'true'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-x86_64
+            configure_args: '--enable-optimizations --with-lto --enable-shared'
+            shared: 'True'
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+            configure_args: '--enable-optimizations --enable-shared'
+            shared: 'True'
+          - os: macos-latest
+            platform: macos-x86_64
+            configure_args: '--enable-optimizations --enable-framework'
+            shared: 'True'
+          - os: macos-14
+            platform: macos-arm64
+            configure_args: '--enable-optimizations --enable-framework'
+            shared: 'True'
+          - os: windows-latest
+            platform: windows-x86_64
+            configure_args: ''
+            shared: 'False'
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Conan
+        uses: conan-io/setup-conan@v1
+        with:
+          version: ${{ env.CONAN_VERSION }}
+      
+      - name: Install Dependencies
+        run: |
+          if [[ "${{ runner.os }}" == "Linux" ]]; then
+            sudo apt-get update
+            sudo apt-get install -y build-essential libssl-dev zlib1g-dev \
+              libbz2-dev libreadline-dev libsqlite3-dev libffi-dev \
+              liblzma-dev tk-dev libncurses5-dev libncursesw5-dev
+          elif [[ "${{ runner.os }}" == "macOS" ]]; then
+            brew install openssl readline sqlite3 xz zlib tcl-tk
+          elif [[ "${{ runner.os }}" == "Windows" ]]; then
+            choco install python3 -y || echo "Python build tools needed"
+          fi
+        shell: bash
+      
+      - name: Build Base Package First
+        run: |
+          cd packages/sparetools-base
+          conan create . --version=2.0.0 --build=missing
+        shell: bash
+      
+      - name: Build CPython (Zero-Copy to Cache)
+        run: |
+          # ✅ Build directly with Conan - no staging
+          cd packages/sparetools-cpython
+          conan create . sparetools-cpython/${{ github.event.inputs.python_version || '3.12.7' }}@ \
+            --build=missing \
+            -s build_type=Release \
+            -o shared=${{ matrix.shared }} \
+            -o optimize=2
+        shell: bash
+      
+      - name: Verify Package in Cache
+        run: |
+          # Package is now in Conan cache
+          conan list "sparetools-cpython/*"
+          
+          # Export for upload
+          conan cache path "sparetools-cpython/${{ github.event.inputs.python_version || '3.12.7' }}"
+        shell: bash
+      
+      - name: Verify Zero-Copy
+        run: |
+          # Check that package is in cache (not copied elsewhere)
+          CACHE_PATH=$(conan cache path "sparetools-cpython/${{ github.event.inputs.python_version || '3.12.7' }}")
+          echo "Package cache path: $CACHE_PATH"
+          
+          # Verify Python executable exists
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            PYTHON_EXE="$CACHE_PATH/bin/python.exe"
+          else
+            PYTHON_EXE="$CACHE_PATH/bin/python3"
+          fi
+          
+          if [ -f "$PYTHON_EXE" ] || [ -x "$PYTHON_EXE" ]; then
+            echo "✅ Python executable found: $PYTHON_EXE"
+            "$PYTHON_EXE" --version
+          else
+            echo "❌ Python executable not found"
+            exit 1
+          fi
+        shell: bash
+      
+      - name: Generate SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: ~/.conan2/p/sparetools-cpython*
+          format: cyclonedx-json
+          output-file: sbom-${{ matrix.platform }}.json
+      
+      - name: Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: ~/.conan2/p/sparetools-cpython*
+          exit-code: '1'
+          severity: 'CRITICAL,HIGH'
+      
+      - name: Upload SBOM Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.platform }}
+          path: sbom-${{ matrix.platform }}.json
+          retention-days: 30
+      
+      - name: Upload Package to Cloudsmith
+        if: github.event_name == 'push' && (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main')
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          pip install cloudsmith-cli
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ || true
+          conan upload "sparetools-cpython/${{ github.event.inputs.python_version || '3.12.7' }}" \
+            -r sparesparrow-conan --confirm \
+            --all
+        shell: bash
+
+  # Quality gate
+  quality-gate:
+    needs: [security-scan, build-cpython]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Evaluate Results
+        run: |
+          if [[ "${{ needs.security-scan.result }}" != "success" ]]; then
+            echo "❌ Security scan failed"
+            exit 1
+          fi
+          if [[ "${{ needs.build-cpython.result }}" != "success" ]]; then
+            echo "❌ Build failed"
+            exit 1
+          fi
+          echo "✅ All quality gates passed"
+        shell: bash

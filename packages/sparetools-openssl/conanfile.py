@@ -289,11 +289,26 @@ class SpareToolsOpenSSLConan(ConanFile):
             self._build_with_perl()
             return
         
+        # ? Use zero-copy CPython from tool_requires
+        cpython_dep = self.dependencies.build.get("sparetools-cpython")
+        if cpython_dep:
+            python_root = cpython_dep.package_folder
+            # Try python3 first, then python3.12, then python
+            python_exe = os.path.join(python_root, "bin", "python3")
+            if not os.path.exists(python_exe):
+                python_exe = os.path.join(python_root, "bin", "python3.12")
+            if not os.path.exists(python_exe):
+                python_exe = os.path.join(python_root, "bin", "python")
+            self.output.info(f"Using Python from zero-copy cache: {python_exe}")
+        else:
+            python_exe = "python3"
+            self.output.warning("sparetools-cpython not found in tool_requires, using system python3")
+        
         # Stage 1: Python configure
         self.output.info("Stage 1: Python configure.py")
         configure_args = self._get_configure_args()
         python_args = " ".join(configure_args[1:])  # Skip target, configure.py handles it
-        self.run(f"python3 {configure_py} {python_args}", cwd=self.source_folder)
+        self.run(f"{python_exe} {configure_py} {python_args}", cwd=self.source_folder)
         
         # Stage 2: Build
         self.output.info("Stage 2: Build")
@@ -308,6 +323,15 @@ class SpareToolsOpenSSLConan(ConanFile):
     def build(self):
         """Build OpenSSL using selected method"""
         self.output.info(f"Build method: {self.options.build_method}")
+        
+        # ? Verify zero-copy CPython is available (for Python build method)
+        if self.options.build_method == "python":
+            cpython_dep = self.dependencies.build.get("sparetools-cpython")
+            if cpython_dep:
+                python_root = cpython_dep.package_folder
+                self.output.info(f"? Zero-copy CPython available from: {python_root}")
+            else:
+                self.output.warning("??  sparetools-cpython not found - Python build may fail")
         
         build_methods = {
             "perl": self._build_with_perl,
