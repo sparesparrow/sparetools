@@ -101,18 +101,47 @@ jobs:
           add: '.github/upstream/openssl-master.sha'
           push: true
 
-  preconfigure-matrix:
-    name: Preconfigure (${{ matrix.target }})
+  preconfigure-linux-x86_64:
+    name: Preconfigure (linux-x86_64)
     needs: monitor-upstream
     if: needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true'
-    strategy:
-      matrix:
-        target: ${{ fromJson(needs.monitor-upstream.outputs.targets) }}
     uses: ./.github/workflows/openssl-perl-preconfigure.yml
     with:
       openssl-repository: 'openssl/openssl'
       openssl-ref: 'master'
-      configure-target: ${{ matrix.target }}
+      configure-target: 'linux-x86_64'
+      config-options: 'no-shared'
+      make-depend: true
+      artifact-name: 'openssl-upstream-master'
+      use-cpython-tools: false
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  preconfigure-darwin64-arm64-cc:
+    name: Preconfigure (darwin64-arm64-cc)
+    needs: monitor-upstream
+    if: needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true'
+    uses: ./.github/workflows/openssl-perl-preconfigure.yml
+    with:
+      openssl-repository: 'openssl/openssl'
+      openssl-ref: 'master'
+      configure-target: 'darwin64-arm64-cc'
+      config-options: 'no-shared'
+      make-depend: true
+      artifact-name: 'openssl-upstream-master'
+      use-cpython-tools: false
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  preconfigure-VC-WIN64A:
+    name: Preconfigure (VC-WIN64A)
+    needs: monitor-upstream
+    if: needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true'
+    uses: ./.github/workflows/openssl-perl-preconfigure.yml
+    with:
+      openssl-repository: 'openssl/openssl'
+      openssl-ref: 'master'
+      configure-target: 'VC-WIN64A'
       config-options: 'no-shared'
       make-depend: true
       artifact-name: 'openssl-upstream-master'
@@ -122,7 +151,7 @@ jobs:
 
   summary:
     name: Summary
-    needs: [monitor-upstream, preconfigure-matrix]
+    needs: [monitor-upstream, preconfigure-linux-x86_64, preconfigure-darwin64-arm64-cc, preconfigure-VC-WIN64A]
     if: always() && (needs.monitor-upstream.outputs.sha_changed == 'true' || github.event.inputs.force_run == 'true')
     runs-on: ubuntu-22.04
     steps:
