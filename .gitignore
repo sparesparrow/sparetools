@@ -21,6 +21,9 @@ dist/
 *.swp
 *.swo
 
+# CMake user-specific presets
+CMakeUserPresets.json
+
 # OS
 .DS_Store
 Thumbs.db

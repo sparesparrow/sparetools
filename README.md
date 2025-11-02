@@ -24,7 +24,7 @@ Modern, Python-based tooling ecosystem for OpenSSL development, building, and de
 
 | Package | Version | Purpose |
 |---------|---------|---------|
-| **sparetools-openssl** | 2.0.0 | Unified OpenSSL library with multi-method builds |
+| **sparetools-openssl** | 3.3.2 | Unified OpenSSL library with multi-method builds |
 | **sparetools-openssl-tools** | 2.0.0 | Build automation, FIPS validation, security scanning |
 | **sparetools-base** | 2.0.0 | Foundation utilities and security gates |
 | **sparetools-cpython** | 3.12.7 | Prebuilt Python 3.12.7 runtime |
@@ -44,7 +44,7 @@ conan remote add sparesparrow-conan \
   https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
 
 # Install OpenSSL package
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   --tool-requires=sparetools-openssl-tools/2.0.0 \
   --build=missing
 ```
@@ -53,17 +53,17 @@ conan install --requires=sparetools-openssl/2.0.0 \
 
 ```bash
 # Using Perl Configure (default, most stable)
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -o sparetools-openssl/*:build_method=perl \
   --build=missing
 
 # Using CMake (modern, IDE-friendly)
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -o sparetools-openssl/*:build_method=cmake \
   --build=missing
 
 # Using Python Configure (experimental)
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -o sparetools-openssl/*:build_method=python_configure \
   --build=missing
 ```
@@ -72,13 +72,13 @@ conan create packages/sparetools-openssl --version=2.0.0 \
 
 ```bash
 # FIPS-enabled build
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
   -pr:b packages/sparetools-openssl-tools/profiles/features/fips-enabled \
   --build=missing
 
 # Performance-optimized build
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
   -pr:b packages/sparetools-openssl-tools/profiles/features/performance \
   --build=missing
@@ -217,7 +217,7 @@ conan remote add sparesparrow-conan \
 
 # Build locally
 cd packages/sparetools-openssl
-conan create . --version=2.0.0 --build=missing
+conan create . --version=3.3.2 --build=missing
 ```
 
 ### Running Tests
@@ -227,7 +227,7 @@ conan create . --version=2.0.0 --build=missing
 pytest tests/
 
 # Integration tests
-conan test test_package sparetools-openssl/2.0.0@
+conan test test_package sparetools-openssl/3.3.2@
 
 # Full CI/CD locally
 act -W .github/workflows/build-test.yml

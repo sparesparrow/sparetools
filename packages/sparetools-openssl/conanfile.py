@@ -353,10 +353,32 @@ class SpareToolsOpenSSLConan(ConanFile):
         # Copy license
         copy(self, "LICENSE*", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
         
-        # Clean up
-        rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
-        rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
-        rm(self, "*.la", os.path.join(self.package_folder, "lib"), recursive=True)
+        # Detect which libdir was actually used by OpenSSL installation
+        # Check for libssl.a or libssl.so to determine the correct directory
+        lib64_path = os.path.join(self.package_folder, "lib64")
+        lib_path = os.path.join(self.package_folder, "lib")
+        
+        if os.path.exists(lib64_path):
+            lib64_has_libs = any(os.path.exists(os.path.join(lib64_path, f"libssl.{ext}")) 
+                                for ext in ["a", "so", "dylib", "dll.a"])
+        else:
+            lib64_has_libs = False
+            
+        if lib64_has_libs:
+            detected_libdir = "lib64"
+            # Clean up lib64
+            rmdir(self, os.path.join(self.package_folder, "lib64", "pkgconfig"))
+            rmdir(self, os.path.join(self.package_folder, "lib64", "cmake"))
+            rm(self, "*.la", os.path.join(self.package_folder, "lib64"), recursive=True)
+        else:
+            detected_libdir = "lib"
+            # Clean up lib
+            rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
+            rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
+            rm(self, "*.la", os.path.join(self.package_folder, "lib"), recursive=True)
+        
+        # Save detected libdir for package_info()
+        save(self, os.path.join(self.package_folder, "conan_libdir.txt"), detected_libdir)
     
     def package_info(self):
         """Define package information for consumers"""
@@ -365,8 +387,13 @@ class SpareToolsOpenSSLConan(ConanFile):
         self.cpp_info.set_property("cmake_target_name", "OpenSSL::OpenSSL")
         self.cpp_info.set_property("pkg_config_name", "openssl")
         
-        # Dynamically detect lib vs lib64 directory
-        libdir = "lib64" if os.path.exists(os.path.join(self.package_folder, "lib64")) else "lib"
+        # Read libdir determined during package() phase
+        libdir_file = os.path.join(self.package_folder, "conan_libdir.txt")
+        if os.path.exists(libdir_file):
+            libdir = load(self, libdir_file).strip()
+        else:
+            # Fallback for packages built with older recipe versions
+            libdir = "lib64" if os.path.exists(os.path.join(self.package_folder, "lib64")) else "lib"
         
         # Libraries
         self.cpp_info.components["ssl"].set_property("cmake_target_name", "OpenSSL::SSL")

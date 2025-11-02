@@ -92,31 +92,51 @@ jobs:
       - name: Build Package (With Profiles)
         if: matrix.base_profile != ''
         run: |
+          # Determine version based on package type
+          case "${{ matrix.package }}" in
+            sparetools-openssl)
+              VERSION="3.3.2"
+              ;;
+            *)
+              VERSION="2.0.0"
+              ;;
+          esac
+
           PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
           PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
           if [ -n "${{ matrix.feature_profile }}" ]; then
             PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
           fi
-          conan create packages/${{ matrix.package }} --version=2.0.0 $PROFILES --build=missing
+          conan create packages/${{ matrix.package }} --version=$VERSION $PROFILES --build=missing
         shell: bash
       
       - name: Build Package (Simple)
         if: matrix.base_profile == ''
         run: |
+          # Determine version based on package type
+          case "${{ matrix.package }}" in
+            sparetools-cpython)
+              VERSION="3.12.7"
+              ;;
+            *)
+              VERSION="2.0.0"
+              ;;
+          esac
+
           if [ "${{ matrix.package }}" == "sparetools-base" ] || \
              [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
              [ "${{ matrix.package }}" == "sparetools-bootstrap" ] || \
              [ "${{ matrix.package }}" == "sparetools-openssl-tools" ]; then
-            conan export packages/${{ matrix.package }} --version=2.0.0
+            conan export packages/${{ matrix.package }} --version=$VERSION
           else
-            conan create packages/${{ matrix.package }} --version=2.0.0 --build=missing
+            conan create packages/${{ matrix.package }} --version=$VERSION --build=missing
           fi
         shell: bash
       
       - name: Test Package
         if: matrix.package == 'sparetools-openssl'
         run: |
-          conan test packages/sparetools-openssl/test_package sparetools-openssl/2.0.0@
+          conan test packages/sparetools-openssl/test_package sparetools-openssl/3.3.2@
       
       - name: Upload Build Artifacts
         if: failure()

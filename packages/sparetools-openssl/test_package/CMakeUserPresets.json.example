@@ -4,6 +4,7 @@
         "conan": {}
     },
     "include": [
-        "build/clang-18-x86_64-gnu17-release/generators/CMakePresets.json"
+        "build/<your-build-folder>/generators/CMakePresets.json"
     ]
 }
+

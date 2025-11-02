@@ -67,7 +67,7 @@ sparetools-openssl-tools-mini/1.0.0
 ```ini
 # conanfile.txt
 [requires]
-sparetools-openssl/2.0.0
+sparetools-openssl/3.3.2
 
 [tool_requires]
 sparetools-openssl-tools/2.0.0
@@ -139,7 +139,7 @@ conan create packages/sparetools-openssl-cmake \
 
 ```bash
 conan create packages/sparetools-openssl \
-  --version=2.0.0 \
+  --version=3.3.2 \
   -o sparetools-openssl/*:build_method=cmake \
   --build=missing
 ```
@@ -148,7 +148,7 @@ conan create packages/sparetools-openssl \
 
 ```bash
 conan create packages/sparetools-openssl \
-  --version=2.0.0 \
+  --version=3.3.2 \
   -pr:b packages/sparetools-openssl-tools/profiles/build-methods/cmake-build \
   --build=missing
 ```
@@ -231,12 +231,12 @@ conan install --requires=sparetools-openssl-cmake/3.3.2 \
 
 ```bash
 # Using option
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   -o sparetools-openssl/*:build_method=cmake \
   --build=missing
 
 # Or using profile
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   -pr:b sparetools-openssl-tools/profiles/build-methods/cmake-build \
   --build=missing
 ```
@@ -258,7 +258,7 @@ conan install --requires=sparetools-openssl/3.3.2 \
 
 ```bash
 # Profile makes it explicit and repeatable
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   -pr:b sparetools-openssl-tools/profiles/base/linux-gcc11 \
   -pr:b sparetools-openssl-tools/profiles/features/fips-enabled \
   --build=missing
@@ -296,7 +296,7 @@ strategy:
 steps:
   - name: Install
     run: |
-      conan install --requires=sparetools-openssl/2.0.0 \
+      conan install --requires=sparetools-openssl/3.3.2 \
         -pr:b sparetools-openssl-tools/profiles/${{ matrix.profile }} \
         --build=missing
 ```
@@ -316,7 +316,7 @@ steps:
 conan install --requires=sparetools-openssl-cmake/3.3.2
 
 # Use
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   -o sparetools-openssl/*:build_method=cmake
 ```
 
@@ -360,7 +360,8 @@ conan export packages/sparetools-openssl-tools --version=2.0.0
 
 # Then use profiles
 conan install . \
-  -pr:b sparetools-openssl-tools/profiles/base/linux-gcc11
+  -pr:b sparetools-openssl-tools/profiles/base/linux-gcc11 \
+  --requires=sparetools-openssl/3.3.2
 ```
 
 ---

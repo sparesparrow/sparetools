@@ -44,8 +44,8 @@ jobs:
           # Create conanfile.txt
           cat > conanfile.txt << 'EOF'
           [requires]
-          sparetools-openssl/2.0.0
-          
+          sparetools-openssl/3.3.2
+
           [tool_requires]
           sparetools-openssl-tools/2.0.0
           
@@ -131,7 +131,7 @@ jobs:
       
       - name: Install OpenSSL with FIPS
         run: |
-          conan install --requires=sparetools-openssl/2.0.0 \
+          conan install --requires=sparetools-openssl/3.3.2 \
             -o sparetools-openssl/*:fips=True \
             --build=missing \
             -r sparesparrow-conan-openssl-conan
@@ -184,7 +184,7 @@ jobs:
           
           # Build with profile combination
           conan create packages/sparetools-openssl \
-            --version=2.0.0 \
+            --version=3.3.2 \
             -pr:b packages/sparetools-openssl-tools/profiles/build-methods/${{ matrix.build_method }} \
             -pr:b packages/sparetools-openssl-tools/profiles/features/${{ matrix.feature }} \
             --build=missing

@@ -104,11 +104,11 @@ conan install --requires=sparetools-openssl-cmake/3.3.2
 **After (v2.0.0):**
 ```bash
 # Single package with build method option
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   -o sparetools-openssl/*:build_method=cmake
 
 # Or use profiles
-conan install --requires=sparetools-openssl/2.0.0 \
+conan install --requires=sparetools-openssl/3.3.2 \
   -pr:b sparetools-openssl-tools/profiles/build-methods/cmake-build \
   -pr:b sparetools-openssl-tools/profiles/features/fips-enabled
 ```
@@ -122,7 +122,7 @@ conan install --requires=sparetools-openssl/2.0.0 \
 
 **Example: FIPS Build:**
 ```bash
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
   -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure \
   -pr:b packages/sparetools-openssl-tools/profiles/features/fips-enabled
@@ -130,10 +130,26 @@ conan create packages/sparetools-openssl --version=2.0.0 \
 
 **Example: Minimal Static Build:**
 ```bash
-conan create packages/sparetools-openssl --version=2.0.0 \
+conan create packages/sparetools-openssl --version=3.3.2 \
   -pr:b packages/sparetools-openssl-tools/profiles/features/static-only \
   -pr:b packages/sparetools-openssl-tools/profiles/features/minimal
 ```
+
+### Version Strategy Clarification
+
+**Important:** The v2.0.0 ecosystem version differs from individual package versions:
+
+- **Infrastructure Packages** (ecosystem version 2.0.0):
+  - sparetools-base/2.0.0
+  - sparetools-openssl-tools/2.0.0
+  - sparetools-shared-dev-tools/2.0.0
+  - sparetools-bootstrap/2.0.0
+
+- **Runtime Packages** (upstream versions):
+  - sparetools-cpython/3.12.7 (matches Python 3.12.7)
+  - sparetools-openssl/3.3.2 (matches OpenSSL 3.3.2)
+
+The OpenSSL package version tracks the upstream OpenSSL release it packages, not the SpareTools ecosystem version. This allows different OpenSSL versions to be part of the same ecosystem release.
 
 ### Known Issues
 - Python configure.py provider ordering incomplete (50% complete)
