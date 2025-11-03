@@ -642,10 +642,16 @@ jobs:
             echo "✅ CPython found in cache"
           fi
 
-          # Build with profile combination
-          PROFILES="-pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }} -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          # Install CPython and shared-dev-tools via Conan
+          # VirtualRunEnv will set up PATH and PYTHONPATH correctly
+          conan install --requires=sparetools-cpython/3.12.7 --requires=sparetools-shared-dev-tools/2.0.0 --build=missing -g VirtualRunEnv
+          source conanrun.sh
+          
+          # Build profile arguments using shared-dev-tools utilities (via CPython from Conan)
           if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES="$PROFILES -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+            PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
+          else
+            PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
           fi
 
           echo "Using profiles: $PROFILES"
