@@ -647,12 +647,27 @@ jobs:
           conan install --requires=sparetools-cpython/3.12.7 --requires=sparetools-shared-dev-tools/2.0.0 --build=missing -g VirtualRunEnv
           
           # Build profile arguments using shared-dev-tools utilities
-          # Use system Python for the script; shared-dev-tools sets PYTHONPATH via package_info
+          # Extract PYTHONPATH from conanrun.sh WITHOUT sourcing (to preserve PATH for conan CLI)
+          # This allows script imports while keeping conan in system Python
+          if [ -f conanrun.sh ]; then
+            # Extract and eval only the PYTHONPATH export line (safer than full source)
+            PYTHONPATH_LINE=$(grep -E '^export PYTHONPATH=' conanrun.sh || grep -E 'PYTHONPATH=' conanrun.sh | head -1)
+            if [ -n "$PYTHONPATH_LINE" ]; then
+              # Use eval to execute only this export line
+              eval "$PYTHONPATH_LINE"
+              echo "✅ Set PYTHONPATH from conanrun.sh for script imports"
+            fi
+          fi
+          
+          # Build profile args - script can now import shared_dev_tools via PYTHONPATH
           if [ -n "${{ matrix.feature_profile }}" ]; then
             PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
           else
             PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
           fi
+          
+          # Clear PYTHONPATH before conan create to ensure system Python modules
+          unset PYTHONPATH
 
           echo "Using profiles: $PROFILES"
           # CRITICAL: Run conan create BEFORE sourcing conanrun.sh
