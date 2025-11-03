@@ -83,11 +83,21 @@ jobs:
       
       - name: Install Conan
         run: |
-          pip install conan==${{ env.CONAN_VERSION }}
+          pip install conan==2.21.0
           conan --version
       
       - name: Detect Conan Profile
         run: conan profile detect --force
+      
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ matrix.package }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}
+          restore-keys: |
+            conan-${{ matrix.os }}-${{ matrix.package }}-
+            conan-${{ matrix.os }}-
+            conan-
       
       - name: Build Package (With Profiles)
         if: matrix.base_profile != ''
