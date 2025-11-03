@@ -9,6 +9,8 @@ class SpareToolsBootstrapConan(ConanFile):
     license = "Apache-2.0"
     url = "https://github.com/sparesparrow/sparetools"
     
+    python_requires = "sparetools-base/2.0.0"
+
     exports_sources = "bootstrap/**", "scripts/**"
     
     def package(self):
