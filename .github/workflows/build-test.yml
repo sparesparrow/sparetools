@@ -157,6 +157,14 @@ jobs:
           conan create packages/${{ matrix.package }} --version=$VERSION $PROFILES --build=missing
         shell: bash
       
+      - name: Export Base Dependency (Simple)
+        if: matrix.base_profile == '' && matrix.package != 'sparetools-base'
+        run: |
+          echo "📦 Exporting sparetools-base (required dependency)..."
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          echo "✅ sparetools-base exported"
+        shell: bash
+      
       - name: Build Package (Simple)
         if: matrix.base_profile == ''
         run: |
@@ -167,12 +175,16 @@ jobs:
             VERSION="${{ env.VERSION_BASE }}"
           fi
 
-          if [ "${{ matrix.package }}" == "sparetools-base" ] || \
-             [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
-             [ "${{ matrix.package }}" == "sparetools-bootstrap" ] || \
-             [ "${{ matrix.package }}" == "sparetools-openssl-tools" ]; then
+          if [ "${{ matrix.package }}" == "sparetools-base" ]; then
+            # sparetools-base has no dependencies, just export
+            conan export packages/${{ matrix.package }} --version=$VERSION
+          elif [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
+               [ "${{ matrix.package }}" == "sparetools-bootstrap" ] || \
+               [ "${{ matrix.package }}" == "sparetools-openssl-tools" ]; then
+            # These need sparetools-base (already exported in previous step)
             conan export packages/${{ matrix.package }} --version=$VERSION
           else
+            # sparetools-cpython needs sparetools-base (already exported)
             conan create packages/${{ matrix.package }} --version=$VERSION --build=missing
           fi
         shell: bash
