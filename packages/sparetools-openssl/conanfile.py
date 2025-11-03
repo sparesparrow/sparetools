@@ -426,10 +426,10 @@ class SpareToolsOpenSSLConan(ConanFile):
                 fips_validator.validate_fips()
                 
         except ImportError as e:
-            self.output.warn(f"Bootstrap utilities not available: {e}")
+            self.output.warning(f"Bootstrap utilities not available: {e}")
             self.output.info("Security gates will be skipped - this is expected for minimal builds")
         except Exception as e:
-            self.output.warn(f"Security gates encountered error: {e}")
+            self.output.warning(f"Security gates encountered error: {e}")
             self.output.info("Continuing build - security gates are non-blocking")
     
     def package(self):
