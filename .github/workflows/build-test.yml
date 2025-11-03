@@ -149,14 +149,17 @@ jobs:
             VERSION="${{ env.VERSION_BASE }}"
           fi
 
-          REPO_ROOT="${{ github.workspace }}"
-
-
-          PROFILES="-pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
-          PROFILES="$PROFILES -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          # Use shared-dev-tools script to resolve profile paths
+          # Export shared-dev-tools first so the script can import it
+          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} || true
+          
+          # Build profile arguments using shared-dev-tools utilities
           if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES="$PROFILES -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+            PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
+          else
+            PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
           fi
+          
           conan create packages/${{ matrix.package }} --version=$VERSION $PROFILES --build=missing
         shell: bash
       
