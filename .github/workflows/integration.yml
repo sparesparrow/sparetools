@@ -426,6 +426,22 @@ jobs:
             echo "❌ Failed to export sparetools-openssl-tools"
             exit 1
           fi
+          if ! conan export packages/sparetools-shared-dev-tools --version=2.0.0; then
+            echo "❌ Failed to export sparetools-shared-dev-tools"
+            exit 1
+          fi
+
+          # Build CPython (required dependency for OpenSSL)
+          echo "🐍 Building CPython (if not in cache)..."
+          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null; then
+            echo "CPython not found, building..."
+            if ! conan create packages/sparetools-cpython --version=3.12.7 --build=missing; then
+              echo "❌ Failed to build CPython"
+              exit 1
+            fi
+          else
+            echo "✅ CPython found in cache"
+          fi
 
           # Build OpenSSL with FIPS
           echo "🔒 Building OpenSSL with FIPS enabled..."
@@ -597,6 +613,14 @@ jobs:
           # Export tool packages first
           conan export packages/sparetools-base --version=2.0.0
           conan export packages/sparetools-openssl-tools --version=2.0.0
+          conan export packages/sparetools-shared-dev-tools --version=2.0.0
+
+          # Build CPython (required dependency for OpenSSL)
+          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null; then
+            echo "🐍 Building CPython (if not in cache)..."
+            conan create packages/sparetools-cpython --version=3.12.7 --build=missing || \
+              echo "⚠️ CPython build skipped (will use system Python if needed)"
+          fi
 
           # Build with profile combination
           PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }} -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
