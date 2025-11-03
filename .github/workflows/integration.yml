@@ -431,10 +431,13 @@ jobs:
             exit 1
           fi
 
-          # Build CPython (required dependency for OpenSSL)
-          echo "🐍 Building CPython (if not in cache)..."
-          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null; then
-            echo "CPython not found, building..."
+          # Export CPython recipe, then build if not in cache
+          echo "🐍 Exporting CPython recipe..."
+          conan export packages/sparetools-cpython --version=3.12.7
+          
+          # Build CPython if not already built
+          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null | grep -q "package_id"; then
+            echo "🐍 Building CPython (not in cache)..."
             if ! conan create packages/sparetools-cpython --version=3.12.7 --build=missing; then
               echo "❌ Failed to build CPython"
               exit 1
@@ -615,11 +618,17 @@ jobs:
           conan export packages/sparetools-openssl-tools --version=2.0.0
           conan export packages/sparetools-shared-dev-tools --version=2.0.0
 
-          # Build CPython (required dependency for OpenSSL)
-          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null; then
-            echo "🐍 Building CPython (if not in cache)..."
+          # Export CPython recipe, then build if not in cache
+          echo "🐍 Exporting CPython recipe..."
+          conan export packages/sparetools-cpython --version=3.12.7
+          
+          # Build CPython if not already built
+          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null | grep -q "package_id"; then
+            echo "🐍 Building CPython (not in cache)..."
             conan create packages/sparetools-cpython --version=3.12.7 --build=missing || \
               echo "⚠️ CPython build skipped (will use system Python if needed)"
+          else
+            echo "✅ CPython found in cache"
           fi
 
           # Build with profile combination
