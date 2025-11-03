@@ -390,16 +390,17 @@ class SpareToolsOpenSSLConan(ConanFile):
     def _run_security_gates(self):
         """Run security scanning and SBOM generation"""
         try:
-            # Import bootstrap utilities directly
-            from sparetools_bootstrap import FIPSValidator, SBOMGenerator
+            # FIXED: Import bootstrap utilities with correct module paths
+            from bootstrap.openssl.fips_validator import FIPSValidator
+            from bootstrap.openssl.sbom_generator import SBOMGenerator
 
-            # Run Trivy security scan
+            # Run Trivy security scan (via base if available)
             self.output.info("Running Trivy security scan...")
-            base = self.python_requires["sparetools-base"]
-            if hasattr(base.conanfile, "run_trivy_scan"):
+            base = self.python_requires["sparetools-base"] if "sparetools-base" in self.python_requires else None
+            if base and hasattr(base.conanfile, "run_trivy_scan"):
                 base.conanfile.run_trivy_scan(self.source_folder)
 
-            # Generate SBOM
+            # Generate SBOM using bootstrap utilities
             self.output.info("Generating SBOM...")
             sbom_gen = SBOMGenerator()
             sbom_gen.generate_sbom(self.source_folder)
@@ -409,8 +410,13 @@ class SpareToolsOpenSSLConan(ConanFile):
                 self.output.info("Running FIPS validation...")
                 fips_validator = FIPSValidator()
                 fips_validator.validate_fips()
+                
+        except ImportError as e:
+            self.output.warn(f"Bootstrap utilities not available: {e}")
+            self.output.info("Security gates will be skipped - this is expected for minimal builds")
         except Exception as e:
-            self.output.warn(f"Security gates not available: {e}")
+            self.output.warn(f"Security gates encountered error: {e}")
+            self.output.info("Continuing build - security gates are non-blocking")
     
     def package(self):
         """Install OpenSSL to package folder"""
