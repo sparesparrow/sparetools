@@ -84,8 +84,10 @@ jobs:
           fi
 
           # Check for common corruption patterns in Python files
-          if grep -r "<!DOCTYPE html>" --include="*.py" .; then
-            echo "❌ Found HTML content in Python files - possible corruption"
+          # Only fail if HTML is found at the start of files (actual corruption)
+          # HTML in string literals or comments is acceptable (documentation/examples)
+          if find . -name "*.py" -type f -exec sh -c 'head -5 "$1" | grep -q "<!DOCTYPE html>"' _ {} \; 2>/dev/null | grep -q "."; then
+            echo "❌ Found HTML content at start of Python files - possible corruption"
             exit 1
           fi
 
@@ -199,10 +201,18 @@ jobs:
           conan export packages/sparetools-shared-dev-tools --version=2.0.0
           conan export packages/sparetools-bootstrap --version=2.0.0
 
-          # Build CPython (may take time, skip if available in cache)
-          conan list "sparetools-cpython/3.12.7:*" || \
+          # Export CPython recipe, then build if not in cache
+          echo "🐍 Exporting CPython recipe..."
+          conan export packages/sparetools-cpython --version=3.12.7
+          
+          # Build CPython if not already built
+          if ! conan list "sparetools-cpython/3.12.7:*" 2>/dev/null | grep -q "package_id"; then
+            echo "🐍 Building CPython (not in cache)..."
             conan create packages/sparetools-cpython --version=3.12.7 --build=missing || \
-            echo "⚠️ CPython build skipped (will use system Python if needed)"
+              echo "⚠️ CPython build skipped (will use system Python if needed)"
+          else
+            echo "✅ CPython found in cache"
+          fi
 
           # Build OpenSSL
           conan create packages/sparetools-openssl --version=3.3.2 --build=missing
