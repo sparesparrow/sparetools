@@ -111,6 +111,34 @@ jobs:
             conan-${{ matrix.os }}-
             conan-
       
+      - name: Export Foundation Packages
+        if: matrix.base_profile != ''
+        run: |
+          echo "📦 Exporting foundation packages..."
+          set -e
+          
+          # Export foundation packages first (required dependencies)
+          echo "Exporting sparetools-base..."
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          
+          echo "Exporting sparetools-openssl-tools..."
+          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+          
+          # Export CPython recipe (needed for tool_requires resolution)
+          echo "Exporting sparetools-cpython recipe..."
+          conan export packages/sparetools-cpython --version=${{ env.VERSION_CPYTHON }}
+          
+          # Check if CPython binary exists, if not Conan will build it with --build=missing
+          echo "🐍 Checking for CPython binary..."
+          if conan list "sparetools-cpython/${{ env.VERSION_CPYTHON }}:*" >/dev/null 2>&1; then
+            echo "✅ CPython binary already available"
+          else
+            echo "ℹ️  CPython binary not found - will be built with --build=missing"
+          fi
+          
+          echo "✅ Foundation packages ready"
+        shell: bash
+      
       - name: Build Package (With Profiles)
         if: matrix.base_profile != ''
         run: |
