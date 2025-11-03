@@ -390,19 +390,25 @@ class SpareToolsOpenSSLConan(ConanFile):
     def _run_security_gates(self):
         """Run security scanning and SBOM generation"""
         try:
-            # FIXED: Access bootstrap functions (not base)
-            bootstrap = self.python_requires["sparetools-bootstrap"]
-            if hasattr(bootstrap.conanfile, "run_trivy_scan"):
-                self.output.info("Running Trivy security scan...")
-                bootstrap.conanfile.run_trivy_scan(self.source_folder)
-            
-            if hasattr(bootstrap.conanfile, "generate_sbom"):
-                self.output.info("Generating SBOM...")
-                bootstrap.conanfile.generate_sbom(self.source_folder)
-                
-            if hasattr(bootstrap.conanfile, "validate_fips") and self.options.fips:
+            # Import bootstrap utilities directly
+            from sparetools_bootstrap import FIPSValidator, SBOMGenerator
+
+            # Run Trivy security scan
+            self.output.info("Running Trivy security scan...")
+            base = self.python_requires["sparetools-base"]
+            if hasattr(base.conanfile, "run_trivy_scan"):
+                base.conanfile.run_trivy_scan(self.source_folder)
+
+            # Generate SBOM
+            self.output.info("Generating SBOM...")
+            sbom_gen = SBOMGenerator()
+            sbom_gen.generate_sbom(self.source_folder)
+
+            # FIPS validation if enabled
+            if self.options.fips:
                 self.output.info("Running FIPS validation...")
-                bootstrap.conanfile.validate_fips("openssl")
+                fips_validator = FIPSValidator()
+                fips_validator.validate_fips()
         except Exception as e:
             self.output.warn(f"Security gates not available: {e}")
     
