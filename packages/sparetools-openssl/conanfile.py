@@ -66,7 +66,8 @@ class SpareToolsOpenSSLConan(ConanFile):
         "sparetools-cpython/3.12.7",
     ]
     
-    python_requires = "sparetools-base/2.0.0"
+    # CRITICAL FIX: Use bootstrap for security gates (instead of base)
+    python_requires = "sparetools-bootstrap/2.0.0"
     
     exports_sources = "configure.py"
     
@@ -221,11 +222,11 @@ class SpareToolsOpenSSLConan(ConanFile):
                 timeout=5
             )
             if result.returncode == 0:
-                self.output.info("? Locale::Maketext::Simple module found")
+                self.output.info("✅ Locale::Maketext::Simple module found")
                 return
             
             # Try to install via cpan (may not work on GitHub Actions, but worth trying)
-            self.output.warn("?? Locale::Maketext::Simple not found, attempting to install via cpan...")
+            self.output.warn("⚠️ Locale::Maketext::Simple not found, attempting to install via cpan...")
             install_result = subprocess.run(
                 ["cpan", "-i", "-f", "Locale::Maketext::Simple"],
                 capture_output=True,
@@ -233,13 +234,13 @@ class SpareToolsOpenSSLConan(ConanFile):
                 timeout=60
             )
             if install_result.returncode == 0:
-                self.output.info("? Locale::Maketext::Simple installed successfully")
+                self.output.info("✅ Locale::Maketext::Simple installed successfully")
             else:
-                self.output.warn(f"?? cpan install failed: {install_result.stderr}")
-                self.output.warn("?? You may need to install Perl modules manually or use CMake build method on Windows")
+                self.output.warn(f"⚠️ cpan install failed: {install_result.stderr}")
+                self.output.warn("⚠️ You may need to install Perl modules manually or use CMake build method on Windows")
         except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
-            self.output.warn(f"?? Could not check/install Perl dependencies: {e}")
-            self.output.warn("?? Consider using CMake build method on Windows if Perl Configure fails")
+            self.output.warn(f"⚠️ Could not check/install Perl dependencies: {e}")
+            self.output.warn("⚠️ Consider using CMake build method on Windows if Perl Configure fails")
 
     def _build_with_perl(self):
         """
@@ -326,7 +327,7 @@ class SpareToolsOpenSSLConan(ConanFile):
             self._build_with_perl()
             return
         
-        # ? Use zero-copy CPython from tool_requires
+        # ✅ Use zero-copy CPython from tool_requires
         cpython_dep = self.dependencies.build.get("sparetools-cpython")
         if cpython_dep:
             python_root = cpython_dep.package_folder
@@ -361,14 +362,14 @@ class SpareToolsOpenSSLConan(ConanFile):
         """Build OpenSSL using selected method"""
         self.output.info(f"Build method: {self.options.build_method}")
         
-        # ? Verify zero-copy CPython is available (for Python build method)
+        # ✅ Verify zero-copy CPython is available (for Python build method)
         if self.options.build_method == "python":
             cpython_dep = self.dependencies.build.get("sparetools-cpython")
             if cpython_dep:
                 python_root = cpython_dep.package_folder
-                self.output.info(f"? Zero-copy CPython available from: {python_root}")
+                self.output.info(f"✅ Zero-copy CPython available from: {python_root}")
             else:
-                self.output.warning("??  sparetools-cpython not found - Python build may fail")
+                self.output.warning("⚠️ sparetools-cpython not found - Python build may fail")
         
         build_methods = {
             "perl": self._build_with_perl,
@@ -389,14 +390,19 @@ class SpareToolsOpenSSLConan(ConanFile):
     def _run_security_gates(self):
         """Run security scanning and SBOM generation"""
         try:
-            base = self.python_requires["sparetools-base"]
-            if hasattr(base.conanfile, "run_trivy_scan"):
+            # FIXED: Access bootstrap functions (not base)
+            bootstrap = self.python_requires["sparetools-bootstrap"]
+            if hasattr(bootstrap.conanfile, "run_trivy_scan"):
                 self.output.info("Running Trivy security scan...")
-                base.conanfile.run_trivy_scan(self.source_folder)
+                bootstrap.conanfile.run_trivy_scan(self.source_folder)
             
-            if hasattr(base.conanfile, "generate_sbom"):
+            if hasattr(bootstrap.conanfile, "generate_sbom"):
                 self.output.info("Generating SBOM...")
-                base.conanfile.generate_sbom(self.source_folder)
+                bootstrap.conanfile.generate_sbom(self.source_folder)
+                
+            if hasattr(bootstrap.conanfile, "validate_fips") and self.options.fips:
+                self.output.info("Running FIPS validation...")
+                bootstrap.conanfile.validate_fips("openssl")
         except Exception as e:
             self.output.warn(f"Security gates not available: {e}")
     
@@ -486,4 +492,3 @@ class SpareToolsOpenSSLConan(ConanFile):
         self.cpp_info.components["crypto"].libdirs = [libdir]
         self.cpp_info.components["crypto"].includedirs = ["include"]
         self.cpp_info.components["crypto"].bindirs = ["bin"]
-
