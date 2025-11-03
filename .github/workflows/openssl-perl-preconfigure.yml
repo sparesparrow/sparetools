@@ -209,5 +209,33 @@ jobs:
 
       - name: Publish summary
         shell: bash
-        run: "|
+        run: |
           ARTIFACT="${ARTIFACT_BASENAME}-${CONFIGURE_TARGET}"
+
+          echo "# OpenSSL Preconfiguration Complete 🔧" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Configuration Details" >> $GITHUB_STEP_SUMMARY
+          echo "| Parameter | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| **Target** | ${CONFIGURE_TARGET} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Repository** | ${{ inputs.openssl-repository }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Ref** | ${{ inputs.openssl-ref }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Options** | ${CONFIGURE_OPTS:-none} |" >> $GITHUB_STEP_SUMMARY
+          echo "| **Make Depend** | ${{ inputs.make-depend }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Generated Artifacts 📦" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle**: \`${ARTIFACT}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          if [ -f "dist/${ARTIFACT}.sha256" ]; then
+            SHA256=$(cat "dist/${ARTIFACT}.sha256" | cut -d' ' -f1)
+            echo "- **SHA256**: \`${SHA256}\`" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "## Usage Instructions 📖" >> $GITHUB_STEP_SUMMARY
+          echo "1. Download the artifact from this workflow run" >> $GITHUB_STEP_SUMMARY
+          echo "2. Extract: \`tar -xzf ${ARTIFACT}.tar.gz\`" >> $GITHUB_STEP_SUMMARY
+          echo "3. Build: \`make -j\$(nproc) && make install\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note**: Perl Configure already executed - ready to build!" >> $GITHUB_STEP_SUMMARY

@@ -81,10 +81,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.conan2
-          key: conan-${{ inputs.os }}-${{ inputs.package_name }}-${{ inputs.package_version }}-${{ hashFiles('packages/**/conanfile.py') }}
+          key: conan-${{ inputs.os }}-${{ inputs.package_name }}-${{ inputs.package_version }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}
           restore-keys: |
+            conan-${{ inputs.os }}-${{ inputs.package_name }}-${{ inputs.package_version }}-
             conan-${{ inputs.os }}-${{ inputs.package_name }}-
             conan-${{ inputs.os }}-
+            conan-
             
       - name: Build dependencies (if needed)
         run: |

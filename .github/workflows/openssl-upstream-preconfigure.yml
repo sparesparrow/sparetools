@@ -2,8 +2,16 @@ name: Monitor OpenSSL Upstream (Preconfigure)
 
 on:
   schedule:
-    # Run hourly to monitor upstream changes
-    - cron: '0 * * * *'
+    # Run daily at 6 AM UTC to monitor upstream changes
+    # Reduced from hourly to minimize workflow runs
+    - cron: '0 6 * * *'
+  push:
+    branches:
+      - main  # Only monitor on main branch, not PRs
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '**/README*'
   workflow_dispatch:
     inputs:
       force_run:

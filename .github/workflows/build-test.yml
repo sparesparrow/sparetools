@@ -7,6 +7,13 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  CONAN_VERSION: "2.21.0"
+  # Centralized version management
+  VERSION_BASE: "2.0.0"
+  VERSION_CPYTHON: "3.12.7"
+  VERSION_OPENSSL: "3.3.2"
+
 jobs:
   build-matrix:
     name: ${{ matrix.name }}
@@ -54,22 +61,27 @@ jobs:
           # Base Packages
           - name: sparetools-base
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-base
           
           - name: sparetools-cpython
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-cpython
           
           - name: sparetools-shared-dev-tools
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-shared-dev-tools
           
           - name: sparetools-bootstrap
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-bootstrap
           
           - name: sparetools-openssl-tools
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-openssl-tools
     
     steps:
@@ -83,11 +95,52 @@ jobs:
       
       - name: Install Conan
         run: |
-          pip install conan==${{ env.CONAN_VERSION }}
+          pip install conan==2.21.0
           conan --version
       
       - name: Detect Conan Profile
         run: conan profile detect --force
+      
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ matrix.package }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}
+          restore-keys: |
+            conan-${{ matrix.os }}-${{ matrix.package }}-
+            conan-${{ matrix.os }}-
+            conan-
+      
+      - name: Export Foundation Packages
+        if: matrix.base_profile != ''
+        run: |
+          echo "📦 Exporting foundation packages..."
+          set -e
+          
+          # Export foundation packages first (required dependencies)
+          echo "Exporting sparetools-base..."
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          
+          echo "Exporting sparetools-openssl-tools..."
+          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+          
+          echo "Exporting sparetools-shared-dev-tools..."
+          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
+          
+          # Export CPython recipe (needed for tool_requires resolution)
+          echo "Exporting sparetools-cpython recipe..."
+          conan export packages/sparetools-cpython --version=${{ env.VERSION_CPYTHON }}
+          
+          # Check if CPython binary exists, if not Conan will build it with --build=missing
+          echo "🐍 Checking for CPython binary..."
+          if conan list "sparetools-cpython/${{ env.VERSION_CPYTHON }}:*" >/dev/null 2>&1; then
+            echo "✅ CPython binary already available"
+          else
+            echo "ℹ️  CPython binary not found - will be built with --build=missing"
+          fi
+          
+          echo "✅ Foundation packages ready"
+        shell: bash
       
       - name: Build Package (With Profiles)
         if: matrix.base_profile != ''
@@ -99,12 +152,48 @@ jobs:
             VERSION="${{ env.VERSION_BASE }}"
           fi
 
-          PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
-          PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
-          if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+          # Install bundled CPython and shared-dev-tools via Conan
+          # VirtualRunEnv creates conanrun.sh with environment setup
+          conan install --requires=sparetools-cpython/${{ env.VERSION_CPYTHON }} --requires=sparetools-shared-dev-tools/${{ env.VERSION_BASE }} --build=missing -g VirtualRunEnv
+          
+          # Architecture: Use bundled tools without breaking system Conan CLI
+          # 1. Extract PYTHONPATH from conanrun.sh (don't source full environment)
+          CONAN_PYTHONPATH=$(grep "^export PYTHONPATH=" conanrun.sh 2>/dev/null | cut -d'=' -f2- | tr -d '"' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo "")
+          if [ -n "$CONAN_PYTHONPATH" ]; then
+            export PYTHONPATH="$CONAN_PYTHONPATH:$PYTHONPATH"
           fi
+          
+          # 2. Find bundled CPython executable via Conan cache path
+          CPYTHON_PACKAGE_PATH=$(conan cache path sparetools-cpython/${{ env.VERSION_CPYTHON }} --folder p 2>/dev/null || echo "")
+          if [ -n "$CPYTHON_PACKAGE_PATH" ] && [ -d "$CPYTHON_PACKAGE_PATH/bin" ]; then
+            CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3.12"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="python3"
+          else
+            CONAN_PYTHON="python3"
+          fi
+          
+          # 3. Build profile args using bundled Python + tools (PYTHONPATH set above)
+          if [ -n "${{ matrix.feature_profile }}" ]; then
+            PROFILES=$("$CONAN_PYTHON" packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
+          else
+            PROFILES=$("$CONAN_PYTHON" packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
+          fi
+          
+          # 4. Clear PYTHONPATH before conan create (use system Conan CLI)
+          unset PYTHONPATH
+          
+          # CRITICAL: Run conan create with system Conan (PATH/PYTHONPATH not modified)
           conan create packages/${{ matrix.package }} --version=$VERSION $PROFILES --build=missing
+        shell: bash
+      
+      - name: Export Base Dependency (Simple)
+        if: matrix.base_profile == '' && matrix.package != 'sparetools-base'
+        run: |
+          echo "📦 Exporting sparetools-base (required dependency)..."
+          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
+          echo "✅ sparetools-base exported"
         shell: bash
       
       - name: Build Package (Simple)
@@ -117,12 +206,16 @@ jobs:
             VERSION="${{ env.VERSION_BASE }}"
           fi
 
-          if [ "${{ matrix.package }}" == "sparetools-base" ] || \
-             [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
-             [ "${{ matrix.package }}" == "sparetools-bootstrap" ] || \
-             [ "${{ matrix.package }}" == "sparetools-openssl-tools" ]; then
+          if [ "${{ matrix.package }}" == "sparetools-base" ]; then
+            # sparetools-base has no dependencies, just export
+            conan export packages/${{ matrix.package }} --version=$VERSION
+          elif [ "${{ matrix.package }}" == "sparetools-shared-dev-tools" ] || \
+               [ "${{ matrix.package }}" == "sparetools-bootstrap" ] || \
+               [ "${{ matrix.package }}" == "sparetools-openssl-tools" ]; then
+            # These need sparetools-base (already exported in previous step)
             conan export packages/${{ matrix.package }} --version=$VERSION
           else
+            # sparetools-cpython needs sparetools-base (already exported)
             conan create packages/${{ matrix.package }} --version=$VERSION --build=missing
           fi
         shell: bash

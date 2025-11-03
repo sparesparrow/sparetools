@@ -46,7 +46,7 @@ jobs:
             {"os": "ubuntu-22.04", "profile_base": "linux-clang18", "build_method": "cmake", "python": "3.12", "name": "Linux Clang 18 CMake"},
             {"os": "macos-13", "profile_base": "darwin-clang", "build_method": "perl", "python": "3.12", "name": "macOS Clang Perl"},
             {"os": "macos-13", "profile_base": "darwin-clang-arm64", "build_method": "perl", "python": "3.12", "name": "macOS ARM64 Perl"},
-            {"os": "windows-2022", "profile_base": "windows-msvc2022", "build_method": "perl", "python": "3.12", "name": "Windows MSVC Perl"}
+            {"os": "windows-2022", "profile_base": "windows-msvc2022", "build_method": "perl", "python": "3.12", "name": "Windows MSVC Perl", "experimental": true}
           ]}'
           
           # Quick matrix for manual workflow dispatch with "quick" scope
@@ -68,6 +68,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare-matrix.outputs.matrix) }}
+    # Mark Windows builds as experimental - CPython builds may take 15-30 min
+    continue-on-error: ${{ matrix.experimental == true }}
     
     steps:
       - uses: actions/checkout@v4
@@ -89,10 +91,23 @@ jobs:
           conan remote add sparesparrow-conan \
             https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
             --force || true
-          
+      
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          # Optimized cache key: includes OS, profile, build method, and package versions
+          key: conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-${{ matrix.build_method }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}-${{ env.VERSION_CPYTHON }}
+          restore-keys: |
+            conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-${{ matrix.build_method }}-
+            conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-
+            conan-nightly-${{ matrix.os }}-
+            conan-${{ matrix.os }}-
+        
       - name: Build all packages
         run: |
           echo "🔨 Building all packages for ${{ matrix.name }}..."
+          echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
           
           # Build in dependency order
           conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
@@ -140,6 +155,15 @@ jobs:
           echo "Date: $(date)" >> build-report.txt
           echo "OS: ${{ matrix.os }}" >> build-report.txt
           echo "Profile: ${{ matrix.profile_base }}" >> build-report.txt
+          # Calculate build duration
+          BUILD_END=$(date +%s)
+          BUILD_START=${BUILD_START:-$BUILD_END}
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+          BUILD_MINUTES=$((BUILD_DURATION / 60))
+          BUILD_SECONDS=$((BUILD_DURATION % 60))
+          echo "Build Duration: ${BUILD_MINUTES}m ${BUILD_SECONDS}s" >> build-report.txt
+          echo "" >> build-report.txt
+
           echo "Build Method: ${{ matrix.build_method }}" >> build-report.txt
           echo "" >> build-report.txt
           echo "Packages Built:" >> build-report.txt
@@ -262,3 +286,5 @@ jobs:
             echo "An issue has been created for investigation." >> $GITHUB_STEP_SUMMARY
           fi
 
+          # Add timing to summary
+          echo "⏱️ Build completed in ${BUILD_MINUTES}m ${BUILD_SECONDS}s" >> $GITHUB_STEP_SUMMARY

@@ -22,7 +22,8 @@ jobs:
   trivy-scan:
     name: Trivy Vulnerability Scan
     runs-on: ubuntu-latest
-    
+    # Remove dependency to allow parallel execution
+
     steps:
       - uses: actions/checkout@v4
       
@@ -166,6 +167,8 @@ jobs:
   fips-validation:
     name: FIPS Validation
     runs-on: ubuntu-latest
+    # FIPS validation scope: Smoke test to verify FIPS validator availability
+    # Note: Full FIPS 140-3 compliance requires certified hardware/software
     
     steps:
       - uses: actions/checkout@v4

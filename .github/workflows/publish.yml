@@ -21,7 +21,55 @@ on:
         default: "both"
 
 jobs:
+  check-existing-packages:
+    runs-on: ubuntu-latest
+    outputs:
+      needs_build: ${{ steps.check.outputs.needs_build }}
+      existing_packages: ${{ steps.check.outputs.existing_packages }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install conan==2.21.0
+
+      - name: Configure Conan remotes
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+
+      - name: Check existing packages in Cloudsmith
+        id: check
+        run: |
+          echo "🔍 Checking for existing packages in Cloudsmith..."
+
+          # Check if packages already exist
+          if conan list "sparetools-base/2.0.0" -r sparesparrow-conan >/dev/null 2>&1 && \
+             conan list "sparetools-cpython/3.12.7" -r sparesparrow-conan >/dev/null 2>&1 && \
+             conan list "sparetools-shared-dev-tools/2.0.0" -r sparesparrow-conan >/dev/null 2>&1 && \
+             conan list "sparetools-bootstrap/2.0.0" -r sparesparrow-conan >/dev/null 2>&1 && \
+             conan list "sparetools-openssl-tools/2.0.0" -r sparesparrow-conan >/dev/null 2>&1; then
+            echo "✅ All packages exist in Cloudsmith - skipping build"
+            echo "needs_build=false" >> $GITHUB_OUTPUT
+            echo "existing_packages=true" >> $GITHUB_OUTPUT
+          else
+            echo "🔨 Some packages missing - will build"
+            echo "needs_build=true" >> $GITHUB_OUTPUT
+            echo "existing_packages=false" >> $GITHUB_OUTPUT
+          fi
+
   build-all-packages:
+    needs: check-existing-packages
+    if: needs.check-existing-packages.outputs.needs_build == 'true'
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.list.outputs.packages }}
@@ -51,7 +99,10 @@ jobs:
         run: conan create packages/sparetools-base --version=2.0.0 --build=missing
 
       - name: Build sparetools-cpython
-        run: conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+        run: |
+          echo "🐍 Building CPython (may take 5-30 minutes, especially on Windows)..."
+          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+        timeout-minutes: 40
 
       - name: Build sparetools-shared-dev-tools
         run: conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
@@ -77,8 +128,25 @@ jobs:
           PACKAGES=$(conan list "sparetools-*/*" --format=compact | grep -v "^$" | tr '\n' ' ')
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
 
+  list-existing-packages:
+    needs: check-existing-packages
+    if: needs.check-existing-packages.outputs.needs_build == 'false'
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.list.outputs.packages }}
+
+    steps:
+      - name: List existing packages
+        id: list
+        run: |
+          echo "📦 Using existing packages from Cloudsmith:"
+          PACKAGES="sparetools-base/2.0.0 sparetools-cpython/3.12.7 sparetools-shared-dev-tools/2.0.0 sparetools-bootstrap/2.0.0 sparetools-openssl-tools/2.0.0 sparetools-openssl/${{ github.event.inputs.version || '3.3.2' }}"
+          echo "$PACKAGES"
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+
+
   publish-cloudsmith:
-    needs: build-all-packages
+    needs: [check-existing-packages, build-all-packages, list-existing-packages]
     if: |
       (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) ||
       (github.event_name == 'workflow_dispatch' && (inputs.registry == 'cloudsmith' || inputs.registry == 'both'))
@@ -139,7 +207,7 @@ jobs:
           echo "✅ Packages published to Cloudsmith"
 
   publish-github:
-    needs: build-all-packages
+    needs: [check-existing-packages, build-all-packages, list-existing-packages]
     if: |
       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
       (github.event_name == 'workflow_dispatch' && (inputs.registry == 'github' || inputs.registry == 'both'))
@@ -191,7 +259,7 @@ jobs:
           echo "✅ Packages published to GitHub Packages"
 
   create-github-release:
-    needs: [build-all-packages, publish-github]
+    needs: [check-existing-packages, build-all-packages, list-existing-packages, publish-github]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:

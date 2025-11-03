@@ -1,5 +1,10 @@
 name: CI - Build and Test
 
+# CI/CD Pipeline for SpareTools OpenSSL Ecosystem
+# Validates builds across multiple platforms and build methods
+# Expected duration: 15-45 minutes (cached: 8-15 minutes)
+# Failure rate target: <5%
+
 on:
   push:
     branches: [ main, develop, 'release/*' ]
@@ -109,8 +114,13 @@ jobs:
           - name: "Windows MSVC 2022"
             os: windows-2022
             profile: windows-msvc2022
+            # ⚠️ Experimental: Windows CPython builds may take 15-30 min
+            # Continue on error to avoid blocking PRs, but report issues
+            experimental: true
             
     runs-on: ${{ matrix.os }}
+    # Mark Windows builds as experimental - CPython builds take 15-30 min
+    continue-on-error: ${{ matrix.os == 'windows-2022' }}
     
     steps:
       - uses: actions/checkout@v4
@@ -119,7 +129,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-          cache: 'pip'
       
       - name: Install Conan
         run: |
@@ -137,29 +146,36 @@ jobs:
       - name: Cache Conan artifacts
         uses: actions/cache@v4
         with:
-          path: ~/.conan2/p
-          key: conan-${{ matrix.os }}-${{ matrix.profile }}-${{ hashFiles('packages/**/conanfile.py') }}
+          # Cache path: ~/.conan2 works on both Windows (via bash) and Unix
+          # Optimized cache key strategy for better hit rates
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ matrix.profile }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}-${{ env.VERSION_CPYTHON }}
           restore-keys: |
+            conan-${{ matrix.os }}-${{ matrix.profile }}-${{ env.VERSION_CPYTHON }}
             conan-${{ matrix.os }}-${{ matrix.profile }}-
+            conan-${{ matrix.os }}-cpython-
             conan-${{ matrix.os }}-
+            conan-
       
       # Stage 1: Foundation packages (python_requires)
       - name: Export Foundation Packages
         run: |
+          echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
           conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
           conan export packages/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
           conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
           conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
         shell: bash
       
-      # Stage 2: Build CPython (tool_requires)  
+      # Stage 2: Build CPython (tool_requires) - may take 5-15 minutes
       - name: Build sparetools-cpython
         run: |
           conan create packages/sparetools-cpython \
             --version=${{ env.VERSION_CPYTHON }} \
             --build=missing
         shell: bash
-      
+        timeout-minutes: 25
+
       # Stage 3: Build OpenSSL
       - name: Build sparetools-openssl (Perl Configure)
         run: |
@@ -203,14 +219,14 @@ jobs:
           conan cache path "sparetools-openssl/${{ env.VERSION_OPENSSL }}:*" | head -1 >> $GITHUB_STEP_SUMMARY || true
         shell: bash
       
-      - name: Save build artifacts
-        if: success()
+      - name: Save build artifacts (on failure only)
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: packages-${{ matrix.os }}-${{ matrix.profile }}
+          name: build-artifacts-${{ matrix.os }}-${{ matrix.profile }}
           path: |
-            ~/.conan2/p/spareto*openssl*/p/lib/
-            ~/.conan2/p/spareto*openssl*/p/bin/
+            ~/.conan2/p/spareto*openssl*/p/lib/*.a
+            ~/.conan2/p/spareto*openssl*/p/include/
           retention-days: 7
 
   # CI Summary

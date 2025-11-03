@@ -44,8 +44,52 @@ class CPythonToolConan(ConanFile):
     
     def build(self):
         """Build directly into package folder - ZERO intermediate copies"""
+
+        if self.settings.os == "Windows":
+            # Windows uses PCbuild system
+            self.output.info("Building CPython for Windows using PCbuild")
+            self._build_windows()
+        else:
+            # Unix/Linux/macOS use autotools
+            self.output.info("Building CPython for Unix-like systems using autotools")
+            self._build_unix()
+
+        self.output.info(f"✅ CPython built directly to: {self.package_folder}")
+
+    def _build_windows(self):
+        """Build CPython on Windows using PCbuild"""
+        # Windows Python builds use Visual Studio project files
+        # Reference: https://github.com/python/cpython/blob/main/PCbuild/readme.txt
+
+        platform = "x64" if self.settings.arch == "x86_64" else "Win32"
+        config = str(self.settings.build_type)
+
+        # Build using PCbuild/build.bat
+        self.run(f'PCbuild\\build.bat -p {platform} -c {config}')
+
+        # Windows doesn't install to a prefix like Unix - copy manually
+        import shutil
+        src_dir = f"PCbuild\\{platform.lower() if platform == 'Win32' else 'amd64'}"
+
+        # Copy binaries
+        bin_dir = os.path.join(self.package_folder, "bin")
+        os.makedirs(bin_dir, exist_ok=True)
+        shutil.copytree(src_dir, bin_dir, dirs_exist_ok=True)
+
+        # Copy lib files
+        lib_dir = os.path.join(self.package_folder, "lib")
+        os.makedirs(lib_dir, exist_ok=True)
+        shutil.copytree("Lib", os.path.join(lib_dir, "python3.12"), dirs_exist_ok=True)
+
+        # Copy includes
+        include_dir = os.path.join(self.package_folder, "include")
+        os.makedirs(include_dir, exist_ok=True)
+        shutil.copytree("Include", os.path.join(include_dir, "python3.12"), dirs_exist_ok=True)
+
+    def _build_unix(self):
+        """Build CPython on Unix-like systems using autotools"""
         autotools = Autotools(self)
-        
+
         # ✅ CRITICAL: Build directly to package folder location
         # This eliminates the staging step entirely
         args = [
@@ -55,22 +99,22 @@ class CPythonToolConan(ConanFile):
             "--with-ensurepip=install",
             "--enable-loadable-sqlite-extensions",
         ]
-        
+
         if self.options.shared:
             args.append("--enable-shared")
         else:
             args.append("--disable-shared")
-        
+
         if self.options.fips:
             args.append("--enable-fips")
-        
+
         # Optimization level
         opt_level = self.options.optimize
         if opt_level == "3":
             args.append("--with-lto")
-        
+
         autotools.configure(args=args)
-        
+
         # Build with parallel jobs
         import subprocess
         try:
@@ -78,13 +122,12 @@ class CPythonToolConan(ConanFile):
             nproc = nproc_result.stdout.strip() if nproc_result.returncode == 0 else '4'
         except:
             nproc = str(os.cpu_count() or 4)
-        
+
         autotools.make(args=[f"-j{nproc}"])
-        
-        # Install directly to package_folder (no DESTDIR needed)
-        autotools.install()
-        
-        self.output.info(f"✅ CPython built directly to: {self.package_folder}")
+
+        # Install directly to package_folder (no DESTDIR since we used --prefix)
+        # Run make install without DESTDIR to avoid double-prefixing
+        self.run("make install")
     
     def package(self):
         """Files already in package_folder from build() - just add metadata"""

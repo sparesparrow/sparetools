@@ -1,3 +1,4 @@
+# Validation test marker - CI/CD pipeline validation 2025-11-02
 from conan import ConanFile
 from conan.tools.files import copy, get, save, load, rm, rmdir
 from conan.tools.gnu import Autotools, AutotoolsToolchain
@@ -65,7 +66,8 @@ class SpareToolsOpenSSLConan(ConanFile):
         "sparetools-cpython/3.12.7",
     ]
     
-    python_requires = "sparetools-base/2.0.0"
+    # Use both base (for Trivy) and bootstrap (for FIPS/SBOM)
+    python_requires = "sparetools-base/2.0.0", "sparetools-bootstrap/2.0.0"
     
     exports_sources = "configure.py"
     
@@ -110,6 +112,13 @@ class SpareToolsOpenSSLConan(ConanFile):
         """
         os_name = str(self.settings.os)
         arch = str(self.settings.arch)
+        
+        # Normalize architecture names (handle variations)
+        arch_normalized = arch.lower()
+        if arch_normalized in ("arm64", "aarch64"):
+            arch = "armv8"
+        elif arch_normalized in ("x86_64", "amd64"):
+            arch = "x86_64"
 
         target_map = {
             # Linux targets
@@ -148,9 +157,16 @@ class SpareToolsOpenSSLConan(ConanFile):
 
         default_target = target_map.get((os_name, arch))
         if not default_target:
-            self.output.warning(f"Unknown platform {os_name}-{arch}, using linux-x86_64")
+            # Log detected settings for debugging
+            self.output.warning(f"Unknown platform {os_name}-{arch} (raw: {self.settings.os}-{self.settings.arch})")
+            # For macOS ARM64, default to darwin64-arm64-cc if arch suggests ARM
+            if os_name == "Macos" and ("arm" in arch.lower() or "aarch" in arch.lower()):
+                self.output.warning(f"Detected macOS ARM, using darwin64-arm64-cc")
+                return "darwin64-arm64-cc"
+            self.output.warning(f"Falling back to linux-x86_64")
             return "linux-x86_64"
-
+        
+        self.output.info(f"Detected target: {default_target} for {os_name}-{arch}")
         return default_target
     
     def _get_configure_args(self):
@@ -209,6 +225,37 @@ class SpareToolsOpenSSLConan(ConanFile):
             tc = AutotoolsToolchain(self)
             tc.generate()
     
+    def _ensure_windows_perl_dependencies(self):
+        """Ensure required Perl modules are available on Windows"""
+        try:
+            # Check if Locale::Maketext::Simple is available
+            result = subprocess.run(
+                ["perl", "-e", "use Locale::Maketext::Simple;"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                self.output.info("? Locale::Maketext::Simple module found")
+                return
+            
+            # Try to install via cpan (may not work on GitHub Actions, but worth trying)
+            self.output.warn("?? Locale::Maketext::Simple not found, attempting to install via cpan...")
+            install_result = subprocess.run(
+                ["cpan", "-i", "-f", "Locale::Maketext::Simple"],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if install_result.returncode == 0:
+                self.output.info("? Locale::Maketext::Simple installed successfully")
+            else:
+                self.output.warn(f"?? cpan install failed: {install_result.stderr}")
+                self.output.warn("?? You may need to install Perl modules manually or use CMake build method on Windows")
+        except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+            self.output.warn(f"?? Could not check/install Perl dependencies: {e}")
+            self.output.warn("?? Consider using CMake build method on Windows if Perl Configure fails")
+
     def _build_with_perl(self):
         """
         Standard Perl Configure build (proven, production-ready).
@@ -218,6 +265,11 @@ class SpareToolsOpenSSLConan(ConanFile):
         - Windows systems - uses nmake (MSVC) or make (MinGW)
         """
         self.output.info("Building with Perl Configure (standard method)")
+
+        # Check and install Windows Perl dependencies if needed
+        is_windows = str(self.settings.os) == "Windows"
+        if is_windows:
+            self._ensure_windows_perl_dependencies()
 
         configure_args = self._get_configure_args()
         configure_cmd = f"perl Configure {' '.join(configure_args)}"
@@ -331,7 +383,7 @@ class SpareToolsOpenSSLConan(ConanFile):
                 python_root = cpython_dep.package_folder
                 self.output.info(f"? Zero-copy CPython available from: {python_root}")
             else:
-                self.output.warning("??  sparetools-cpython not found - Python build may fail")
+                self.output.warning("?? sparetools-cpython not found - Python build may fail")
         
         build_methods = {
             "perl": self._build_with_perl,
@@ -352,19 +404,39 @@ class SpareToolsOpenSSLConan(ConanFile):
     def _run_security_gates(self):
         """Run security scanning and SBOM generation"""
         try:
-            base = self.python_requires["sparetools-base"]
-            if hasattr(base.conanfile, "run_trivy_scan"):
-                self.output.info("Running Trivy security scan...")
+            # FIXED: Import bootstrap utilities with correct module paths
+            from bootstrap.openssl.fips_validator import FIPSValidator
+            from bootstrap.openssl.sbom_generator import SBOMGenerator
+
+            # Run Trivy security scan (via base if available)
+            self.output.info("Running Trivy security scan...")
+            base = self.python_requires["sparetools-base"] if "sparetools-base" in self.python_requires else None
+            if base and hasattr(base.conanfile, "run_trivy_scan"):
                 base.conanfile.run_trivy_scan(self.source_folder)
-            
-            if hasattr(base.conanfile, "generate_sbom"):
-                self.output.info("Generating SBOM...")
-                base.conanfile.generate_sbom(self.source_folder)
+
+            # Generate SBOM using bootstrap utilities
+            self.output.info("Generating SBOM...")
+            sbom_gen = SBOMGenerator()
+            sbom_gen.generate_sbom(self.source_folder)
+
+            # FIPS validation if enabled
+            if self.options.fips:
+                self.output.info("Running FIPS validation...")
+                fips_validator = FIPSValidator()
+                fips_validator.validate_fips()
+                
+        except ImportError as e:
+            self.output.warn(f"Bootstrap utilities not available: {e}")
+            self.output.info("Security gates will be skipped - this is expected for minimal builds")
         except Exception as e:
-            self.output.warn(f"Security gates not available: {e}")
+            self.output.warn(f"Security gates encountered error: {e}")
+            self.output.info("Continuing build - security gates are non-blocking")
     
     def package(self):
         """Install OpenSSL to package folder"""
+        # Windows uses nmake, others use make
+        is_windows = str(self.settings.os) == "Windows"
+        
         if self.options.build_method == "cmake":
             cmake = CMake(self)
             cmake.install()
@@ -372,7 +444,10 @@ class SpareToolsOpenSSLConan(ConanFile):
             autotools = Autotools(self)
             autotools.install()
         else:
-            self.run("make install_sw install_ssldirs", cwd=self.source_folder)
+            if is_windows:
+                self.run("nmake install_sw install_ssldirs", cwd=self.source_folder)
+            else:
+                self.run("make install_sw install_ssldirs", cwd=self.source_folder)
         
         # Copy license
         copy(self, "LICENSE*", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
@@ -443,4 +518,3 @@ class SpareToolsOpenSSLConan(ConanFile):
         self.cpp_info.components["crypto"].libdirs = [libdir]
         self.cpp_info.components["crypto"].includedirs = ["include"]
         self.cpp_info.components["crypto"].bindirs = ["bin"]
-

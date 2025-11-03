@@ -1,0 +1,5 @@
+# Minimal requirements for CI/CD workflows
+# Only includes system-level dependencies installed via pip
+# Package dependencies are managed via Conan
+
+conan==2.21.0

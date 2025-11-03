@@ -1,5 +1,21 @@
 name: Build and Test
 
+# ⚠️ DEPRECATED: This workflow is being replaced by ci.yml
+# 
+# **Status:** This workflow is deprecated and should not be used for new PRs.
+# The `ci.yml` workflow provides better maintenance, caching, and change detection.
+#
+# **Migration:**
+# - For PR validation, use `.github/workflows/ci.yml`
+# - For manual builds, use `.github/workflows/build-test.yml` or `ci.yml`
+# - This workflow will be removed in v2.1.0
+#
+# **Why deprecated:**
+# - ci.yml has better change detection (skips docs-only changes)
+# - ci.yml has improved caching strategy
+# - ci.yml has Windows experimental builds with continue-on-error
+# - ci.yml uses centralized version management
+
 on:
   push:
     branches: [ main, develop ]
@@ -123,7 +139,13 @@ jobs:
       always() &&
       (needs.build-foundation.result == 'success' || needs.build-foundation.result == 'skipped') &&
       (needs.detect-changes.outputs.cpython_changed == 'true' || github.event_name == 'workflow_dispatch')
-    
+
+    env:
+      CONAN_VERSION: "2.21.0"
+      VERSION_BASE: "2.0.0"
+      VERSION_CPYTHON: "3.12.7"
+      VERSION_OPENSSL: "3.3.2"
+
     strategy:
       fail-fast: false
       matrix:
@@ -134,17 +156,17 @@ jobs:
             platform: macos-x86_64
           - os: macos-14
             platform: macos-arm64
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install Conan
-        run: pip install conan==${{ env.CONAN_VERSION }}
+        run: pip install conan==2.21.0
       
       - name: Configure Conan
         run: |
@@ -204,10 +226,16 @@ jobs:
       always() &&
       (needs.build-foundation.result == 'success' || needs.build-foundation.result == 'skipped') &&
       (needs.build-cpython.result == 'success' || needs.build-cpython.result == 'skipped') &&
-      (needs.detect-changes.outputs.openssl_changed == 'true' || 
+      (needs.detect-changes.outputs.openssl_changed == 'true' ||
        needs.detect-changes.outputs.profiles_changed == 'true' ||
        github.event_name == 'workflow_dispatch')
-    
+
+    env:
+      CONAN_VERSION: "2.21.0"
+      VERSION_BASE: "2.0.0"
+      VERSION_CPYTHON: "3.12.7"
+      VERSION_OPENSSL: "3.3.2"
+
     strategy:
       fail-fast: false
       matrix:
@@ -218,41 +246,41 @@ jobs:
             base_profile: base/linux-gcc11
             method_profile: build-methods/perl-configure
             feature_profile: ""
-          
+
           - name: Linux-GCC11-Perl-FIPS
             os: ubuntu-22.04
             base_profile: base/linux-gcc11
             method_profile: build-methods/perl-configure
             feature_profile: features/fips-enabled
-          
+
           - name: Linux-Clang18-Perl-Default
             os: ubuntu-22.04
             base_profile: base/linux-clang18
             method_profile: build-methods/perl-configure
             feature_profile: ""
-          
+
           - name: Windows-MSVC2022-Perl-Default
             os: windows-2022
             base_profile: base/windows-msvc2022
             method_profile: build-methods/perl-configure
             feature_profile: ""
-          
+
           - name: macOS-ARM64-Perl-Default
             os: macos-14
             base_profile: base/darwin-clang-arm64
             method_profile: build-methods/perl-configure
             feature_profile: ""
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      
+
       - name: Install Conan
-        run: pip install conan==${{ env.CONAN_VERSION }}
+        run: pip install conan==2.21.0
       
       - name: Configure Conan
         run: |
@@ -288,13 +316,41 @@ jobs:
         run: |
           cd packages/sparetools-openssl
           
-          # Build profile arguments
-          PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
-          PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          # Install bundled CPython and shared-dev-tools via Conan
+          # VirtualRunEnv creates conanrun.sh with environment setup
+          cd ../..
+          conan install --requires=sparetools-cpython/${{ env.VERSION_CPYTHON }} --requires=sparetools-shared-dev-tools/${{ env.VERSION_BASE }} --build=missing -g VirtualRunEnv
+          cd packages/sparetools-openssl
           
-          if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+          # Architecture: Use bundled tools without breaking system Conan CLI
+          # 1. Extract PYTHONPATH from conanrun.sh (don't source full environment)
+          CONAN_PYTHONPATH=$(grep "^export PYTHONPATH=" ../../conanrun.sh 2>/dev/null | cut -d'=' -f2- | tr -d '"' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo "")
+          if [ -n "$CONAN_PYTHONPATH" ]; then
+            export PYTHONPATH="$CONAN_PYTHONPATH:$PYTHONPATH"
           fi
+          
+          # 2. Find bundled CPython executable via Conan cache path
+          CPYTHON_PACKAGE_PATH=$(conan cache path sparetools-cpython/${{ env.VERSION_CPYTHON }} --folder p 2>/dev/null || echo "")
+          if [ -n "$CPYTHON_PACKAGE_PATH" ] && [ -d "$CPYTHON_PACKAGE_PATH/bin" ]; then
+            CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3.12"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="python3"
+          else
+            CONAN_PYTHON="python3"
+          fi
+          
+          # 3. Build profile args using bundled Python + tools (PYTHONPATH set above)
+          if [ -n "${{ matrix.feature_profile }}" ]; then
+            PROFILES=$("$CONAN_PYTHON" ../../packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
+          else
+            PROFILES=$("$CONAN_PYTHON" ../../packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
+          fi
+          
+          # 4. Clear PYTHONPATH before conan create (use system Conan CLI)
+          unset PYTHONPATH
+          
+          # CRITICAL: Run conan create with system Conan (PATH/PYTHONPATH not modified)
           
           # ✅ Conan 2.x syntax
           conan create . \
