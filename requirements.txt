@@ -3,3 +3,4 @@
 # Package dependencies are managed via Conan
 
 conan==2.21.0
+pyyaml>=6.0

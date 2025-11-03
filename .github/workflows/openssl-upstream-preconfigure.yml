@@ -29,6 +29,10 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   monitor-upstream:
     name: Monitor OpenSSL Upstream
