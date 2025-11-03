@@ -49,10 +49,10 @@ This is a major version with significant architectural changes. Migration requir
 - **integration.yml**: Consumer project testing, FIPS validation
 
 #### Documentation
-- **README.md** for all 7 packages:
+- **README.md** for all 6 packages:
   - sparetools-base, sparetools-cpython, sparetools-openssl
   - sparetools-openssl-tools, sparetools-shared-dev-tools
-  - sparetools-bootstrap, sparetools-mcp-orchestrator
+  - sparetools-bootstrap
 - **Profiles Documentation**:
   - 450+ line profiles/README.md
   - 350+ line profiles/matrix/README.md with CI/CD examples
@@ -166,14 +166,13 @@ The OpenSSL package version tracks the upstream OpenSSL release it packages, not
 
 ### Added
 - Initial release of SpareTools OpenSSL DevOps Ecosystem
-- 8 core packages:
+- 7 core packages:
   - sparetools-base/1.0.0
   - sparetools-cpython/3.12.7
   - sparetools-shared-dev-tools/1.0.0
   - sparetools-bootstrap/1.0.0
   - sparetools-openssl-tools/1.0.0
   - sparetools-openssl-tools-mini/1.0.0
-  - sparetools-mcp-orchestrator/1.0.0
   - sparetools-openssl/3.3.2
 - OpenSSL 3.3.2 successfully packaged
 - Zero-copy deployment pattern (symlink-based)

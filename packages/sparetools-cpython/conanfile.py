@@ -100,6 +100,29 @@ class CPythonToolConan(ConanFile):
             "--enable-loadable-sqlite-extensions",
         ]
 
+        # macOS-specific configuration
+        if self.settings.os == "Macos":
+            # Detect architecture for macOS
+            if self.settings.arch == "armv8" or self.settings.arch == "arm64":
+                # Apple Silicon (M1/M2/M3)
+                args.append("--enable-universalsdk=/")
+                args.append("--with-universal-archs=universal2")
+                args.append("ac_cv_func_wcsftime=yes")  # Fix for Python 3.12.7 on Apple Silicon
+            else:
+                # Intel macOS
+                args.append("--enable-universalsdk=/")
+                args.append("--with-universal-archs=intel-64")
+            
+            # Set minimum deployment target (required for macOS builds)
+            # Use environment variable if set, otherwise default to macOS 13.0
+            deployment_target = os.environ.get("MACOSX_DEPLOYMENT_TARGET", "13.0")
+            
+            # Set deployment target via environment variable (configure script respects this)
+            os.environ["MACOSX_DEPLOYMENT_TARGET"] = deployment_target
+            args.append(f"--with-macos-version-min={deployment_target}")
+            
+            self.output.info(f"macOS build configuration: arch={self.settings.arch}, deployment_target={deployment_target}")
+
         if self.options.shared:
             args.append("--enable-shared")
         else:
