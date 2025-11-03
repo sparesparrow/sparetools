@@ -1,8 +1,20 @@
 name: Build and Test
 
 # ⚠️ DEPRECATED: This workflow is being replaced by ci.yml
-# This workflow will be removed in a future release.
-# Please refer to ci.yml for the current CI/CD pipeline.
+# 
+# **Status:** This workflow is deprecated and should not be used for new PRs.
+# The `ci.yml` workflow provides better maintenance, caching, and change detection.
+#
+# **Migration:**
+# - For PR validation, use `.github/workflows/ci.yml`
+# - For manual builds, use `.github/workflows/build-test.yml` or `ci.yml`
+# - This workflow will be removed in v2.1.0
+#
+# **Why deprecated:**
+# - ci.yml has better change detection (skips docs-only changes)
+# - ci.yml has improved caching strategy
+# - ci.yml has Windows experimental builds with continue-on-error
+# - ci.yml uses centralized version management
 
 on:
   push:

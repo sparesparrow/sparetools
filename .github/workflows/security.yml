@@ -22,7 +22,8 @@ jobs:
   trivy-scan:
     name: Trivy Vulnerability Scan
     runs-on: ubuntu-latest
-    
+    # Remove dependency to allow parallel execution
+
     steps:
       - uses: actions/checkout@v4
       
