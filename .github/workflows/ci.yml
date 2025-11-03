@@ -1,5 +1,10 @@
 name: CI - Build and Test
 
+# CI/CD Pipeline for SpareTools OpenSSL Ecosystem
+# Validates builds across multiple platforms and build methods
+# Expected duration: 15-45 minutes (cached: 8-15 minutes)
+# Failure rate target: <5%
+
 on:
   push:
     branches: [ main, develop, 'release/*' ]
@@ -110,6 +115,7 @@ jobs:
             os: windows-2022
             profile: windows-msvc2022
             # ⚠️ Experimental: Windows CPython builds may take 15-30 min
+            # Continue on error to avoid blocking PRs, but report issues
             experimental: true
             
     runs-on: ${{ matrix.os }}
@@ -141,11 +147,12 @@ jobs:
         uses: actions/cache@v4
         with:
           # Cache path: ~/.conan2 works on both Windows (via bash) and Unix
-          # Improved cache key includes CPython to better cache Windows builds (15-30 min)
+          # Optimized cache key strategy for better hit rates
           path: ~/.conan2
-          key: conan-${{ matrix.os }}-${{ matrix.profile }}-cpython-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**', 'packages/sparetools-cpython/**') }}
+          key: conan-${{ matrix.os }}-${{ matrix.profile }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}-${{ env.VERSION_CPYTHON }}
           restore-keys: |
-            conan-${{ matrix.os }}-${{ matrix.profile }}-cpython-
+            conan-${{ matrix.os }}-${{ matrix.profile }}-${{ env.VERSION_CPYTHON }}
+            conan-${{ matrix.os }}-${{ matrix.profile }}-
             conan-${{ matrix.os }}-cpython-
             conan-${{ matrix.os }}-
             conan-
@@ -160,14 +167,15 @@ jobs:
           conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
         shell: bash
       
-      # Stage 2: Build CPython (tool_requires)  
+      # Stage 2: Build CPython (tool_requires) - may take 5-15 minutes
       - name: Build sparetools-cpython
         run: |
           conan create packages/sparetools-cpython \
             --version=${{ env.VERSION_CPYTHON }} \
             --build=missing
         shell: bash
-      
+        timeout-minutes: 25
+
       # Stage 3: Build OpenSSL
       - name: Build sparetools-openssl (Perl Configure)
         run: |
