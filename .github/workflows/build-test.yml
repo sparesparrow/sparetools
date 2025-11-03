@@ -163,8 +163,16 @@ jobs:
             export PYTHONPATH="$CONAN_PYTHONPATH:$PYTHONPATH"
           fi
           
-          # 2. Find bundled CPython executable in Conan cache
-          CONAN_PYTHON=$(find ~/.conan2/p -name "python3" -type f -executable 2>/dev/null | head -1 || echo "python3")
+          # 2. Find bundled CPython executable via Conan cache path
+          CPYTHON_PACKAGE_PATH=$(conan cache path sparetools-cpython/${{ env.VERSION_CPYTHON }} --folder p 2>/dev/null || echo "")
+          if [ -n "$CPYTHON_PACKAGE_PATH" ] && [ -d "$CPYTHON_PACKAGE_PATH/bin" ]; then
+            CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3.12"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python"
+            [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="python3"
+          else
+            CONAN_PYTHON="python3"
+          fi
           
           # 3. Build profile args using bundled Python + tools (PYTHONPATH set above)
           if [ -n "${{ matrix.feature_profile }}" ]; then

@@ -654,12 +654,22 @@ jobs:
             echo "✅ Extracted PYTHONPATH from conanrun.sh: $CONAN_PYTHONPATH"
           fi
           
-          # 2. Find bundled CPython executable in Conan cache
-          CONAN_PYTHON=$(find ~/.conan2/p -name "python3" -type f -executable 2>/dev/null | head -1 || echo "python3")
-          if [ "$CONAN_PYTHON" != "python3" ]; then
-            echo "✅ Using bundled CPython: $CONAN_PYTHON"
+          # 2. Find bundled CPython executable via Conan cache path
+          # Query Conan for the installed CPython package location
+          CPYTHON_PACKAGE_PATH=$(conan cache path sparetools-cpython/3.12.7 --folder p 2>/dev/null || echo "")
+          if [ -n "$CPYTHON_PACKAGE_PATH" ] && [ -d "$CPYTHON_PACKAGE_PATH/bin" ]; then
+            CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3"
+            if [ -x "$CONAN_PYTHON" ]; then
+              echo "✅ Using bundled CPython: $CONAN_PYTHON"
+            else
+              # Try python3.12 or python as fallback
+              CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python3.12"
+              [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="$CPYTHON_PACKAGE_PATH/bin/python"
+              [ ! -x "$CONAN_PYTHON" ] && CONAN_PYTHON="python3"
+            fi
           else
-            echo "⚠️  Using system python3 (bundled CPython not found)"
+            CONAN_PYTHON="python3"
+            echo "⚠️  Using system python3 (bundled CPython not found at $CPYTHON_PACKAGE_PATH)"
           fi
           
           # 3. Build profile args using bundled Python + tools (PYTHONPATH set above)
