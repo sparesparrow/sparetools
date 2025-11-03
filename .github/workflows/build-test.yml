@@ -156,16 +156,16 @@ jobs:
           # VirtualRunEnv will set up PATH and PYTHONPATH correctly
           conan install --requires=sparetools-cpython/${{ env.VERSION_CPYTHON }} --requires=sparetools-shared-dev-tools/${{ env.VERSION_BASE }} --build=missing -g VirtualRunEnv
           
-          # Source Conan environment to get CPython and shared-dev-tools in PYTHONPATH
-          source conanrun.sh
-          
-          # Build profile arguments using shared-dev-tools utilities (via CPython from Conan)
+          # Build profile arguments using shared-dev-tools utilities
+          # Use system Python for the script; shared-dev-tools sets PYTHONPATH via package_info
           if [ -n "${{ matrix.feature_profile }}" ]; then
             PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
           else
             PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
           fi
           
+          # CRITICAL: Run conan create BEFORE sourcing conanrun.sh
+          # Sourcing conanrun.sh changes PATH/PYTHONPATH and breaks system Conan CLI
           conan create packages/${{ matrix.package }} --version=$VERSION $PROFILES --build=missing
         shell: bash
       
