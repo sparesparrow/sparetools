@@ -20,4 +20,5 @@ class SpareToolsBootstrapConan(ConanFile):
     
     def package_info(self):
         self.cpp_info.libs = []
-        self.env_info.PYTHONPATH.append(self.package_folder)
+        # Conan 2.x API: Use buildenv_info for build-time Python modules
+        self.buildenv_info.append_path("PYTHONPATH", self.package_folder)
