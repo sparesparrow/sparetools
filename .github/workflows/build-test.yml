@@ -124,6 +124,9 @@ jobs:
           echo "Exporting sparetools-openssl-tools..."
           conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
           
+          echo "Exporting sparetools-shared-dev-tools..."
+          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
+          
           # Export CPython recipe (needed for tool_requires resolution)
           echo "Exporting sparetools-cpython recipe..."
           conan export packages/sparetools-cpython --version=${{ env.VERSION_CPYTHON }}
@@ -149,11 +152,14 @@ jobs:
             VERSION="${{ env.VERSION_BASE }}"
           fi
 
-          # Use shared-dev-tools script to resolve profile paths
-          # Export shared-dev-tools first so the script can import it
-          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} || true
+          # Install CPython and shared-dev-tools via Conan
+          # VirtualRunEnv will set up PATH and PYTHONPATH correctly
+          conan install --requires=sparetools-cpython/${{ env.VERSION_CPYTHON }} --requires=sparetools-shared-dev-tools/${{ env.VERSION_BASE }} --build=missing -g VirtualRunEnv
           
-          # Build profile arguments using shared-dev-tools utilities
+          # Source Conan environment to get CPython and shared-dev-tools in PYTHONPATH
+          source conanrun.sh
+          
+          # Build profile arguments using shared-dev-tools utilities (via CPython from Conan)
           if [ -n "${{ matrix.feature_profile }}" ]; then
             PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
           else

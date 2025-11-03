@@ -4,17 +4,42 @@ Build Profile Arguments for Conan
 
 Generates Conan profile arguments using shared-dev-tools utilities.
 Resolves profile paths correctly regardless of working directory.
+
+This script should be run with Python from sparetools-cpython package,
+which has shared-dev-tools installed via Conan package_info PYTHONPATH.
 """
 
 import os
 import sys
 from pathlib import Path
 
-# Add shared_dev_tools to path
-tools_path = Path(__file__).parent.parent
-sys.path.insert(0, str(tools_path))
-
-from shared_dev_tools.core.utilities import get_project_root
+# Try to import from installed shared-dev-tools (via Conan PYTHONPATH)
+try:
+    from shared_dev_tools.core.utilities import get_project_root
+except ImportError:
+    # Fallback: Try to find shared-dev-tools in source tree or Conan cache
+    # Check if we're in a Conan environment with PYTHONPATH set
+    pythonpath = os.environ.get('PYTHONPATH', '').split(os.pathsep)
+    found = False
+    
+    for path in pythonpath:
+        if path:
+            tools_init = Path(path) / 'shared_dev_tools' / '__init__.py'
+            if tools_init.exists():
+                sys.path.insert(0, path)
+                from shared_dev_tools.core.utilities import get_project_root
+                found = True
+                break
+    
+    if not found:
+        # Last resort: try source tree
+        tools_path = Path(__file__).parent.parent
+        sys.path.insert(0, str(tools_path))
+        try:
+            from shared_dev_tools.core.utilities import get_project_root
+        except ImportError:
+            print("ERROR: Cannot import shared_dev_tools. Ensure sparetools-shared-dev-tools is installed via Conan.", file=sys.stderr)
+            sys.exit(1)
 
 
 def get_repo_root():

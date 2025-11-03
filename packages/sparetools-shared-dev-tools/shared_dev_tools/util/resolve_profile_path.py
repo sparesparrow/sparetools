@@ -6,13 +6,38 @@ Uses shared-dev-tools utilities to resolve Conan profile paths correctly
 regardless of current working directory.
 """
 
+import os
 import sys
 from pathlib import Path
 
-# Add parent directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-from shared_dev_tools.core.utilities import get_project_root
+# Try to import from installed shared-dev-tools (via Conan PYTHONPATH)
+try:
+    from shared_dev_tools.core.utilities import get_project_root
+except ImportError:
+    # Fallback: Check PYTHONPATH for Conan-installed package
+    pythonpath = os.environ.get('PYTHONPATH', '').split(os.pathsep)
+    found = False
+    
+    for path in pythonpath:
+        if path:
+            tools_init = Path(path) / 'shared_dev_tools' / '__init__.py'
+            if tools_init.exists():
+                sys.path.insert(0, path)
+                from shared_dev_tools.core.utilities import get_project_root
+                found = True
+                break
+    
+    if not found:
+        # Last resort: try source tree
+        tools_path = Path(__file__).parent.parent.parent
+        sys.path.insert(0, str(tools_path))
+        try:
+            from shared_dev_tools.core.utilities import get_project_root
+        except ImportError:
+            raise ImportError(
+                "Cannot import shared_dev_tools. "
+                "Ensure sparetools-shared-dev-tools is installed via Conan and available in PYTHONPATH."
+            )
 
 
 def resolve_profile_path(profile_relative_path: str, base_path: str = None) -> str:
