@@ -210,6 +210,37 @@ class SpareToolsOpenSSLConan(ConanFile):
             tc = AutotoolsToolchain(self)
             tc.generate()
     
+    def _ensure_windows_perl_dependencies(self):
+        """Ensure required Perl modules are available on Windows"""
+        try:
+            # Check if Locale::Maketext::Simple is available
+            result = subprocess.run(
+                ["perl", "-e", "use Locale::Maketext::Simple;"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                self.output.info("? Locale::Maketext::Simple module found")
+                return
+            
+            # Try to install via cpan (may not work on GitHub Actions, but worth trying)
+            self.output.warn("?? Locale::Maketext::Simple not found, attempting to install via cpan...")
+            install_result = subprocess.run(
+                ["cpan", "-i", "-f", "Locale::Maketext::Simple"],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if install_result.returncode == 0:
+                self.output.info("? Locale::Maketext::Simple installed successfully")
+            else:
+                self.output.warn(f"?? cpan install failed: {install_result.stderr}")
+                self.output.warn("?? You may need to install Perl modules manually or use CMake build method on Windows")
+        except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
+            self.output.warn(f"?? Could not check/install Perl dependencies: {e}")
+            self.output.warn("?? Consider using CMake build method on Windows if Perl Configure fails")
+
     def _build_with_perl(self):
         """
         Standard Perl Configure build (proven, production-ready).
@@ -219,6 +250,11 @@ class SpareToolsOpenSSLConan(ConanFile):
         - Windows systems - uses nmake (MSVC) or make (MinGW)
         """
         self.output.info("Building with Perl Configure (standard method)")
+
+        # Check and install Windows Perl dependencies if needed
+        is_windows = str(self.settings.os) == "Windows"
+        if is_windows:
+            self._ensure_windows_perl_dependencies()
 
         configure_args = self._get_configure_args()
         configure_cmd = f"perl Configure {' '.join(configure_args)}"
@@ -366,6 +402,9 @@ class SpareToolsOpenSSLConan(ConanFile):
     
     def package(self):
         """Install OpenSSL to package folder"""
+        # Windows uses nmake, others use make
+        is_windows = str(self.settings.os) == "Windows"
+        
         if self.options.build_method == "cmake":
             cmake = CMake(self)
             cmake.install()
@@ -373,7 +412,10 @@ class SpareToolsOpenSSLConan(ConanFile):
             autotools = Autotools(self)
             autotools.install()
         else:
-            self.run("make install_sw install_ssldirs", cwd=self.source_folder)
+            if is_windows:
+                self.run("nmake install_sw install_ssldirs", cwd=self.source_folder)
+            else:
+                self.run("make install_sw install_ssldirs", cwd=self.source_folder)
         
         # Copy license
         copy(self, "LICENSE*", src=self.source_folder, dst=os.path.join(self.package_folder, "licenses"))
