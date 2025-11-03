@@ -152,20 +152,31 @@ jobs:
             VERSION="${{ env.VERSION_BASE }}"
           fi
 
-          # Install CPython and shared-dev-tools via Conan
-          # VirtualRunEnv will set up PATH and PYTHONPATH correctly
+          # Install bundled CPython and shared-dev-tools via Conan
+          # VirtualRunEnv creates conanrun.sh with environment setup
           conan install --requires=sparetools-cpython/${{ env.VERSION_CPYTHON }} --requires=sparetools-shared-dev-tools/${{ env.VERSION_BASE }} --build=missing -g VirtualRunEnv
           
-          # Build profile arguments using shared-dev-tools utilities
-          # Use system Python for the script; shared-dev-tools sets PYTHONPATH via package_info
-          if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
-          else
-            PROFILES=$(python3 packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
+          # Architecture: Use bundled tools without breaking system Conan CLI
+          # 1. Extract PYTHONPATH from conanrun.sh (don't source full environment)
+          CONAN_PYTHONPATH=$(grep "^export PYTHONPATH=" conanrun.sh 2>/dev/null | cut -d'=' -f2- | tr -d '"' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' || echo "")
+          if [ -n "$CONAN_PYTHONPATH" ]; then
+            export PYTHONPATH="$CONAN_PYTHONPATH:$PYTHONPATH"
           fi
           
-          # CRITICAL: Run conan create BEFORE sourcing conanrun.sh
-          # Sourcing conanrun.sh changes PATH/PYTHONPATH and breaks system Conan CLI
+          # 2. Find bundled CPython executable in Conan cache
+          CONAN_PYTHON=$(find ~/.conan2/p -name "python3" -type f -executable 2>/dev/null | head -1 || echo "python3")
+          
+          # 3. Build profile args using bundled Python + tools (PYTHONPATH set above)
+          if [ -n "${{ matrix.feature_profile }}" ]; then
+            PROFILES=$("$CONAN_PYTHON" packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}" "${{ matrix.feature_profile }}")
+          else
+            PROFILES=$("$CONAN_PYTHON" packages/sparetools-shared-dev-tools/scripts/build_profile_args.py "${{ matrix.base_profile }}" "${{ matrix.method_profile }}")
+          fi
+          
+          # 4. Clear PYTHONPATH before conan create (use system Conan CLI)
+          unset PYTHONPATH
+          
+          # CRITICAL: Run conan create with system Conan (PATH/PYTHONPATH not modified)
           conan create packages/${{ matrix.package }} --version=$VERSION $PROFILES --build=missing
         shell: bash
       
