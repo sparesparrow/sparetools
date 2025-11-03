@@ -106,7 +106,7 @@ For architecture deep-dives, OpenSSL 3.6.0 complexity analysis, and development 
 
 ## Package List (All 11)
 
-### Production Packages (7) ✅
+### Production Packages (6) ✅
 
 | # | Name | Version | Type | Purpose |
 |---|------|---------|------|---------|
@@ -115,8 +115,7 @@ For architecture deep-dives, OpenSSL 3.6.0 complexity analysis, and development 
 | 3 | **sparetools-shared-dev-tools** | 2.0.0 | python-require | Generic dev utilities |
 | 4 | **sparetools-openssl-tools** | 2.0.0 | python-require | OpenSSL build tools (15+ profiles) |
 | 5 | **sparetools-bootstrap** | 2.0.0 | python-require | Orchestration (3-agent) |
-| 6 | **sparetools-mcp-orchestrator** | 2.0.0 | python-require | AI/MCP/Mermaid tools |
-| 7 | **sparetools-openssl** | 3.3.2 | library | MAIN DELIVERABLE (4 build methods) |
+| 6 | **sparetools-openssl** | 3.3.2 | library | MAIN DELIVERABLE (4 build methods) |
 
 ### Deprecated Packages (4) ⚠️
 

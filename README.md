@@ -30,8 +30,7 @@ Modern, Python-based tooling ecosystem for OpenSSL development, building, and de
 | **sparetools-cpython** | 3.12.7 | Prebuilt Python 3.12.7 runtime |
 | **sparetools-shared-dev-tools** | 2.0.0 | Shared development utilities |
 | **sparetools-bootstrap** | 2.0.0 | Bootstrap automation (3-agent orchestration) |
-| **sparetools-mcp-orchestrator** | 2.0.0 | MCP integration for AI-assisted development |
-
+| 
 ---
 
 ## 🚀 Quick Start
@@ -89,13 +88,43 @@ conan create packages/sparetools-openssl --version=3.3.2 \
 ## 📚 Documentation
 
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and breaking changes
-- **[CLAUDE.md](CLAUDE.md)** - Developer guidance and architecture overview
+- **[Testing Guide](docs/TESTING-GUIDE.md)** - Comprehensive testing guide with PR validation
 - **[Migration Guide](docs/MIGRATION-GUIDE.md)** - Upgrading from v1.x to v2.0.0
 - **[Package READMEs](packages/)** - Individual package documentation
 - **[Profiles Guide](packages/sparetools-openssl-tools/profiles/README.md)** - Profile system documentation
 - **[_Build Directory](_Build/README.md)** - Zero-copy build artifacts explanation
 - **[Build Results](build_results/)** - Build reports and validation output
 - **[Reviews](reviews/)** - Release reviews and comprehensive summaries
+
+---
+
+## 🤝 Contributing
+
+### PR Validation Checklist
+
+**Before opening a PR**, validate your changes locally to avoid blocking CI/CD:
+
+```bash
+# Run validation script (recommended)
+./scripts/validate-pr.sh
+
+# Or manually validate:
+# 1. Export foundation packages
+conan export packages/sparetools-base --version=2.0.0
+
+# 2. Build changed packages
+conan create packages/sparetools-openssl --version=3.3.2 --build=missing
+
+# 3. Run tests
+conan test packages/sparetools-openssl/test_package --requires=sparetools-openssl/3.3.2
+```
+
+**CI/CD Notes:**
+- ✅ Docs-only changes skip builds automatically
+- ⚠️ Windows CPython builds are experimental (15-30 min, won't block PR)
+- 🔍 Integration tests run separately in CI
+
+See **[Testing Guide](docs/TESTING-GUIDE.md#pr-validation-requirements)** for complete details.
 
 ---
 

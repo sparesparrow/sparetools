@@ -216,6 +216,113 @@ python test_custom.py
 
 ## Integration Testing
 
+### PR Validation Requirements
+
+**⚠️ Important:** Before opening a PR, validate your changes locally to avoid blocking CI/CD pipelines.
+
+#### Pre-PR Checklist
+
+1. **Test Foundation Packages Locally**
+   ```bash
+   # Export foundation packages
+   conan export packages/sparetools-base --version=2.0.0
+   conan export packages/sparetools-openssl-tools --version=2.0.0
+   ```
+
+2. **Test CPython Build (if changed)**
+   ```bash
+   # CPython builds take 5-10 min on Linux/macOS, 15-30 min on Windows
+   # Windows CPython builds are marked experimental in CI (continue-on-error: true)
+   conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+   ```
+
+3. **Test OpenSSL Build (if changed)**
+   ```bash
+   # Build with at least one profile
+   conan create packages/sparetools-openssl \
+     --version=3.3.2 \
+     -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
+     -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure \
+     --build=missing
+   
+   # Run test_package
+   conan test packages/sparetools-openssl/test_package \
+     --requires=sparetools-openssl/3.3.2
+   ```
+
+4. **Test Profile Changes (if profiles modified)**
+   ```bash
+   # Validate profile syntax
+   conan profile show packages/sparetools-openssl-tools/profiles/base/linux-gcc11
+   
+   # Test build with modified profile
+   conan create packages/sparetools-openssl \
+     --version=3.3.2 \
+     -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
+     --build=missing
+   ```
+
+#### CI/CD Expectations
+
+- **CI Workflow (`ci.yml`)**: Runs on every push to main/develop and all PRs
+  - Skips builds for docs-only changes
+  - Windows builds are experimental (won't block PR)
+  - Builds foundation → CPython → OpenSSL in dependency order
+  
+- **Integration Tests**: Separate workflow validates:
+  - Profile matrix combinations
+  - FIPS configuration
+  - Consumer project integration
+  
+- **Windows Builds**: Marked as experimental due to CPython build time (15-30 min)
+  - Use `continue-on-error: true` to prevent blocking
+  - Cache optimized for Windows CPython builds
+  - Failures are logged but don't block PR merge
+
+#### Local Build Validation Script
+
+Create `scripts/validate-pr.sh`:
+```bash
+#!/bin/bash
+# Validate PR changes before pushing
+
+set -e
+
+echo "🔍 Validating PR changes..."
+
+# Check what changed
+if git diff --name-only origin/main | grep -q "packages/"; then
+  echo "📦 Package changes detected"
+  
+  # Test foundation
+  conan export packages/sparetools-base --version=2.0.0
+  
+  # Test if CPython changed
+  if git diff --name-only origin/main | grep -q "sparetools-cpython"; then
+    echo "⚠️  CPython changed - this will take 5-30 min to build"
+    conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+  fi
+  
+  # Test OpenSSL if changed
+  if git diff --name-only origin/main | grep -q "sparetools-openssl"; then
+    conan create packages/sparetools-openssl \
+      --version=3.3.2 \
+      -pr:b packages/sparetools-openssl-tools/profiles/base/linux-gcc11 \
+      --build=missing
+  fi
+else
+  echo "✅ No package changes - docs/CI only changes"
+fi
+
+echo "✅ PR validation complete"
+```
+
+Usage:
+```bash
+chmod +x scripts/validate-pr.sh
+./scripts/validate-pr.sh
+```
+
 ### Multi-Package Dependency Test
 
 Test the complete dependency chain:
