@@ -317,11 +317,13 @@ jobs:
           cd packages/sparetools-openssl
           
           # Build profile arguments
-          PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
-          PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          REPO_ROOT="${{ github.workspace }}"
+
+          PROFILES="-pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }}"
+          PROFILES="$PROFILES -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
           
           if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+            PROFILES="$PROFILES -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
           fi
           
           # ✅ Conan 2.x syntax

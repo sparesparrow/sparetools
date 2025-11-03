@@ -643,9 +643,9 @@ jobs:
           fi
 
           # Build with profile combination
-          PROFILES="-pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }} -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
+          PROFILES="-pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.base_profile }} -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.method_profile }}"
           if [ -n "${{ matrix.feature_profile }}" ]; then
-            PROFILES="$PROFILES -pr:b packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
+            PROFILES="$PROFILES -pr:b $REPO_ROOT/packages/sparetools-openssl-tools/profiles/${{ matrix.feature_profile }}"
           fi
 
           echo "Using profiles: $PROFILES"
