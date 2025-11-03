@@ -7,6 +7,13 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  CONAN_VERSION: "2.21.0"
+  # Centralized version management
+  VERSION_BASE: "2.0.0"
+  VERSION_CPYTHON: "3.12.7"
+  VERSION_OPENSSL: "3.3.2"
+
 jobs:
   build-matrix:
     name: ${{ matrix.name }}
@@ -54,22 +61,27 @@ jobs:
           # Base Packages
           - name: sparetools-base
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-base
           
           - name: sparetools-cpython
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-cpython
           
           - name: sparetools-shared-dev-tools
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-shared-dev-tools
           
           - name: sparetools-bootstrap
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-bootstrap
           
           - name: sparetools-openssl-tools
             os: ubuntu-22.04
+            base_profile: ""
             package: sparetools-openssl-tools
     
     steps:
