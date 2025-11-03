@@ -66,8 +66,8 @@ class SpareToolsOpenSSLConan(ConanFile):
         "sparetools-cpython/3.12.7",
     ]
     
-    # CRITICAL FIX: Use bootstrap for security gates (instead of base)
-    python_requires = "sparetools-bootstrap/2.0.0"
+    # Use both base (for Trivy) and bootstrap (for FIPS/SBOM)
+    python_requires = "sparetools-base/2.0.0", "sparetools-bootstrap/2.0.0"
     
     exports_sources = "configure.py"
     
@@ -112,6 +112,13 @@ class SpareToolsOpenSSLConan(ConanFile):
         """
         os_name = str(self.settings.os)
         arch = str(self.settings.arch)
+        
+        # Normalize architecture names (handle variations)
+        arch_normalized = arch.lower()
+        if arch_normalized in ("arm64", "aarch64"):
+            arch = "armv8"
+        elif arch_normalized in ("x86_64", "amd64"):
+            arch = "x86_64"
 
         target_map = {
             # Linux targets
@@ -150,9 +157,16 @@ class SpareToolsOpenSSLConan(ConanFile):
 
         default_target = target_map.get((os_name, arch))
         if not default_target:
-            self.output.warning(f"Unknown platform {os_name}-{arch}, using linux-x86_64")
+            # Log detected settings for debugging
+            self.output.warning(f"Unknown platform {os_name}-{arch} (raw: {self.settings.os}-{self.settings.arch})")
+            # For macOS ARM64, default to darwin64-arm64-cc if arch suggests ARM
+            if os_name == "Macos" and ("arm" in arch.lower() or "aarch" in arch.lower()):
+                self.output.warning(f"Detected macOS ARM, using darwin64-arm64-cc")
+                return "darwin64-arm64-cc"
+            self.output.warning(f"Falling back to linux-x86_64")
             return "linux-x86_64"
-
+        
+        self.output.info(f"Detected target: {default_target} for {os_name}-{arch}")
         return default_target
     
     def _get_configure_args(self):
@@ -222,11 +236,11 @@ class SpareToolsOpenSSLConan(ConanFile):
                 timeout=5
             )
             if result.returncode == 0:
-                self.output.info("✅ Locale::Maketext::Simple module found")
+                self.output.info("? Locale::Maketext::Simple module found")
                 return
             
             # Try to install via cpan (may not work on GitHub Actions, but worth trying)
-            self.output.warn("⚠️ Locale::Maketext::Simple not found, attempting to install via cpan...")
+            self.output.warn("?? Locale::Maketext::Simple not found, attempting to install via cpan...")
             install_result = subprocess.run(
                 ["cpan", "-i", "-f", "Locale::Maketext::Simple"],
                 capture_output=True,
@@ -234,13 +248,13 @@ class SpareToolsOpenSSLConan(ConanFile):
                 timeout=60
             )
             if install_result.returncode == 0:
-                self.output.info("✅ Locale::Maketext::Simple installed successfully")
+                self.output.info("? Locale::Maketext::Simple installed successfully")
             else:
-                self.output.warn(f"⚠️ cpan install failed: {install_result.stderr}")
-                self.output.warn("⚠️ You may need to install Perl modules manually or use CMake build method on Windows")
+                self.output.warn(f"?? cpan install failed: {install_result.stderr}")
+                self.output.warn("?? You may need to install Perl modules manually or use CMake build method on Windows")
         except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
-            self.output.warn(f"⚠️ Could not check/install Perl dependencies: {e}")
-            self.output.warn("⚠️ Consider using CMake build method on Windows if Perl Configure fails")
+            self.output.warn(f"?? Could not check/install Perl dependencies: {e}")
+            self.output.warn("?? Consider using CMake build method on Windows if Perl Configure fails")
 
     def _build_with_perl(self):
         """
@@ -327,7 +341,7 @@ class SpareToolsOpenSSLConan(ConanFile):
             self._build_with_perl()
             return
         
-        # ✅ Use zero-copy CPython from tool_requires
+        # ? Use zero-copy CPython from tool_requires
         cpython_dep = self.dependencies.build.get("sparetools-cpython")
         if cpython_dep:
             python_root = cpython_dep.package_folder
@@ -362,14 +376,14 @@ class SpareToolsOpenSSLConan(ConanFile):
         """Build OpenSSL using selected method"""
         self.output.info(f"Build method: {self.options.build_method}")
         
-        # ✅ Verify zero-copy CPython is available (for Python build method)
+        # ? Verify zero-copy CPython is available (for Python build method)
         if self.options.build_method == "python":
             cpython_dep = self.dependencies.build.get("sparetools-cpython")
             if cpython_dep:
                 python_root = cpython_dep.package_folder
-                self.output.info(f"✅ Zero-copy CPython available from: {python_root}")
+                self.output.info(f"? Zero-copy CPython available from: {python_root}")
             else:
-                self.output.warning("⚠️ sparetools-cpython not found - Python build may fail")
+                self.output.warning("?? sparetools-cpython not found - Python build may fail")
         
         build_methods = {
             "perl": self._build_with_perl,
