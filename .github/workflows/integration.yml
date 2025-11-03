@@ -123,7 +123,7 @@ jobs:
       - name: Validate Conanfile Structure
         run: |
           echo "🔍 Validating Conanfile structure..."
-          find packages -name "conanfile.py" -type f | while read file; do
+          find packages -name "conanfile.py" -type f -not -path "*/test_package/*" | while read file; do
             echo "Checking $file..."
             # Basic structure validation
             if ! grep -q "class.*ConanFile" "$file"; then
