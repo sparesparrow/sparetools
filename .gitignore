@@ -9,6 +9,11 @@ conaninfo.txt
 conanbuildinfo.txt
 conanfile.pyc
 graph_info.json
+conanbuild.sh
+conanrun.sh
+conanbuildenv-*.sh
+conanrunenv-*.sh
+deactivate_conan*.sh
 
 # Build
 build/
@@ -44,3 +49,6 @@ _Build/openssl-builds/*/vanilla/src/
 # Build results (keep structure, ignore individual reports if needed)
 # build_results/*.md can be committed for release tracking
 _Build/
+
+# MIA bootstrap cache
+.mia/

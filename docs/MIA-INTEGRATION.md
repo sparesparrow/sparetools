@@ -191,12 +191,29 @@ In CI/CD pipelines:
 2. Cache Conan cache directory
 3. Use `--build=missing` for first-time builds
 
+## OBD-II Simulation
+
+For OBD-II development and testing, use the bootstrap script to set up a hermetic Python environment with ELM327-emulator:
+
+```bash
+./bootstrap-obd.py
+```
+
+This script:
+- Downloads CPython 3.12.7 from Cloudsmith (`sparesparrow/cpy` repository)
+- Sets up an isolated Python environment in `.mia/python`
+- Installs ELM327-emulator and obd packages
+- Launches the emulator in car scenario mode
+
+See [OBD Simulation Guide](OBD-SIMULATION.md) for detailed usage and troubleshooting.
+
 ## Related Documentation
 
 - [Quick Reference](QUICK-REFERENCE.md) - Quick reference for sparetools
 - [Packages](PACKAGES.md) - Complete package documentation
 - [MIA Contributor Guide](MIA-CONTRIBUTOR-GUIDE.md) - Guide for MIA contributors
 - [Cross-Repo Testing](CROSS-REPO-TESTING.md) - Testing cross-repo dependencies
+- [OBD Simulation Guide](OBD-SIMULATION.md) - OBD-II simulation setup and usage
 
 ## Support
 
