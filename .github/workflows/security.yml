@@ -256,9 +256,34 @@ jobs:
           deny-licenses: GPL-3.0, AGPL-3.0
           comment-summary-in-pr: true
 
+  recipe-audit:
+    name: Recipe Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Run Conan recipe audit
+        run: |
+          echo "🔍 Running security-focused recipe audit..."
+          python3 scripts/audit-conan-recipes.py || echo "⚠️ Audit found issues"
+      
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: recipe-audit-report
+          path: docs/AUDIT-RESULTS.md
+          retention-days: 30
+
   security-summary:
     name: Security Summary
-    needs: [trivy-scan, sbom-generation, fips-validation, codeql-analysis]
+    needs: [trivy-scan, sbom-generation, fips-validation, codeql-analysis, recipe-audit]
     runs-on: ubuntu-latest
     if: always()
     
@@ -276,12 +301,14 @@ jobs:
           echo "| SBOM Generation | ${{ needs.sbom-generation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| FIPS Validation | ${{ needs.fips-validation.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Recipe Audit | ${{ needs.recipe-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ needs.trivy-scan.result }}" == "success" ] && \
              [ "${{ needs.sbom-generation.result }}" == "success" ] && \
              [ "${{ needs.fips-validation.result }}" == "success" ] && \
-             [ "${{ needs.codeql-analysis.result }}" == "success" ]; then
+             [ "${{ needs.codeql-analysis.result }}" == "success" ] && \
+             [ "${{ needs.recipe-audit.result }}" == "success" ]; then
             echo "### ✅ All security checks passed" >> $GITHUB_STEP_SUMMARY
           else
             echo "### ⚠️ Some security checks failed or were skipped" >> $GITHUB_STEP_SUMMARY

@@ -298,6 +298,46 @@ except ImportError:
         self.log("✓ Profile structure is correct", "SUCCESS")
         return True
     
+    def test_error_scenarios(self) -> bool:
+        """Test error scenarios and edge cases"""
+        self.log("Testing error scenarios", "INFO")
+        
+        # Test 1: Missing dependency
+        test_dir = tempfile.mkdtemp(prefix="sparetools_test_")
+        conanfile = Path(test_dir) / "conanfile.py"
+        
+        conanfile_content = '''
+from conan import ConanFile
+
+class TestConsumer(ConanFile):
+    name = "test-consumer-error"
+    version = "1.0.0"
+    
+    requires = [
+        "sparetools-openssl/999.999.999",  # Non-existent version
+    ]
+'''
+        
+        conanfile.write_text(conanfile_content)
+        
+        code, stdout, stderr = self.run_command(
+            f"conan install {test_dir} --build=missing",
+            cwd=test_dir
+        )
+        
+        # Clean up
+        subprocess.run(f"rm -rf {test_dir}", shell=True)
+        
+        # Should fail gracefully
+        if code != 0:
+            self.results.append(("Error handling (missing version)", True, ""))
+            self.log("✓ Error scenarios handled correctly", "SUCCESS")
+            return True
+        else:
+            self.results.append(("Error handling (missing version)", False, "Should fail for non-existent version"))
+            self.log("⚠ Error scenario not detected", "WARNING")
+            return False
+    
     def run_all_tests(self) -> bool:
         """Run all integration tests"""
         self.log("=" * 80, "INFO")
@@ -349,6 +389,10 @@ except ImportError:
         # Test 8: Full-stack build (optional, may take time)
         # self.log("\n8. Testing Full-Stack OpenSSL Build", "INFO")
         # self.test_openssl_build_with_full_stack()
+        
+        # Test 9: Error scenarios
+        self.log("\n9. Testing Error Scenarios", "INFO")
+        self.test_error_scenarios()
         
         # Print summary
         self.print_summary()
