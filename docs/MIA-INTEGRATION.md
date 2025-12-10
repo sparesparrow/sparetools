@@ -97,6 +97,97 @@ cmake --build build
 - **sparetools-bootstrap/2.0.0**: Bootstrap utilities (python_requires)
 - **sparetools-shared-dev-tools/2.0.0**: Shared development tools (python_requires)
 
+## Hermetic Python Environments with sparetools-cpython
+
+### Overview
+
+`sparetools-cpython/3.12.7` provides prebuilt CPython 3.12.7 with OpenSSL support, enabling hermetic Python environments for MIA projects. This eliminates system Python dependencies and ensures consistent runtime behavior across different environments.
+
+### Key Features
+
+- **Zero-copy architecture**: Builds directly to package folder
+- **Optimization enabled**: Includes `--enable-optimizations` and `--with-lto`
+- **Environment isolation**: Sets `PYTHONHOME`, `PATH`, and `LD_LIBRARY_PATH`
+- **Conf info exposure**: Provides `user.cpython:executable` and `user.cpython:home`
+
+### Usage in Conan Recipes
+
+```python
+from conan import ConanFile
+
+class MIAProjectConan(ConanFile):
+    name = "mia-project"
+    version = "1.0.0"
+
+    # Get bundled Python as tool requirement
+    tool_requires = "sparetools-cpython/3.12.7"
+
+    # Access Python in package_info
+    def package_info(self):
+        python_exe = self.conf_info["user.cpython:executable"]
+        python_home = self.conf_info["user.cpython:home"]
+
+        # Use in build scripts or expose to consumers
+        self.buildenv_info.define("MY_PYTHON_EXE", python_exe)
+```
+
+### Environment Variables
+
+When consumed, sparetools-cpython automatically sets:
+
+```bash
+export PYTHONHOME="/path/to/sparetools-cpython/package"
+export PATH="/path/to/sparetools-cpython/bin:$PATH"
+export LD_LIBRARY_PATH="/path/to/sparetools-cpython/lib:$LD_LIBRARY_PATH"
+```
+
+### Best Practices
+
+1. **Always use bundled Python**: Never rely on system Python in production
+2. **Pin versions**: Use exact versions like `sparetools-cpython/3.12.7`
+3. **Test with bundled environment**: Run tests using the bundled Python executable
+4. **Environment activation**: Use Conan generators like `VirtualRunEnv` for proper environment setup
+
+## sparetools-base Utilities
+
+### Overview
+
+`sparetools-base/2.0.0` provides foundation utilities for common operations across SpareTools packages.
+
+### Available Utilities
+
+- **security-gates.py**: Security validation and gatekeeping functions
+- **symlink-helpers.py**: Cross-platform symlink creation and management
+
+### Usage
+
+```python
+# In conanfile.py
+python_requires = "sparetools-base/2.0.0"
+
+# In build scripts or other Python code
+from sparetools_base.security_gates import validate_security
+from sparetools_base.symlink_helpers import create_symlink
+
+# Use utilities
+if not validate_security():
+    raise Exception("Security validation failed")
+```
+
+### Integration Pattern
+
+```python
+from conan import ConanFile
+from sparetools_base.security_gates import validate_build_environment
+
+class SecurePackage(ConanFile):
+    python_requires = "sparetools-base/2.0.0"
+
+    def configure(self):
+        if not validate_build_environment():
+            raise ConanException("Build environment security check failed")
+```
+
 ## Dependency Resolution
 
 ### Version Resolution
@@ -193,17 +284,44 @@ In CI/CD pipelines:
 
 ## OBD-II Simulation
 
-For OBD-II development and testing, use the bootstrap script to set up a hermetic Python environment with ELM327-emulator:
+For OBD-II development and testing, consume the packaged tool via Conan with bundled CPython:
 
 ```bash
-./bootstrap-obd.py
+# Install with bundled Python environment
+conan install --requires=sparetools-obd-sim/2.0.0 \
+  --build=missing \
+  -r sparesparrow-conan \
+  -g VirtualRunEnv \
+  -of .conan
+
+# Activate the environment (includes bundled Python)
+source .conan/activate.sh        # macOS/Linux
+.\.conan\activate.bat            # Windows
+
+# Run the OBD bootstrap script
+python -m sparetools_obd
 ```
 
-This script:
-- Downloads CPython 3.12.7 from Cloudsmith (`sparesparrow/cpy` repository)
-- Sets up an isolated Python environment in `.mia/python`
-- Installs ELM327-emulator and obd packages
+The packaged bootstrap now uses bundled CPython from `sparetools-cpython/3.12.7`:
+- No system Python dependency required
+- Hermetic Python environment via Conan tool requirements
+- Automatic environment setup through `VirtualRunEnv` generator
+- Installs ELM327-emulator and obd packages in isolated environment
 - Launches the emulator in car scenario mode
+
+### Updated Integration Pattern
+
+```python
+# In your MIA project conanfile.py
+class MIAOBDProject(ConanFile):
+    requires = [
+        "sparetools-obd-sim/2.0.0",  # Includes bundled Python
+    ]
+    tool_requires = [
+        "sparetools-cpython/3.12.7",  # Explicit Python requirement
+    ]
+    python_requires = "sparetools-base/2.0.0"  # Utilities
+```
 
 See [OBD Simulation Guide](OBD-SIMULATION.md) for detailed usage and troubleshooting.
 
