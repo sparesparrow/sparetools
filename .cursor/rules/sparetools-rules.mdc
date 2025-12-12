@@ -1,0 +1,77 @@
+---
+description: "SpareTools development conventions and best practices"
+alwaysApply: true
+---
+
+# SpareTools Development Rules
+
+## Core Principles
+
+### Always use bundled CPython
+- **Never use system Python** in SpareTools packages or MIA projects consuming SpareTools
+- Use `tool_requires = "sparetools-cpython/3.12.7"` to get bundled Python
+- Access via `conf_info["user.cpython:executable"]` and `conf_info["user.cpython:home"]`
+- Environment variables `PYTHONHOME` and `PATH` are automatically configured
+
+### Use sparetools-base utilities
+- Import common utilities from `sparetools-base/2.0.0`
+- Available functions: `security-gates.py`, `symlink-helpers.py`
+- Use via `python_requires = "sparetools-base/2.0.0"`
+
+### Follow zero-copy architecture
+- Build packages directly to `package_folder` without staging
+- Use `--prefix=<package_folder>` in configure scripts
+- Avoid `make install DESTDIR=<staging>` patterns
+- Eliminates unnecessary copy operations and disk usage
+
+## Package Development Guidelines
+
+### Conan Recipe Structure
+```python
+from conan import ConanFile
+
+class MyPackage(ConanFile):
+    python_requires = "sparetools-base/2.0.0"  # For utilities
+    tool_requires = "sparetools-cpython/3.12.7"  # For bundled Python
+```
+
+### Environment Access
+- Python executable: `self.conf_info["user.cpython:executable"]`
+- Python home: `self.conf_info["user.cpython:home"]`
+- Environment variables set automatically in `package_info()`
+
+### Testing with Bundled Python
+```bash
+# Install with bundled Python
+conan install . --tool-requires=sparetools-cpython/3.12.7 --build=missing
+
+# Run tests with bundled environment
+conan build .
+```
+
+## MIA Integration
+
+### Hermetic Python Environments
+- MIA projects get consistent Python runtime via SpareTools packages
+- No dependency on system Python installation
+- Automatic environment setup via Conan generators
+
+### Consumption Pattern
+```python
+# In MIA project conanfile.py
+requires = ["sparetools-openssl/3.3.2"]
+tool_requires = ["sparetools-cpython/3.12.7"]
+python_requires = "sparetools-base/2.0.0"
+```
+
+## Troubleshooting
+
+### Python Not Found
+- Ensure `tool_requires = "sparetools-cpython/3.12.7"` is set
+- Check `conf_info["user.cpython:executable"]` access
+- Verify environment variables are propagated
+
+### Import Errors
+- Use `python_requires = "sparetools-base/2.0.0"` for utilities
+- Check `PYTHONPATH` includes package locations
+- Verify Conan environment activation

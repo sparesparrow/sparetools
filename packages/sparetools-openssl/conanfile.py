@@ -240,7 +240,7 @@ class SpareToolsOpenSSLConan(ConanFile):
                 return
             
             # Try to install via cpan (may not work on GitHub Actions, but worth trying)
-            self.output.warn("?? Locale::Maketext::Simple not found, attempting to install via cpan...")
+            self.output.warning("?? Locale::Maketext::Simple not found, attempting to install via cpan...")
             install_result = subprocess.run(
                 ["cpan", "-i", "-f", "Locale::Maketext::Simple"],
                 capture_output=True,
@@ -250,11 +250,11 @@ class SpareToolsOpenSSLConan(ConanFile):
             if install_result.returncode == 0:
                 self.output.info("? Locale::Maketext::Simple installed successfully")
             else:
-                self.output.warn(f"?? cpan install failed: {install_result.stderr}")
-                self.output.warn("?? You may need to install Perl modules manually or use CMake build method on Windows")
+                self.output.warning(f"?? cpan install failed: {install_result.stderr}")
+                self.output.warning("?? You may need to install Perl modules manually or use CMake build method on Windows")
         except (subprocess.TimeoutExpired, FileNotFoundError, Exception) as e:
-            self.output.warn(f"?? Could not check/install Perl dependencies: {e}")
-            self.output.warn("?? Consider using CMake build method on Windows if Perl Configure fails")
+            self.output.warning(f"?? Could not check/install Perl dependencies: {e}")
+            self.output.warning("?? Consider using CMake build method on Windows if Perl Configure fails")
 
     def _build_with_perl(self):
         """
@@ -318,7 +318,7 @@ class SpareToolsOpenSSLConan(ConanFile):
             cmake.build()
             cmake.test()
         else:
-            self.output.warn("CMake not supported by this OpenSSL version, falling back to Perl Configure")
+            self.output.warning("CMake not supported by this OpenSSL version, falling back to Perl Configure")
             self._build_with_perl()
     
     def _build_with_autotools(self):
@@ -337,7 +337,7 @@ class SpareToolsOpenSSLConan(ConanFile):
         
         configure_py = os.path.join(self.source_folder, "configure.py")
         if not os.path.exists(configure_py):
-            self.output.warn("configure.py not found, falling back to Perl Configure")
+            self.output.warning("configure.py not found, falling back to Perl Configure")
             self._build_with_perl()
             return
         
