@@ -45,7 +45,7 @@ def resolve_profile_path(profile_relative_path: str, base_path: str = None) -> s
     Resolve a relative profile path to an absolute path.
     
     Args:
-        profile_relative_path: Relative path like 'packages/sparetools-openssl-tools/profiles/base/linux-gcc11'
+        profile_relative_path: Relative path like 'packages/sparetools-bootstrap/profiles/base/linux-gcc11'
         base_path: Optional base path (defaults to project root)
     
     Returns:
@@ -85,7 +85,7 @@ def main():
     )
     parser.add_argument(
         'profile_path',
-        help='Relative profile path (e.g., packages/sparetools-openssl-tools/profiles/base/linux-gcc11)'
+        help='Relative profile path (e.g., packages/sparetools-bootstrap/profiles/base/linux-gcc11)'
     )
     parser.add_argument(
         '--base-path',

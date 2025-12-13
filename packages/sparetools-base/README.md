@@ -158,8 +158,8 @@ conan export . --version=1.0.0
 
 ```bash
 # Test by using in another package
-cd packages/sparetools-openssl
-conan create . --version=3.3.2 --build=missing
+cd packages/sparetools-cpython
+conan create . --version=3.12.7 --build=missing
 ```
 
 ### Adding New Utilities
@@ -288,8 +288,8 @@ See CONTRIBUTING.md in repository root.
 ## Related Packages
 
 - **sparetools-shared-dev-tools**: Higher-level development tools
-- **sparetools-openssl-tools**: OpenSSL-specific tools
-- **sparetools-openssl**: Uses this as base
+- **sparetools-cpython**: Python environment tooling
+- **sparetools-bootstrap**: Bootstrap utilities
 
 ## Resources
 

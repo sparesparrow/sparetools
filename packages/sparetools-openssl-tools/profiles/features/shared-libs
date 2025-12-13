@@ -1,8 +1,0 @@
-[options]
-sparetools-openssl/*:shared=True
-sparetools-openssl/*:fPIC=True
-
-[conf]
-# Build shared libraries (.so, .dll, .dylib)
-tools.build:skip_test=False
-

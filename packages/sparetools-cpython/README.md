@@ -94,4 +94,4 @@ Current: 3.12.7
 ## Related Packages
 
 - sparetools-base: Uses this for Python scripts
-- sparetools-openssl: Uses for Python configure.py
+- sparetools-bootstrap: Uses this for build automation

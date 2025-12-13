@@ -64,5 +64,6 @@ Apache-2.0
 ## Related Packages
 
 - sparetools-base: Foundation utilities
-- sparetools-openssl-tools: OpenSSL-specific tools
+- sparetools-cpython: Python environment tooling
+- sparetools-bootstrap: Bootstrap utilities
 
