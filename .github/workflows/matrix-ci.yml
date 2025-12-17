@@ -1,0 +1,392 @@
+name: Matrix CI/CD - Multi-Consumer Build
+
+# Matrix-driven CI/CD pipeline for SpareTools monorepo
+# Automatically generates build matrices based on consumer configurations
+# Supports parallel builds, security scanning, and comprehensive reporting
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'packages/**'
+      - 'scripts/**'
+      - '.github/workflows/matrix-ci.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'packages/**'
+      - 'scripts/**'
+      - '.github/workflows/matrix-ci.yml'
+  schedule:
+    # Nightly builds on weekdays
+    - cron: '0 2 * * 1-5'
+  workflow_dispatch:
+    inputs:
+      consumers:
+        description: 'Comma-separated list of consumers to build'
+        required: false
+        default: 'all'
+      matrix_type:
+        description: 'Type of matrix to generate'
+        required: false
+        default: 'build'
+        options: ['build', 'security', 'integration']
+
+env:
+  CONAN_VERSION: "2.21.0"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # Matrix generation job
+  generate-matrix:
+    name: Generate Build Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      build-matrix: ${{ steps.generate.outputs.build-matrix }}
+      security-matrix: ${{ steps.generate.outputs.security-matrix }}
+      integration-matrix: ${{ steps.generate.outputs.integration-matrix }}
+      matrix-type: ${{ steps.generate.outputs.matrix-type }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          pip install pyyaml
+
+      - name: Generate build matrices
+        id: generate
+        run: |
+          # Determine matrix type
+          MATRIX_TYPE="${{ github.event.inputs.matrix_type || 'build' }}"
+
+          # Generate build matrix
+          python scripts/ci-cd/matrix-generator.py \
+            --consumers ${{ github.event.inputs.consumers || 'all' }} \
+            --matrix-type build \
+            --output build-matrix.json
+
+          # Generate security matrix
+          python scripts/ci-cd/matrix-generator.py \
+            --consumers ${{ github.event.inputs.consumers || 'all' }} \
+            --matrix-type security \
+            --output security-matrix.json
+
+          # Generate integration matrix
+          python scripts/ci-cd/matrix-generator.py \
+            --consumers ${{ github.event.inputs.consumers || 'all' }} \
+            --matrix-type integration \
+            --output integration-matrix.json
+
+          # Set outputs
+          echo "build-matrix=$(cat build-matrix.json | jq -c .)" >> $GITHUB_OUTPUT
+          echo "security-matrix=$(cat security-matrix.json | jq -c .)" >> $GITHUB_OUTPUT
+          echo "integration-matrix=$(cat integration-matrix.json | jq -c .)" >> $GITHUB_OUTPUT
+          echo "matrix-type=$MATRIX_TYPE" >> $GITHUB_OUTPUT
+
+      - name: Upload matrix artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-matrices
+          path: |
+            *-matrix.json
+          retention-days: 7
+
+  # Build job - uses generated matrix
+  build:
+    name: Build ${{ matrix.consumer }}/${{ matrix.package }}
+    needs: generate-matrix
+    if: fromJson(needs.generate-matrix.outputs.build-matrix).include[0]
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.build-matrix) }}
+
+    env:
+      CONAN_HOME: ~/.conan2
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Conan
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan --version
+
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ matrix.os }}-${{ matrix.consumer }}-${{ matrix.package }}-${{ hashFiles(format('packages/{0}/{1}/conanfile.py', matrix.consumer == 'foundation' && 'foundation' || format('consumers/{0}', matrix.consumer), matrix.package)) }}
+          restore-keys: |
+            conan-${{ matrix.os }}-${{ matrix.consumer }}-
+            conan-${{ matrix.os }}-
+
+      - name: Build package
+        run: |
+          echo "Building ${{ matrix.consumer }}/${{ matrix.package }} on ${{ matrix.os }}"
+
+          # Record start time
+          echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
+
+          # Build package
+          python scripts/build/build-orchestrator.py \
+            --consumers ${{ matrix.consumer }} \
+            --no-fail-fast
+
+      - name: Run validation
+        run: |
+          # Run appropriate validation tier based on consumer
+          if [[ "${{ matrix.consumer }}" == "foundation" ]]; then
+            python scripts/validation/tier1-syntax.py --consumer ${{ matrix.consumer }}
+          else
+            python scripts/validation/tier2-dependencies.py --consumer ${{ matrix.consumer }}
+          fi
+
+      - name: Generate build report
+        if: always()
+        run: |
+          # Calculate build duration
+          BUILD_END=$(date +%s)
+          BUILD_DURATION=$((BUILD_END - BUILD_START))
+
+          # Create build result data
+          cat > build-result.json << EOF
+          {
+            "consumer": "${{ matrix.consumer }}",
+            "package": "${{ matrix.package }}",
+            "platform": "${{ matrix.os }}",
+            "status": "${{ job.status }}",
+            "duration": $BUILD_DURATION,
+            "timestamp": "$(date -Iseconds)"
+          }
+          EOF
+
+      - name: Upload build artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ matrix.consumer }}-${{ matrix.package }}-${{ matrix.os }}
+          path: |
+            build-result.json
+            _Build/**/${{ matrix.package }}*.tar.gz
+          retention-days: 30
+
+      - name: Upload failure logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failure-logs-${{ matrix.consumer }}-${{ matrix.package }}-${{ matrix.os }}
+          path: |
+            build-result.json
+            ~/.conan2/logs/**
+          retention-days: 7
+
+  # Security scanning job
+  security-scan:
+    name: Security Scan ${{ matrix.target }}
+    needs: [generate-matrix, build]
+    if: fromJson(needs.generate-matrix.outputs.security-matrix).include[0]
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.security-matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run security scan
+        run: |
+          echo "Running ${{ matrix.tool }} security scan on ${{ matrix.target }}"
+
+          # Run appropriate security tool
+          if [[ "${{ matrix.tool }}" == "trivy" ]]; then
+            # Install Trivy
+            curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+
+            # Run scan
+            if [[ "${{ matrix.scan_type }}" == "container" ]]; then
+              trivy image --exit-code 0 --format json ${{ matrix.target }} > security-results.json
+            else
+              trivy fs --exit-code 0 --format json . > security-results.json
+            fi
+
+          elif [[ "${{ matrix.tool }}" == "gitleaks" ]]; then
+            # Install Gitleaks
+            wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/latest/download/gitleaks-linux-amd64.tar.gz
+            tar -xzf gitleaks.tar.gz
+            sudo mv gitleaks /usr/local/bin/
+
+            # Run scan
+            gitleaks detect --verbose --redact --report-format json --report-path secrets-results.json || true
+
+          fi
+
+      - name: Upload security results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-results-${{ matrix.target }}-${{ matrix.tool }}
+          path: |
+            *-results.json
+          retention-days: 30
+
+  # Integration testing job
+  integration-test:
+    name: Integration Test ${{ matrix.test_type }}
+    needs: [generate-matrix, build]
+    if: fromJson(needs.generate-matrix.outputs.integration-matrix).include[0] && needs.generate-matrix.outputs.matrix-type == 'integration'
+    runs-on: ${{ matrix.runs-on }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.integration-matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run integration tests
+        run: |
+          echo "Running ${{ matrix.test_type }} integration tests"
+
+          # Run appropriate integration tests
+          if [[ "${{ matrix.test_type }}" == "cross-consumer" ]]; then
+            python scripts/validation/tier3-cross-consumer.py \
+              --consumer ${{ join(matrix.consumers, ' --consumer ') }}
+          elif [[ "${{ matrix.test_type }}" == "intra-consumer" ]]; then
+            python scripts/validation/tier4-integration.py \
+              --consumer ${{ matrix.consumer }}
+          fi
+
+      - name: Upload integration results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-results-${{ matrix.test_type }}-${{ matrix.os }}
+          path: |
+            test-results/
+            *-results.json
+          retention-days: 7
+
+  # Results aggregation and reporting
+  report:
+    name: Generate CI/CD Report
+    needs: [generate-matrix, build, security-scan, integration-test]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: ./artifacts
+
+      - name: Generate comprehensive report
+        run: |
+          # Generate build report
+          python scripts/ci-cd/report-generator.py \
+            --report-type combined \
+            --format html \
+            --title "SpareTools Matrix CI/CD Report - $(date +%Y-%m-%d)"
+
+          # Generate JSON summary
+          python scripts/ci-cd/report-generator.py \
+            --report-type combined \
+            --format json \
+            --title "CI/CD Summary"
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: cicd-reports
+          path: |
+            reports/
+          retention-days: 30
+
+      - name: Update GitHub summary
+        run: |
+          echo "## 🔄 Matrix CI/CD Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Status" >> $GITHUB_STEP_SUMMARY
+          echo "- Jobs: ${{ needs.build.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration: ${{ needs.integration-test.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Reports" >> $GITHUB_STEP_SUMMARY
+          echo "- 📊 [Full Report](artifacts/cicd-reports/combined-report.html)" >> $GITHUB_STEP_SUMMARY
+          echo "- 📋 [Summary](artifacts/cicd-reports/combined-report.md)" >> $GITHUB_STEP_SUMMARY
+
+  # Package publishing (only on main branch)
+  publish:
+    name: Publish Packages
+    needs: [build, security-scan, report]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: build-artifacts-*
+          path: ./packages
+
+      - name: Publish to Cloudsmith
+        run: |
+          python scripts/ci-cd/artifact-uploader.py \
+            --target cloudsmith \
+            --artifacts-dir ./packages \
+            --api-key ${{ secrets.CLOUDSMITH_API_KEY }}
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+
+      - name: Update package registry
+        run: |
+          echo "📦 Packages published successfully"
+          echo "- Registry: Cloudsmith (sparesparrow-conan)" >> $GITHUB_STEP_SUMMARY
+          echo "- Status: ✅ Published" >> $GITHUB_STEP_SUMMARY
