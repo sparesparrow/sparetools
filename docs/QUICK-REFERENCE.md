@@ -1,5 +1,18 @@
 # SpareTools Package Ecosystem - Quick Reference Card
 
+## 🚀 Quick Start Commands
+
+```bash
+# New project from template
+python bootstrap-obd.py --template=mia --name=my-project
+
+# Install packages
+conan install --requires=sparetools-openssl/3.3.2 --build=missing
+
+# Validate setup
+python scripts/audit-conan-recipes.py
+```
+
 ## At a Glance
 
 **11 packages** | **7 production** | **4 deprecated** | **v2.0.0** | **Conan 2.x**

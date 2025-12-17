@@ -48,10 +48,17 @@ Historical and deprecated documentation is available in the [archive/](archive/)
 
 ## 🚀 Quick Start
 
+### For Existing Projects
 1. **Install Conan 2.x**: `pip install conan==2.21.0`
 2. **Configure remote**: See [Quick Reference](QUICK-REFERENCE.md)
 3. **Install packages**: `conan install --requires=sparetools-openssl/3.3.2`
 4. **Build from source**: See [CI/CD Guide](CI-CD-GUIDE.md)
+
+### For New Projects
+1. **Use project templates**: `python bootstrap-obd.py --template=mia`
+2. **Choose template type**: generic, mia, mcp, or android
+3. **Follow template README**: Each template includes complete setup instructions
+4. **Bootstrap environment**: Templates include bootstrap scripts for hermetic builds
 
 ## 📦 Package Ecosystem
 
@@ -63,6 +70,33 @@ The SpareTools ecosystem consists of:
 - **Main**: `sparetools-openssl/3.3.2` - OpenSSL library
 
 See [Packages](PACKAGES.md) for complete details.
+
+## 🎯 Project Templates
+
+SpareTools now includes project templates for different use cases:
+
+| Template | Purpose | Key Features |
+|----------|---------|--------------|
+| **Generic** | C++ libraries | CMake, Conan, testing, CI/CD |
+| **MIA** | Python applications | Hermetic Python, OpenSSL integration, pytest |
+| **MCP** | AI assistants | MCP protocol server, Docker, stdio/http transport |
+| **Android** | Mobile apps | JNI, native libraries, Gradle, cross-platform |
+
+### Using Templates
+
+```bash
+# Create new project from template
+python bootstrap-obd.py --template=mia --name=my-project
+
+# Templates include:
+# - Complete project structure
+# - CI/CD workflows (.github/workflows/)
+# - Documentation templates
+# - Testing frameworks
+# - Bootstrap scripts
+```
+
+See [Template Usage Documentation](TEMPLATE-USAGE.md) for detailed instructions.
 
 ## 🔍 Validation & Testing
 

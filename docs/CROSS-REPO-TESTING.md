@@ -1,273 +1,650 @@
-# Cross-Repository Dependency Resolution Testing
+# Cross-Repository Testing Guide
 
-This document describes how to test cross-repository dependency resolution for sparetools packages.
+Comprehensive guide to testing SpareTools packages across repositories and ensuring ecosystem compatibility.
 
 ## Overview
 
-SpareTools packages are published to Cloudsmith and can be consumed by projects in other repositories (like MIA). This document explains how to test that dependency resolution works correctly across repositories.
+Cross-repository testing ensures that SpareTools packages work correctly across different projects and environments. This guide covers:
 
-## Prerequisites
+- Testing SpareTools packages in consumer projects
+- Multi-repository validation workflows
+- Integration testing strategies
+- Compatibility matrices
+- Automated cross-repo testing
 
-- Conan 2.x installed: `pip install conan==2.21.0`
-- Network access to Cloudsmith
-- (Optional) Cloudsmith API key for private repositories
+## Testing Strategies
 
-## Running Tests
+### 1. Consumer Integration Testing
 
-### Automated Test Script
-
-Run the cross-repo resolution test script:
-
-```bash
-python3 scripts/test-cross-repo-resolution.py
-```
-
-This script tests:
-
-1. **Remote Configuration**: Verifies Cloudsmith remote can be added
-2. **Package Discovery**: Tests searching for packages in remote
-3. **Version Resolution**: Tests resolving specific versions
-4. **Dependency Graph**: Tests building dependency graphs
-5. **Build with Remote Dependencies**: Tests building with remote packages
-
-### Manual Testing
-
-#### 1. Configure Remote
-
-```bash
-conan remote add sparesparrow-conan \
-  https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
-  --force
-```
-
-#### 2. Verify Remote
-
-```bash
-conan remote list
-```
-
-You should see `sparesparrow-conan` in the output.
-
-#### 3. Search for Packages
-
-```bash
-conan search sparetools-openssl -r sparesparrow-conan
-```
-
-This should list available versions of `sparetools-openssl`.
-
-#### 4. Test Dependency Resolution
-
-Create a test `conanfile.py`:
+Test SpareTools packages in real consumer applications:
 
 ```python
+# test_sparetools_consumer.py
+"""Test SpareTools packages in consumer context."""
+
+import subprocess
+import tempfile
+import os
+from pathlib import Path
+
+def test_sparetools_in_consumer():
+    """Test SpareTools integration in a consumer project."""
+
+    # Create temporary consumer project
+    with tempfile.TemporaryDirectory() as tmpdir:
+        project_dir = Path(tmpdir) / "consumer"
+        project_dir.mkdir()
+
+        # Create consumer conanfile.py
+        conanfile = project_dir / "conanfile.py"
+        conanfile.write_text("""
 from conan import ConanFile
 
-class TestConan(ConanFile):
-    name = "test-consumer"
+class Consumer(ConanFile):
+    name = "consumer"
     version = "1.0.0"
-    
-    requires = [
-        "sparetools-openssl/3.3.2",
-    ]
+
+    requires = "sparetools-openssl/3.3.2"
+    tool_requires = "sparetools-cpython/3.12.7"
+
+    def generate(self):
+        # Test that generators work
+        pass
+
+    def build(self):
+        # Test build integration
+        self.run("echo 'Consumer build successful'")
+""")
+
+        # Test Conan integration
+        os.chdir(project_dir)
+        result = subprocess.run([
+            "conan", "install", ".", "--build=missing"
+        ], capture_output=True, text=True)
+
+        assert result.returncode == 0, f"Conan install failed: {result.stderr}"
+
+        # Test build
+        result = subprocess.run([
+            "conan", "build", "."
+        ], capture_output=True, text=True)
+
+        assert result.returncode == 0, f"Build failed: {result.stderr}"
+
+        print("✅ Consumer integration test passed")
 ```
 
-Then test resolution:
+### 2. Multi-Repository Validation
+
+Test package compatibility across repository boundaries:
 
 ```bash
-conan graph explain conanfile.py
+#!/bin/bash
+# cross_repo_test.sh
+
+# Test repositories
+REPOS=(
+    "https://github.com/sparesparrow/sparetools"
+    "https://github.com/example/mia-consumer"
+    "https://github.com/example/android-consumer"
+)
+
+# Test scenarios
+SCENARIOS=(
+    "basic-integration"
+    "version-compatibility"
+    "platform-matrix"
+)
+
+for repo in "${REPOS[@]}"; do
+    echo "Testing repository: $repo"
+
+    # Clone and test
+    repo_name=$(basename "$repo")
+    git clone "$repo" "test-$repo_name"
+    cd "test-$repo_name"
+
+    for scenario in "${SCENARIOS[@]}"; do
+        echo "Running scenario: $scenario"
+        ./test/scripts/run_cross_repo_test.sh "$scenario"
+    done
+
+    cd ..
+    rm -rf "test-$repo_name"
+done
 ```
 
-#### 5. Test Installation
+### 3. Version Compatibility Matrix
 
-```bash
-conan install conanfile.py --build=missing
+Test package combinations systematically:
+
+```python
+# test_version_matrix.py
+"""Test version compatibility across SpareTools packages."""
+
+import itertools
+import subprocess
+import json
+
+# Package versions to test
+VERSIONS = {
+    "sparetools-base": ["2.0.0"],
+    "sparetools-cpython": ["3.12.7"],
+    "sparetools-openssl": ["3.3.2"],
+    "sparetools-openssl-tools": ["2.0.0"]
+}
+
+def generate_version_combinations():
+    """Generate all version combinations to test."""
+    keys = list(VERSIONS.keys())
+    values = list(VERSIONS.values())
+    combinations = list(itertools.product(*values))
+
+    return [dict(zip(keys, combo)) for combo in combinations]
+
+def test_version_combination(versions):
+    """Test a specific version combination."""
+
+    # Create test conanfile
+    conanfile_content = f"""
+from conan import ConanFile
+
+class VersionTest(ConanFile):
+    requires = "{versions['sparetools-openssl']}"
+    tool_requires = "{versions['sparetools-cpython']}"
+    python_requires = "{versions['sparetools-base']}"
+"""
+
+    with open("test_conanfile.py", "w") as f:
+        f.write(conanfile_content)
+
+    try:
+        # Test installation
+        result = subprocess.run([
+            "conan", "install", "test_conanfile.py", "--build=missing"
+        ], capture_output=True, timeout=300)
+
+        return result.returncode == 0
+
+    except subprocess.TimeoutExpired:
+        return False
+    finally:
+        os.remove("test_conanfile.py")
+
+# Run compatibility matrix
+combinations = generate_version_combinations()
+results = []
+
+for combo in combinations:
+    compatible = test_version_combination(combo)
+    results.append({
+        "versions": combo,
+        "compatible": compatible
+    })
+
+# Save results
+with open("compatibility_matrix.json", "w") as f:
+    json.dump(results, f, indent=2)
 ```
 
-This should download and install `sparetools-openssl/3.3.2` from Cloudsmith.
+## Automated Cross-Repository Testing
 
-## Test Scenarios
-
-### Scenario 1: Basic Package Resolution
-
-**Goal**: Verify packages can be resolved from remote
-
-**Steps**:
-1. Configure Cloudsmith remote
-2. Search for `sparetools-openssl`
-3. Verify version `3.3.2` is available
-
-**Expected Result**: Package found and version available
-
-### Scenario 2: Dependency Chain Resolution
-
-**Goal**: Verify dependency chains resolve correctly
-
-**Steps**:
-1. Create consumer requiring `sparetools-openssl/3.3.2`
-2. Run `conan graph explain`
-3. Verify all dependencies resolve
-
-**Expected Result**: Complete dependency graph resolved
-
-### Scenario 3: Version Range Resolution
-
-**Goal**: Test version range resolution
-
-**Steps**:
-1. Create consumer with version range: `sparetools-openssl/[>=3.3.0]`
-2. Run dependency resolution
-3. Verify correct version selected
-
-**Expected Result**: Latest compatible version selected
-
-### Scenario 4: Build with Remote Dependencies
-
-**Goal**: Test building with remote dependencies
-
-**Steps**:
-1. Create consumer project
-2. Install dependencies: `conan install . --build=missing`
-3. Build project: `conan build .`
-
-**Expected Result**: Project builds successfully with remote dependencies
-
-## Troubleshooting
-
-### Package Not Found
-
-**Issue**: `conan search` doesn't find packages
-
-**Solutions**:
-1. Verify remote is configured: `conan remote list`
-2. Check remote URL is correct
-3. Verify packages are published to Cloudsmith
-4. Check network connectivity
-
-### Authentication Required
-
-**Issue**: Authentication errors when accessing packages
-
-**Solutions**:
-1. Check if packages are private
-2. Authenticate: `conan remote login sparesparrow-conan USERNAME --password API_KEY`
-3. Verify API key has correct permissions
-
-### Version Resolution Fails
-
-**Issue**: Specific version not found
-
-**Solutions**:
-1. Verify version exists: `conan search sparetools-openssl -r sparesparrow-conan`
-2. Check version format (should be `3.3.2`, not `v3.3.2`)
-3. Try version range instead: `sparetools-openssl/[>=3.3.0]`
-
-### Network Issues
-
-**Issue**: Timeouts or connection errors
-
-**Solutions**:
-1. Check network connectivity
-2. Verify Cloudsmith is accessible
-3. Check firewall/proxy settings
-4. Try with `--timeout` flag: `conan install . --timeout=300`
-
-## CI/CD Integration
-
-### GitHub Actions Example
+### GitHub Actions Workflow
 
 ```yaml
-- name: Configure Conan Remote
-  run: |
-    conan remote add sparesparrow-conan \
-      https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
-      --force
+# .github/workflows/cross-repo-test.yml
+name: Cross-Repository Testing
 
-- name: Test Dependency Resolution
-  run: |
-    conan graph explain conanfile.py
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+  workflow_dispatch:
+    inputs:
+      target_repo:
+        description: 'Target repository to test against'
+        required: false
+        default: 'sparesparrow/mia-consumer'
 
-- name: Install Dependencies
-  run: |
+env:
+  CONAN_VERSION: "2.21.0"
+
+jobs:
+  cross-repo-test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        target_repo: [
+          'sparesparrow/mia-consumer',
+          'sparesparrow/android-consumer',
+          'sparesparrow/mcp-consumer'
+        ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Conan
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan profile detect --force
+
+      - name: Configure Conan remotes
+        run: |
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/
+
+      - name: Clone target repository
+        run: |
+          git clone https://github.com/${{ matrix.target_repo }}.git target_repo
+          cd target_repo
+
+      - name: Install dependencies
+        run: |
+          cd target_repo
+          conan install . --build=missing
+
+      - name: Run consumer tests
+        run: |
+          cd target_repo
+          conan build .
+          conan test test_package
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "## Cross-Repo Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target:** ${{ matrix.target_repo }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** $status" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp:** $(date)" >> $GITHUB_STEP_SUMMARY
+```
+
+### Local Cross-Repository Testing
+
+```bash
+#!/bin/bash
+# local_cross_repo_test.sh
+
+set -e
+
+# Configuration
+SPARETOOLS_REPO="path/to/sparetools"
+CONSUMER_REPOS=(
+    "path/to/mia-consumer"
+    "path/to/android-consumer"
+)
+
+# Build SpareTools packages locally
+echo "Building SpareTools packages..."
+cd "$SPARETOOLS_REPO"
+conan create packages/sparetools-base --version=2.0.0 --build=missing
+conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+conan create packages/sparetools-openssl --version=3.3.2 --build=missing
+
+# Test in each consumer repository
+for consumer_repo in "${CONSUMER_REPOS[@]}"; do
+    echo "Testing in consumer: $consumer_repo"
+
+    cd "$consumer_repo"
+
+    # Clean previous builds
+    rm -rf build/
+
+    # Test with local packages
     conan install . --build=missing
+    conan build .
+    conan test test_package
+
+    echo "✅ $consumer_repo tests passed"
+done
+
+echo "🎉 All cross-repository tests passed!"
 ```
 
-### Caching
+## Integration Testing Scenarios
 
-Cache Conan cache directory in CI/CD:
+### 1. MIA Consumer Integration
+
+```python
+# test_mia_integration.py
+"""Test SpareTools in MIA consumer context."""
+
+import os
+import sys
+import subprocess
+from pathlib import Path
+
+def test_mia_consumer():
+    """Test MIA consumer with SpareTools packages."""
+
+    # Create MIA consumer project
+    project_dir = Path("test_mia_consumer")
+    project_dir.mkdir(exist_ok=True)
+
+    # Create pyproject.toml
+    pyproject = project_dir / "pyproject.toml"
+    pyproject.write_text("""
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mia-consumer"
+version = "1.0.0"
+dependencies = ["cryptography"]
+
+[tool.setuptools]
+packages = ["mia_consumer"]
+""")
+
+    # Create conanfile.py
+    conanfile = project_dir / "conanfile.py"
+    conanfile.write_text("""
+from conan import ConanFile
+
+class MiaConsumer(ConanFile):
+    requires = "sparetools-openssl/3.3.2"
+    tool_requires = "sparetools-cpython/3.12.7"
+
+    def generate(self):
+        # Generate Python environment
+        pass
+""")
+
+    # Create Python package
+    pkg_dir = project_dir / "mia_consumer"
+    pkg_dir.mkdir()
+
+    init_file = pkg_dir / "__init__.py"
+    init_file.write_text("""
+"""MIA consumer package."""
+
+import ssl
+
+def test_openssl_integration():
+    """Test OpenSSL integration via ssl module."""
+    version = ssl.OPENSSL_VERSION
+    print(f"OpenSSL version: {version}")
+    return version
+""")
+
+    # Test the integration
+    os.chdir(project_dir)
+
+    # Install dependencies
+    subprocess.run(["conan", "install", ".", "--build=missing"], check=True)
+
+    # Build package
+    subprocess.run(["conan", "build", "."], check=True)
+
+    # Test Python integration
+    result = subprocess.run([
+        sys.executable, "-c",
+        "from mia_consumer import test_openssl_integration; test_openssl_integration()"
+    ], capture_output=True, text=True, check=True)
+
+    assert "OpenSSL version:" in result.stdout
+    print("✅ MIA consumer integration test passed")
+```
+
+### 2. Android Consumer Integration
+
+```python
+# test_android_integration.py
+"""Test SpareTools in Android consumer context."""
+
+import os
+import subprocess
+from pathlib import Path
+
+def test_android_consumer():
+    """Test Android consumer with SpareTools native libraries."""
+
+    project_dir = Path("test_android_consumer")
+    project_dir.mkdir(exist_ok=True)
+
+    # Create Android project structure
+    app_dir = project_dir / "app" / "src" / "main" / "cpp"
+    app_dir.mkdir(parents=True)
+
+    # Create native conanfile.py
+    conanfile = app_dir / "conanfile.py"
+    conanfile.write_text("""
+from conan import ConanFile
+
+class AndroidConsumer(ConanFile):
+    settings = "os", "arch", "compiler", "build_type"
+    requires = "sparetools-openssl/3.3.2"
+
+    def configure(self):
+        # Android-specific configuration
+        self.options["sparetools-openssl/*"].shared = False
+""")
+
+    # Create CMakeLists.txt
+    cmake = app_dir / "CMakeLists.txt"
+    cmake.write_text("""
+cmake_minimum_required(VERSION 3.18.1)
+project(android-consumer)
+
+find_package(sparetools-openssl REQUIRED)
+
+add_library(consumer-lib SHARED consumer.cpp)
+target_link_libraries(consumer-lib sparetools-openssl::sparetools-openssl)
+""")
+
+    # Create consumer.cpp
+    cpp_file = app_dir / "consumer.cpp"
+    cpp_file.write_text("""
+#include <jni.h>
+#include <openssl/ssl.h>
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_example_Consumer_getOpenSSLVersion(JNIEnv* env, jobject) {
+    const char* version = OpenSSL_version(OPENSSL_VERSION);
+    return env->NewStringUTF(version);
+}
+""")
+
+    # Test Android build
+    os.chdir(app_dir)
+
+    # Install dependencies
+    subprocess.run([
+        "conan", "install", ".", "--build=missing",
+        "-pr", "android-arm64"
+    ], check=True)
+
+    # Build with CMake
+    subprocess.run([
+        "cmake", "-B", "build", "-S", ".",
+        "-DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake"
+    ], check=True)
+
+    subprocess.run([
+        "cmake", "--build", "build", "--config", "Release"
+    ], check=True)
+
+    print("✅ Android consumer integration test passed")
+```
+
+## Compatibility Testing
+
+### Platform Compatibility Matrix
+
+```python
+# test_platform_compatibility.py
+"""Test SpareTools compatibility across platforms."""
+
+import platform
+import subprocess
+import sys
+
+PLATFORMS = [
+    ("linux", "x86_64", "gcc", "11"),
+    ("macos", "armv8", "apple-clang", "14"),
+    ("windows", "x86_64", "msvc", "193"),
+]
+
+def test_platform_compatibility():
+    """Test package compatibility on different platforms."""
+
+    current_platform = platform.system().lower()
+
+    for os_name, arch, compiler, version in PLATFORMS:
+        if current_platform == os_name or os_name == "any":
+            print(f"Testing {os_name}-{arch}-{compiler}{version}")
+
+            # Create platform-specific profile
+            profile_content = f"""
+[settings]
+os={os_name.capitalize() if os_name != "macos" else "Macos"}
+arch={arch}
+compiler={compiler}
+compiler.version={version}
+build_type=Release
+"""
+
+            profile_file = f"profile_{os_name}_{arch}.txt"
+            with open(profile_file, "w") as f:
+                f.write(profile_content)
+
+            try:
+                # Test package creation
+                subprocess.run([
+                    "conan", "create", "packages/sparetools-openssl",
+                    "--version=3.3.2",
+                    f"--profile={profile_file}",
+                    "--build=missing"
+                ], check=True, timeout=600)
+
+                print(f"✅ {os_name}-{arch} compatibility test passed")
+
+            except subprocess.CalledProcessError as e:
+                print(f"❌ {os_name}-{arch} compatibility test failed: {e}")
+                return False
+            finally:
+                os.remove(profile_file)
+
+    return True
+
+if __name__ == "__main__":
+    success = test_platform_compatibility()
+    sys.exit(0 if success else 1)
+```
+
+## Continuous Integration
+
+### Multi-Repository CI Setup
 
 ```yaml
-- name: Cache Conan
-  uses: actions/cache@v4
-  with:
-    path: ~/.conan2
-    key: conan-${{ runner.os }}-${{ hashFiles('conanfile.py') }}
+# .github/workflows/multi-repo-ci.yml
+name: Multi-Repository CI
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    - cron: '0 3 * * *'  # Daily integration test
+
+jobs:
+  test-sparetools-core:
+    uses: sparesparrow/sparetools/.github/workflows/ci.yml@main
+
+  test-mia-consumer:
+    needs: test-sparetools-core
+    uses: sparesparrow/mia-consumer/.github/workflows/integration.yml@main
+    with:
+      sparetools-ref: ${{ github.sha }}
+
+  test-android-consumer:
+    needs: test-sparetools-core
+    uses: sparesparrow/android-consumer/.github/workflows/integration.yml@main
+    with:
+      sparetools-ref: ${{ github.sha }}
+
+  integration-report:
+    needs: [test-sparetools-core, test-mia-consumer, test-android-consumer]
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+      - name: Generate integration report
+        run: |
+          echo "## Integration Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Core: ${{ needs.test-sparetools-core.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- MIA: ${{ needs.test-mia-consumer.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Android: ${{ needs.test-android-consumer.result }}" >> $GITHUB_STEP_SUMMARY
 ```
 
 ## Best Practices
 
-### 1. Pin Versions in Production
+### 1. Test Isolation
 
-Use exact versions in production:
+- Use separate Conan caches for different test scenarios
+- Clean build artifacts between tests
+- Isolate network-dependent tests
 
-```python
-requires = [
-    "sparetools-openssl/3.3.2",  # Exact version
-]
-```
+### 2. Comprehensive Coverage
 
-### 2. Use Version Ranges in Development
+- Test all supported platforms and architectures
+- Include version compatibility testing
+- Test both release and debug builds
 
-Use version ranges for flexibility:
+### 3. Automated Reporting
 
-```python
-requires = [
-    "sparetools-openssl/[>=3.3.0,<4.0.0]",  # Version range
-]
-```
+- Generate detailed test reports
+- Track compatibility matrices over time
+- Alert on breaking changes
 
-### 3. Test Resolution Regularly
+### 4. Performance Monitoring
 
-Run resolution tests:
-- Before releases
-- After dependency updates
-- In CI/CD pipelines
+- Track build times across repositories
+- Monitor package sizes and dependencies
+- Identify performance regressions
 
-### 4. Document Dependencies
+## Troubleshooting
 
-Document all external dependencies and their sources in your project documentation.
+### Common Issues
 
-## Related Documentation
+1. **Conan Cache Conflicts**
+   ```bash
+   # Clear cache between tests
+   conan remove "*" -c
+   conan cache clean
+   ```
 
-- [MIA Integration Guide](MIA-INTEGRATION.md) - Integration guide for MIA
-- [MIA Contributor Guide](MIA-CONTRIBUTOR-GUIDE.md) - Guide for contributors
-- [Packages](PACKAGES.md) - Package documentation
+2. **Platform-Specific Failures**
+   ```bash
+   # Test with specific profile
+   conan create . --profile=problematic_profile --build=missing
+   ```
 
-## Test Script Reference
+3. **Network Timeouts**
+   ```bash
+   # Increase timeouts for large builds
+   conan create . --build=missing --timeout=1800
+   ```
 
-The test script `scripts/test-cross-repo-resolution.py` provides automated testing:
+4. **Dependency Resolution Issues**
+   ```bash
+   # Debug dependency resolution
+   conan graph info . --profile=myprofile
+   ```
+
+### Debugging Cross-Repository Tests
 
 ```bash
-# Run all tests
-python3 scripts/test-cross-repo-resolution.py
+# Enable verbose logging
+export CONAN_LOG_LEVEL=debug
+export CONAN_LOG_RUN_TO_OUTPUT=false
 
-# Tests run:
-# - Remote configuration
-# - Package discovery
-# - Version resolution
-# - Dependency graph
-# - Build with remote dependencies
+# Run with detailed output
+conan create . --build=missing -v
 ```
 
-## Support
-
-For issues with cross-repo dependency resolution:
-
-1. Check [MIA Integration Guide](MIA-INTEGRATION.md)
-2. Review [CI/CD Troubleshooting](CI-CD-TROUBLESHOOTING.md)
-3. Verify packages are published to Cloudsmith
-4. Open an issue on GitHub
-
-## Updates
-
-This testing guide is maintained alongside the codebase. Last updated: 2025-12-03
+This guide provides a comprehensive framework for testing SpareTools packages across repositories and ensuring ecosystem compatibility.

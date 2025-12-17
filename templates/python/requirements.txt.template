@@ -1,0 +1,14 @@
+# Requirements for {{project_name}}
+
+# Core dependencies
+# Add your project's runtime dependencies here
+# requests>=2.25.0
+# pydantic>=2.0.0
+# click>=8.0.0
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# ruff>=0.1.0
+# black>=22.0.0
+# mypy>=1.0.0
+# pre-commit>=2.20.0
