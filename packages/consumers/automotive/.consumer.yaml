@@ -1,0 +1,36 @@
+name: automotive
+display_name: "Automotive Systems"
+description: "OBD-II diagnostics, vehicle communication, and automotive protocols"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+  mia:
+    - sparetools-obd-sim/2.0.0
+
+packages:
+  # OBD-II simulation covered in MIA consumer
+
+examples:
+  - ../../examples/automotive-diagnostics
+  - ../../examples/vehicle-communication
+
+documentation:
+  main: ../../../docs/consumers/automotive/
+  integration: ../../../docs/consumers/automotive/OBD-PROTOCOL-REFERENCE.md
+
+ci_workflows:
+  - build-automotive
+  - test-obd-protocols
+  - automotive-integration-tests
+
+platforms:
+  linux: ["x86_64", "aarch64", "armv7"]
+  macos: ["x86_64", "arm64"]
+  windows: ["x86_64"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]
