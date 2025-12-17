@@ -1,0 +1,187 @@
+# ClipHist Android Consumer Configuration
+# This file defines how the ClipHist Android consumer integrates with the SpareTools monorepo
+
+name: "sparetools-cliphist-android"
+version: "1.0.0"
+description: "Secure clipboard history manager for Android devices"
+
+# Consumer metadata
+type: "application"  # application, library, or tool
+platform: "android"
+language: "kotlin"
+framework: "jetpack-compose"
+
+# Build configuration
+build:
+  system: "gradle"
+  min_sdk: 21
+  target_sdk: 34
+  compile_sdk: 34
+
+  # Android-specific build settings
+  android:
+    namespace: "com.sparesparrow.cliphist"
+    application_id: "com.sparesparrow.cliphist"
+    version_code: 1
+    version_name: "1.0.0"
+
+  # Build variants
+  variants:
+    - name: "debug"
+      build_type: "debug"
+      signing_config: "debug"
+    - name: "release"
+      build_type: "release"
+      signing_config: "release"
+      minify: true
+      proguard_files:
+        - "app/proguard-rules.pro"
+
+# Dependencies
+dependencies:
+  # Foundation layer dependencies
+  foundation:
+    - "sparetools-base/2.0.0"
+    - "sparetools-recipe-base/1.0.0"
+
+  # External dependencies
+  external:
+    # Core Android
+    - "androidx.core:core-ktx:1.12.0"
+    - "androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
+    - "androidx.activity:activity-compose:1.8.2"
+
+    # Compose BOM
+    - "androidx.compose:compose-bom:2024.02.00"
+    - "androidx.compose.ui:ui"
+    - "androidx.compose.ui:ui-graphics"
+    - "androidx.compose.ui:ui-tooling-preview"
+    - "androidx.compose.material3:material3"
+
+    # Navigation
+    - "androidx.navigation:navigation-compose:2.7.6"
+
+    # Dependency Injection
+    - "com.google.dagger:hilt-android:2.48"
+    - "androidx.hilt:hilt-navigation-compose:1.1.0"
+
+    # Database
+    - "androidx.room:room-runtime:2.6.1"
+    - "androidx.room:room-ktx:2.6.1"
+
+    # Security
+    - "net.zetetic:android-database-sqlcipher:4.5.4"
+
+    # Coroutines
+    - "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3"
+
+# Tool requirements (Conan)
+tool_requires:
+  - "gradle/8.5"
+  - "android-ndk/r25b"
+  - "android-sdk/34"
+
+# Testing configuration
+testing:
+  unit_tests:
+    enabled: true
+    framework: "junit"
+    runner: "androidx.test.runner.AndroidJUnitRunner"
+
+  instrumentation_tests:
+    enabled: true
+    framework: "androidx.test.ext.junit"
+    emulator:
+      api_level: 29
+      arch: "x86_64"
+
+  integration_tests:
+    enabled: true
+    framework: "custom"
+    script: "test-integration.py"
+
+# CI/CD configuration
+ci_cd:
+  # GitHub Actions workflows to run
+  workflows:
+    - "android-build.yml"
+    - "android-test.yml"
+    - "security-scan.yml"
+
+  # Build matrix for CI
+  matrix:
+    - os: "ubuntu-latest"
+      java_version: "17"
+      android_api: "29"
+      android_abi: "x86_64"
+
+  # Artifacts to publish
+  artifacts:
+    - name: "debug-apk"
+      path: "app/build/outputs/apk/debug/*.apk"
+      type: "apk"
+    - name: "release-aab"
+      path: "app/build/outputs/bundle/release/*.aab"
+      type: "bundle"
+
+# Security configuration
+security:
+  encryption:
+    enabled: true
+    provider: "sqlcipher"
+    key_derivation: "pbkdf2"
+
+  permissions:
+    required:
+      - "android.permission.INTERNET"
+      - "android.permission.RECEIVE_BOOT_COMPLETED"
+    optional:
+      - "android.permission.ACCESS_NETWORK_STATE"
+
+  code_analysis:
+    enabled: true
+    tools:
+      - "lint"
+      - "detekt"
+      - "sonarqube"
+
+# Deployment configuration
+deployment:
+  google_play:
+    enabled: false  # Set to true when ready for production
+    track: "beta"
+    rollout_fraction: 0.1
+
+  github_releases:
+    enabled: true
+    draft: true
+    prerelease: true
+
+# Documentation
+documentation:
+  readme: "README.md"
+  api_docs: false  # No public API
+  user_guide: "docs/user-guide.md"
+
+# Maintenance
+maintenance:
+  update_dependencies: true
+  security_updates: true
+  deprecation_warnings: true
+
+# Custom configuration for this consumer
+custom:
+  clipboard:
+    max_history_size: 1000
+    auto_cleanup_days: 30
+    encryption_enabled: true
+
+  ui:
+    theme: "material3"
+    dark_mode_support: true
+    dynamic_colors: true
+
+  services:
+    clipboard_monitor: true
+    boot_receiver: true
+    notification_service: false
