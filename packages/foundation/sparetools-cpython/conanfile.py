@@ -90,14 +90,11 @@ class CPythonToolConan(ConanFile):
         shutil.copytree("Include", os.path.join(include_dir, "python3.12"), dirs_exist_ok=True)
 
     def _build_unix(self):
-        """Build CPython on Unix-like systems using autotools"""
-        autotools = Autotools(self)
+        """Build CPython on Unix-like systems using manual commands"""
+        # Build directly to package_folder to avoid Autotools DESTDIR issues
 
-        # Build to a temporary location first, then copy to package_folder
-        # This avoids source tree pollution issues with out-of-tree builds
-        build_prefix = os.path.join(self.build_folder, "install")
         args = [
-            f"--prefix={build_prefix}",  # Build to temp location first
+            f"--prefix={self.package_folder}",  # Direct build to final location
             # Temporarily disable PGO to avoid build issues
             # "--enable-optimizations",
             "--with-lto",
@@ -117,15 +114,15 @@ class CPythonToolConan(ConanFile):
                 # Intel macOS
                 args.append("--enable-universalsdk=/")
                 args.append("--with-universal-archs=intel-64")
-            
+
             # Set minimum deployment target (required for macOS builds)
             # Use environment variable if set, otherwise default to macOS 13.0
             deployment_target = os.environ.get("MACOSX_DEPLOYMENT_TARGET", "13.0")
-            
+
             # Set deployment target via environment variable (configure script respects this)
             os.environ["MACOSX_DEPLOYMENT_TARGET"] = deployment_target
             args.append(f"--with-macos-version-min={deployment_target}")
-            
+
             self.output.info(f"macOS build configuration: arch={self.settings.arch}, deployment_target={deployment_target}")
 
         if self.options.shared:
@@ -141,7 +138,9 @@ class CPythonToolConan(ConanFile):
         if opt_level == "3":
             args.append("--with-lto")
 
-        autotools.configure(args=args)
+        # Configure manually
+        configure_cmd = ["./configure"] + args
+        self.run(" ".join(configure_cmd))
 
         # Build with parallel jobs
         import subprocess
@@ -151,16 +150,14 @@ class CPythonToolConan(ConanFile):
         except:
             nproc = str(os.cpu_count() or 4)
 
-        autotools.make(args=[f"-j{nproc}"])
+        # Build
+        self.run(f"make -j{nproc}")
 
-        # Install to temporary location first
-        autotools.install()
+        # Clean build artifacts before install (Python's strict requirement for out-of-tree builds)
+        self.run("make clean")
 
-        # Now copy everything to package_folder to maintain zero-copy architecture
-        import shutil
-        if os.path.exists(self.package_folder):
-            shutil.rmtree(self.package_folder)
-        shutil.move(build_prefix, self.package_folder)
+        # Install directly (no DESTDIR needed since we built to final location)
+        self.run("make install")
     
     def package(self):
         """Files already in package_folder from build() - just add metadata"""
