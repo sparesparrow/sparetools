@@ -93,10 +93,11 @@ class CPythonToolConan(ConanFile):
         """Build CPython on Unix-like systems using autotools"""
         autotools = Autotools(self)
 
-        # ✅ CRITICAL: Build directly to package folder location
-        # This eliminates the staging step entirely
+        # Build to a temporary location first, then copy to package_folder
+        # This avoids source tree pollution issues with out-of-tree builds
+        build_prefix = os.path.join(self.build_folder, "install")
         args = [
-            f"--prefix={self.package_folder}",  # Direct to final location
+            f"--prefix={build_prefix}",  # Build to temp location first
             # Temporarily disable PGO to avoid build issues
             # "--enable-optimizations",
             "--with-lto",
@@ -152,9 +153,14 @@ class CPythonToolConan(ConanFile):
 
         autotools.make(args=[f"-j{nproc}"])
 
-        # Install directly to package_folder (no DESTDIR since we used --prefix)
-        # Run make install without DESTDIR to avoid double-prefixing
-        self.run("make install")
+        # Install to temporary location first
+        autotools.install()
+
+        # Now copy everything to package_folder to maintain zero-copy architecture
+        import shutil
+        if os.path.exists(self.package_folder):
+            shutil.rmtree(self.package_folder)
+        shutil.move(build_prefix, self.package_folder)
     
     def package(self):
         """Files already in package_folder from build() - just add metadata"""
