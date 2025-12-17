@@ -1,0 +1,39 @@
+name: mcp
+display_name: "MCP (Model Context Protocol)"
+description: "AI assistant integration with MCP protocol, orchestration, and tooling"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+    - sparetools-bootstrap/2.0.0
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+  openssl:
+    - sparetools-openssl/3.3.2  # optional for secure MCP
+
+packages:
+  - sparetools-mcp-orchestrator
+  - sparetools-tinymcp
+  - sparetools-mcpserver-cpp
+
+examples:
+  - ../../examples/mcp-integration
+  - ../../examples/mcp-orchestration
+
+documentation:
+  main: ../../../docs/consumers/mcp/
+  integration: ../../../docs/consumers/mcp/MCP-ARCHITECTURE.md
+
+ci_workflows:
+  - build-mcp
+  - test-mcp-protocol
+  - mcp-integration-tests
+
+platforms:
+  linux: ["x86_64", "aarch64"]
+  macos: ["x86_64", "arm64"]
+  windows: ["x86_64"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]

@@ -1,0 +1,35 @@
+name: openssl
+display_name: "OpenSSL Package Suite"
+description: "Production-grade OpenSSL with multiple build methods"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+
+packages:
+  - sparetools-openssl
+  - sparetools-openssl-tools
+
+examples:
+  - ../../examples/openssl-basic
+  - ../../examples/openssl-advanced
+
+documentation:
+  main: ../../../docs/consumers/openssl/
+  integration: ../../../docs/consumers/openssl/BUILD-MATRIX.md
+
+ci_workflows:
+  - build-openssl
+  - test-openssl-variants
+  - security-scan-openssl
+
+platforms:
+  linux: ["x86_64", "aarch64", "armv7"]
+  macos: ["x86_64", "arm64"]
+  windows: ["x86_64", "x86"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]

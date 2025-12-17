@@ -43,7 +43,6 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: changes
         with:
-          base: ${{ github.event.before || github.ref }}
           filters: |
             packages:
               - 'packages/**/*.py'
@@ -71,6 +70,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -89,6 +90,26 @@ jobs:
             python -m py_compile "$file"
             ruff check "$file" || true
           done
+      
+      - name: Run Conan recipe audit
+        run: |
+          echo "🔍 Running Conan recipe audit..."
+          python3 scripts/audit-conan-recipes.py || echo "⚠️ Audit found issues - see docs/AUDIT-RESULTS.md"
+      
+      - name: Validate OpenSSL compatibility
+        run: |
+          echo "🔍 Validating OpenSSL 3.3.2 compatibility..."
+          python3 scripts/validate-openssl-compatibility.py || echo "⚠️ Compatibility check found issues - see docs/OPENSSL-332-COMPATIBILITY.md"
+      
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-reports
+          path: |
+            docs/AUDIT-RESULTS.md
+            docs/OPENSSL-332-COMPATIBILITY.md
+          retention-days: 7
 
   # Build and test
   build-test:

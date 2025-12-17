@@ -1,0 +1,296 @@
+name: Android Consumer CI
+
+# CI/CD Pipeline for Android Consumers in SpareTools
+# Builds and tests Android applications using the layered architecture
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+    paths:
+      - 'packages/consumers/android/**'
+      - 'packages/foundation/**'
+      - '.github/workflows/android-consumer.yml'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'packages/consumers/android/**'
+      - 'packages/foundation/**'
+      - '.github/workflows/android-consumer.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  CONAN_VERSION: "2.21.0"
+  VERSION_BASE: "2.0.0"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
+
+jobs:
+  # Change detection for Android consumers
+  detect-android-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      android-changed: ${{ steps.changes.outputs.android }}
+      foundation-changed: ${{ steps.changes.outputs.foundation }}
+      skip-build: ${{ steps.skip.outputs.skip-build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            android:
+              - 'packages/consumers/android/**'
+            foundation:
+              - 'packages/foundation/**'
+
+      - name: Determine if build can be skipped
+        id: skip
+        run: |
+          if [[ "${{ steps.changes.outputs.android }}" == "false" &&
+                "${{ steps.changes.outputs.foundation }}" == "false" ]]; then
+            echo "skip-build=true" >> $GITHUB_OUTPUT
+            echo "✅ No Android consumer or foundation changes, skipping build"
+          else
+            echo "skip-build=false" >> $GITHUB_OUTPUT
+            echo "🔨 Android consumer changes detected, running build"
+          fi
+
+  # Android consumer validation
+  validate-android-consumer:
+    needs: detect-android-changes
+    if: needs.detect-android-changes.outputs.skip-build == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Android consumer structure
+        run: |
+          cd packages/consumers/android/sparetools-cliphist-android
+          python3 validate-android-consumer.py
+
+      - name: Validate consumer configuration
+        run: |
+          # Check that .consumer.yaml exists and is valid
+          if [ ! -f "packages/consumers/android/sparetools-cliphist-android/.consumer.yaml" ]; then
+            echo "❌ Missing .consumer.yaml configuration file"
+            exit 1
+          fi
+
+          # Basic YAML validation
+          python3 -c "
+          import yaml
+          with open('packages/consumers/android/sparetools-cliphist-android/.consumer.yaml') as f:
+              config = yaml.safe_load(f)
+              required_keys = ['name', 'version', 'type', 'platform']
+              for key in required_keys:
+                  if key not in config:
+                      print(f'❌ Missing required key: {key}')
+                      exit(1)
+              print('✅ Consumer configuration is valid')
+          "
+
+  # Android consumer build
+  build-android-consumer:
+    needs: [detect-android-changes, validate-android-consumer]
+    if: needs.detect-android-changes.outputs.skip-build == 'false'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: "Android API 29 (x86_64)"
+            api-level: 29
+            target: google_apis
+            arch: x86_64
+            profile: android-x86_64
+          - name: "Android API 29 (arm64)"
+            api-level: 29
+            target: google_apis
+            arch: arm64-v8a
+            profile: android-arm64
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Conan
+        run: |
+          pip install conan==${{ env.CONAN_VERSION }}
+          conan --version
+
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-android-${{ matrix.arch }}-${{ hashFiles('packages/**/conanfile.py') }}-${{ env.VERSION_BASE }}
+          restore-keys: |
+            conan-android-${{ matrix.arch }}-${{ env.VERSION_BASE }}
+            conan-android-${{ matrix.arch }}-
+            conan-android-
+
+      - name: Export foundation packages
+        run: |
+          echo "📦 Exporting foundation packages..."
+          conan export packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }}
+          conan export packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
+          conan export packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
+          conan export packages/foundation/sparetools-recipe-base --version=1.0.0
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          packages: 'platform-tools,build-tools;34.0.0,platforms;android-34'
+
+      - name: Build Android consumer
+        run: |
+          cd packages/consumers/android/sparetools-cliphist-android
+
+          echo "🔨 Building ClipHist Android (${{ matrix.name }})..."
+
+          # Create Android-specific profile
+          cat > android_profile.txt << EOF
+          [settings]
+          os=Android
+          arch=${{ matrix.arch }}
+          compiler=clang
+          compiler.version=17
+          compiler.libcxx=c++_shared
+          build_type=Release
+
+          [conf]
+          tools.android:api_level=${{ matrix.api-level }}
+          tools.android:ndk_version=25.2.9519653
+          tools.cmake.cmaketoolchain:generator=Ninja
+          tools.android:gradle_command=./gradlew
+          EOF
+
+          # Install dependencies via Conan
+          conan install . \
+            --profile:build default \
+            --profile:host android_profile.txt \
+            --build=missing \
+            --output-folder build
+
+          # Build APK using Gradle
+          cd build
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --parallel
+
+      - name: Run Android integration tests
+        run: |
+          cd packages/consumers/android/sparetools-cliphist-android
+          python3 test-integration.py
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cliphist-android-${{ matrix.arch }}-debug
+          path: |
+            packages/consumers/android/sparetools-cliphist-android/build/app/build/outputs/apk/debug/*.apk
+            packages/consumers/android/sparetools-cliphist-android/build/app/build/outputs/logs/*.log
+          retention-days: 30
+
+      - name: Display build summary
+        if: always()
+        run: |
+          echo "## 📱 Android Consumer Build Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Consumer | Architecture | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|--------------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ClipHist Android | ${{ matrix.arch }} | ${{ job.status }} |" >> $GITHUB_STEP_SUMMARY
+
+          if [ -d "packages/consumers/android/sparetools-cliphist-android/build/app/build/outputs/apk/debug" ]; then
+            APK_COUNT=$(ls packages/consumers/android/sparetools-cliphist-android/build/app/build/outputs/apk/debug/*.apk 2>/dev/null | wc -l)
+            echo "| APK Files | $APK_COUNT | ✅ |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Android emulator tests (optional, runs on schedule)
+  test-android-emulator:
+    needs: build-android-consumer
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Android emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: google_apis
+          arch: x86_64
+          profile: Nexus 6
+          script: |
+            # Install test APK and run tests
+            echo "🚀 Running Android emulator tests..."
+            adb devices
+
+            # Note: Full emulator testing would require building test APKs
+            # This is a placeholder for future implementation
+            echo "✅ Emulator test setup complete"
+
+  # Security scan for Android consumer
+  security-scan-android:
+    needs: build-android-consumer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: 'packages/consumers/android/sparetools-cliphist-android'
+          format: 'sarif'
+          output: 'trivy-android-results.sarif'
+
+      - name: Upload Trivy scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-android-results.sarif'
+          category: "android-consumer-security"
+
+      - name: Check for critical vulnerabilities
+        run: |
+          # Parse Trivy results for critical issues
+          if [ -f "trivy-android-results.sarif" ]; then
+            CRITICAL_COUNT=$(grep -o '"level":"error"' trivy-android-results.sarif | wc -l)
+            if [ "$CRITICAL_COUNT" -gt 0 ]; then
+              echo "🚨 Found $CRITICAL_COUNT critical security issues in Android consumer"
+              exit 1
+            else
+              echo "✅ No critical security issues found in Android consumer"
+            fi
+          fi

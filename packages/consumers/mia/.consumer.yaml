@@ -1,0 +1,36 @@
+name: mia
+display_name: "MIA IoT Architecture"
+description: "Modular IoT Architecture with OBD-II simulation and cloud integration"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+    - sparetools-bootstrap/2.0.0
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+
+packages:
+  - sparetools-mia
+  - sparetools-obd-sim
+
+examples:
+  - ../../examples/mia-integration
+  - ../../examples/obd-simulation
+
+documentation:
+  main: ../../../docs/consumers/mia/
+  integration: ../../../docs/consumers/mia/MIA-INTEGRATION.md
+
+ci_workflows:
+  - build-mia
+  - test-mia-integration
+  - obd-simulation-tests
+
+platforms:
+  linux: ["x86_64", "aarch64", "armv7"]
+  macos: ["x86_64", "arm64"]
+  windows: ["x86_64"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]

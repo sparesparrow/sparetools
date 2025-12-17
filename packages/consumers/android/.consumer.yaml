@@ -1,0 +1,36 @@
+name: android
+display_name: "Android Mobile Applications"
+description: "Cross-platform Android apps with native JNI integration and OpenSSL"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+  openssl:
+    - sparetools-openssl/3.3.2
+
+packages:
+  - sparetools-cliphist-android
+
+examples:
+  - ../../examples/android-integration
+  - ../../examples/jni-native-integration
+
+documentation:
+  main: ../../../docs/consumers/android/
+  integration: ../../../docs/consumers/android/ANDROID-INTEGRATION.md
+
+ci_workflows:
+  - build-android
+  - test-android-instrumentation
+  - android-native-tests
+
+platforms:
+  android: ["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]
+  android_ndk: ["21.4.7075529"]
+  android_sdk: ["api-34"]

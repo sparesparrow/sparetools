@@ -1,0 +1,5 @@
+[options]
+sparetools-openssl/*:build_method=perl-configure
+sparetools-openssl/*:fips=False
+sparetools-openssl/*:no_threads=False
+sparetools-openssl/*:no_stdlib_check=False

@@ -1,0 +1,121 @@
+; PlatformIO Project Configuration File
+;
+;   Build options: build flags, source filter
+;   Upload options: custom upload port, speed and extra flags
+;   Library options: dependencies, extra library storages
+;   Advanced options: extra scripting
+;
+; Please visit documentation for the other options and examples
+; https://docs.platformio.org/page/projectconf.html
+
+[platformio]
+; Default environments for different board configurations
+default_envs = esp32dev
+; Source directory
+src_dir = src
+; Include directories
+include_dir = include
+; Build cache directory
+build_cache_dir = .pio/cache
+; PlatformIO core directory
+core_dir = .platformio
+; Global build flags
+build_flags =
+    -std=gnu++17
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Wno-unused-parameter
+    -Wno-missing-field-initializers
+    -DESP32
+    -include limits.h
+; Global library dependencies
+lib_deps =
+    # Add your ESP32-specific libraries here
+    # Example: adafruit/SdFat - Adafruit Fork @ ^2.2.3
+; Extra scripts for build process
+extra_scripts =
+    pre:scripts/pre_build.py
+    post:scripts/post_build.py
+
+; Base environment configuration
+[env]
+platform = espressif32 @ ^6.4.0
+framework = arduino
+monitor_speed = 115200
+monitor_rts = 0
+monitor_dtr = 0
+monitor_filters = esp32_exception_decoder, time
+board_build.partitions = custom_partition.csv
+; Build optimization
+build_type = release
+; Upload settings
+upload_speed = 921600
+; Filesystem settings
+board_build.filesystem = littlefs
+board_upload.maximum_size = 1310720
+
+; Debug build configuration
+[env:debug]
+build_type = debug
+build_flags =
+    ${env.build_flags}
+    -DDEBUG
+    -DCORE_DEBUG_LEVEL=5
+    -g
+    -O0
+
+; Test build configuration
+[env:test]
+build_type = test
+build_flags =
+    ${env.build_flags}
+    -DUNIT_TEST
+    -DCORE_DEBUG_LEVEL=0
+lib_deps =
+    ${env.lib_deps}
+    ArduinoFake
+
+; ==========================================
+; ESP32 Board Configurations
+; ==========================================
+
+; ESP32 DevKit V1
+[env:esp32dev]
+board = esp32dev
+build_flags =
+    ${env.build_flags}
+    -Ofast
+    -D BOARD_NAME="esp32dev"
+
+; ESP32-S2 DevKit
+[env:esp32-s2-saola-1]
+board = esp32-s2-saola-1
+build_flags =
+    ${env.build_flags}
+    -Ofast
+    -D BOARD_NAME="esp32-s2-saola-1"
+
+; ESP32-S3 DevKit
+[env:esp32-s3-devkitc-1]
+board = esp32-s3-devkitc-1
+build_flags =
+    ${env.build_flags}
+    -Ofast
+    -D BOARD_NAME="esp32-s3-devkitc-1"
+
+; ESP32-C3 DevKit
+[env:esp32-c3-devkitc-02]
+board = esp32-c3-devkitc-02
+build_flags =
+    ${env.build_flags}
+    -Ofast
+    -D BOARD_NAME="esp32-c3-devkitc-02"
+
+; ESP32-C6 DevKit
+[env:esp32-c6-devkitc-1]
+board = esp32-c6-devkitc-1
+build_flags =
+    ${env.build_flags}
+    -Ofast
+    -D BOARD_NAME="esp32-c6-devkitc-1"

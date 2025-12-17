@@ -1,0 +1,95 @@
+name: ESP32 Build Workflow
+
+on:
+  workflow_call:
+    inputs:
+      esp32-boards:
+        description: 'ESP32 board configurations to build (JSON array)'
+        type: string
+        default: '["esp32dev"]'
+        required: false
+      python-version:
+        description: 'Python version to use'
+        type: string
+        default: '3.12'
+        required: false
+      bootstrap-script:
+        description: 'Bootstrap script command'
+        type: string
+        default: 'python scripts/bootstrap.py'
+        required: false
+      enable-caching:
+        description: 'Enable PlatformIO caching'
+        type: boolean
+        default: true
+        required: false
+
+env:
+  SPARETOOLS_PROJECT_TYPE: embedded/esp32
+  SPARETOOLS_PROJECT_NAME: nucleus-esp32
+
+jobs:
+  build-esp32:
+    name: Build ESP32 Firmware
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        board: ${{ fromJson(inputs.esp32-boards) }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache PlatformIO
+      if: inputs.enable-caching
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.platformio
+          .pio
+        key: ${{ runner.os }}-platformio-${{ hashFiles('platformio.ini', 'boards/**') }}
+        restore-keys: |
+          ${{ runner.os }}-platformio-
+
+    - name: Bootstrap development environment
+      run: ${{ inputs.bootstrap-script }}
+
+    - name: Install ESP32 PlatformIO platform
+      run: |
+        pio platform install espressif32 --with-package framework-arduinoespressif32
+
+    - name: Build ESP32 firmware (${{ matrix.board }})
+      run: |
+        pio run -e ${{ matrix.board }}
+
+    - name: Verify firmware artifacts
+      run: |
+        ls -la .pio/build/${{ matrix.board }}/
+        # Check that essential files exist
+        test -f .pio/build/${{ matrix.board }}/firmware.bin || exit 1
+        test -f .pio/build/${{ matrix.board }}/partitions.bin || exit 1
+        test -f .pio/build/${{ matrix.board }}/bootloader.bin || exit 1
+
+    - name: Upload firmware artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: esp32-firmware-${{ matrix.board }}
+        path: |
+          .pio/build/${{ matrix.board }}/firmware.bin
+          .pio/build/${{ matrix.board }}/partitions.bin
+          .pio/build/${{ matrix.board }}/bootloader.bin
+          .pio/build/${{ matrix.board }}/firmware.elf
+        retention-days: 30
+
+    - name: Upload build logs
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: build-logs-${{ matrix.board }}
+        path: |
+          .pio/build/${{ matrix.board }}/*.log
+        retention-days: 7

@@ -1,0 +1,288 @@
+name: CI - Android Build and Test
+
+# CI/CD Pipeline for {{project_name}} (Android App)
+# Validates Android builds across different API levels and architectures
+# Expected duration: 20-40 minutes
+# Failure rate target: <5%
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ '{{' }} github.workflow }}-${{ '{{' }} github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CONAN_VERSION: "2.21.0"
+  VERSION_BASE: "{{base_version}}"
+  VERSION_CPYTHON: "{{cpython_version}}"
+  VERSION_OPENSSL: "{{openssl_version}}"
+
+jobs:
+  # Change detection
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      android-changed: ${{ '{{' }} steps.changes.outputs.android }}
+      native-changed: ${{ '{{' }} steps.changes.outputs.native }}
+      skip-build: ${{ '{{' }} steps.skip.outputs.skip-build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            android:
+              - 'app/src/main/java/**'
+              - 'app/src/main/res/**'
+              - 'app/src/main/AndroidManifest.xml'
+              - 'app/build.gradle.kts'
+              - 'build.gradle.kts'
+            native:
+              - 'app/src/main/cpp/**'
+              - 'conanfile.py'
+
+      - name: Determine if build can be skipped
+        id: skip
+        run: |
+          if [[ "${{ '{{' }} steps.changes.outputs.android }}" == "false" && "${{ '{{' }} steps.changes.outputs.native }}" == "false" ]]; then
+            echo "skip-build=true" >> $GITHUB_OUTPUT
+            echo "✅ No Android/native changes, skipping build"
+          else
+            echo "skip-build=false" >> $GITHUB_OUTPUT
+            echo "🔨 Android/native changes detected, running build"
+          fi
+
+  # Code quality checks
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Set up Python for native validation
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate Gradle wrapper
+        run: |
+          echo "🔍 Validating Gradle wrapper..."
+          ./gradlew --version
+
+      - name: Run Android lint
+        run: |
+          echo "🔍 Running Android lint..."
+          ./gradlew lint || echo "⚠️ Lint issues found"
+
+      - name: Check Kotlin code style
+        run: |
+          echo "🔍 Checking Kotlin code style..."
+          ./gradlew spotlessCheck || echo "⚠️ Code style issues found"
+
+      - name: Validate native code
+        run: |
+          echo "🔍 Validating native code..."
+          find app/src/main/cpp -name "*.cpp" -o -name "*.h" | xargs -I {} sh -c 'echo "Checking {}"; gcc -fsyntax-only -Iapp/src/main/cpp {} 2>/dev/null || echo "⚠️ Syntax issue in {}"'
+
+  # Build Android app
+  build-android:
+    needs: [detect-changes, code-quality]
+    if: needs.detect-changes.outputs.skip-build == 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [21, 29, 33]
+        arch: ['x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a']
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Python for Conan
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Conan
+        run: |
+          pip install conan==${{ '{{' }} env.CONAN_VERSION }}
+          conan --version
+
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-android-${{ '{{' }} matrix.arch }}-api${{ '{{' }} matrix.api-level }}-${{ '{{' }} hashFiles('**/conanfile.py') }}
+          restore-keys: |
+            conan-android-${{ '{{' }} matrix.arch }}-api${{ '{{' }} matrix.api-level }}
+            conan-android-${{ '{{' }} matrix.arch }}
+            conan-android-
+
+      - name: Set up Android NDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/21.4.7075529" >> $GITHUB_ENV
+
+      # Build native libraries first
+      - name: Build native libraries
+        run: |
+          cd app/src/main/cpp
+          conan install . --build=missing --profile android
+
+      # Build Android app
+      - name: Build Android app
+        run: |
+          ./gradlew assembleDebug \
+            -Pandroid.testInstrumentationRunnerArguments.class="com.{{package_name}}.ExampleInstrumentedTest" \
+            -Pandroid.experimental.testOptions.execution=ANDROIDX_TEST_ORCHESTRATOR
+
+      - name: Run unit tests
+        run: |
+          ./gradlew testDebugUnitTest
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-api${{ '{{' }} matrix.api-level }}-${{ '{{' }} matrix.arch }}
+          path: |
+            app/build/reports/
+            app/build/test-results/
+          retention-days: 7
+
+      - name: Upload APK
+        if: matrix.api-level == 33 && matrix.arch == 'arm64-v8a'
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+  # Instrumented tests (on emulator)
+  instrumented-tests:
+    needs: [build-android]
+    if: needs.detect-changes.outputs.skip-build == 'false'
+    runs-on: macos-latest  # Better emulator performance
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create AVD and run instrumented tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          arch: x86_64
+          profile: Nexus 6
+          avd-name: test
+          script: |
+            ./gradlew connectedDebugAndroidTest \
+              -Pandroid.testInstrumentationRunnerArguments.class="com.{{package_name}}.ExampleInstrumentedTest"
+
+      - name: Upload instrumented test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-test-results
+          path: |
+            app/build/reports/androidTests/
+          retention-days: 7
+
+  # Release build
+  release-build:
+    needs: [build-android, instrumented-tests]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Build release APK and Bundle
+        run: |
+          ./gradlew assembleRelease bundleRelease
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: |
+            app/build/outputs/apk/release/app-release.apk
+            app/build/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+  # CI Summary
+  ci-summary:
+    needs: [detect-changes, code-quality, build-android, instrumented-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI Results
+        run: |
+          echo "## 🎯 Android CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ '{{' }} needs.build-android.result }}" == "success" ] && \
+             [ "${{ '{{' }} needs.instrumented-tests.result }}" == "success" ] || \
+             [ "${{ '{{' }} needs.detect-changes.outputs.skip-build }}" == "true" ]; then
+            echo "✅ **CI PASSED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All Android builds and tests completed successfully." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "❌ **CI FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Build Status: ${{ '{{' }} needs.build-android.result }}" >> $GITHUB_STEP_SUMMARY
+            echo "Test Status: ${{ '{{' }} needs.instrumented-tests.result }}" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

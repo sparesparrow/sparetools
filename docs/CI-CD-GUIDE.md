@@ -31,6 +31,9 @@ gh secret list -R sparesparrow/sparetools
 ### 3. Trigger Workflows
 
 ```bash
+# For new projects: Use templates (includes CI/CD)
+python bootstrap-obd.py --template=mia --name=my-project
+
 # Push to main/develop triggers ci.yml
 git push origin main
 
@@ -41,6 +44,10 @@ gh pr create --title "feat: new feature"
 gh workflow run nightly.yml
 ```
 
+**Note:** Project templates now include pre-configured CI/CD workflows for each project type (Generic, MIA, MCP, Android).
+
+→ **Templates:** [Template Usage Guide](../TEMPLATE-USAGE.md)
+
 ### 4. Monitor
 
 ```bash
@@ -48,6 +55,47 @@ gh workflow run nightly.yml
 gh run watch
 
 # List recent runs
+gh run list --limit 5
+
+# View workflow logs
+gh run view <run-id> --log
+```
+
+## 🎯 Template Integration
+
+Project templates now include pre-configured CI/CD workflows:
+
+### Template Workflow Features
+
+| Template | CI/CD Features |
+|----------|----------------|
+| **Generic** | Multi-platform C++ builds, Conan integration |
+| **MIA** | Python testing, coverage reports, PyPI publishing |
+| **MCP** | Protocol validation, Docker builds, security scanning |
+| **Android** | Native builds, instrumented tests, APK generation |
+
+### Bootstrap Integration
+
+```bash
+# Create project with CI/CD ready
+python bootstrap-obd.py --template=mia --name=my-app
+
+# Workflows are automatically configured for:
+# - Multi-platform testing
+# - Automated dependency updates
+# - Security scanning
+# - Release automation
+```
+
+### Workflow Customization
+
+Templates include `.github/workflows/ci.yml.template` files that are customized during project creation. Each workflow:
+
+- Uses change detection to skip unnecessary builds
+- Supports matrix builds across platforms
+- Includes comprehensive testing and validation
+- Uploads artifacts and test results
+- Integrates with GitHub security features
 gh run list --limit 5
 
 # View specific workflow

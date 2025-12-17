@@ -1,0 +1,34 @@
+name: audio
+display_name: "Audio/Media Processing"
+description: "Real-time audio processing with RTP-MIDI streaming and media tools"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+
+packages:
+  - sparetools-rtp-midi
+
+examples:
+  - ../../examples/audio-streaming
+  - ../../examples/rtp-midi-integration
+
+documentation:
+  main: ../../../docs/consumers/audio/
+  integration: ../../../docs/consumers/audio/RTP-MIDI-GUIDE.md
+
+ci_workflows:
+  - build-audio
+  - test-audio-streaming
+  - rtp-midi-protocol-tests
+
+platforms:
+  linux: ["x86_64", "aarch64"]
+  macos: ["x86_64", "arm64"]
+  windows: ["x86_64"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]

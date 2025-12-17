@@ -1,0 +1,118 @@
+name: Testing Workflow
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        type: string
+        default: '3.12'
+        required: false
+      bootstrap-script:
+        description: 'Bootstrap script command'
+        type: string
+        default: 'python scripts/bootstrap.py'
+        required: false
+      test-suite:
+        description: 'Test suite to run (unit, integration, all)'
+        type: string
+        default: 'all'
+        required: false
+      enable-coverage:
+        description: 'Enable coverage reporting'
+        type: boolean
+        default: true
+        required: false
+      run-hardware-simulation:
+        description: 'Run hardware simulation tests'
+        type: boolean
+        default: true
+        required: false
+
+env:
+  SPARETOOLS_PROJECT_TYPE: embedded/esp32
+  SPARETOOLS_PROJECT_NAME: nucleus-esp32
+  CONAN_USER_HOME: ${{ github.workspace }}/.conan-cache
+
+jobs:
+  test:
+    name: Test Suite (${{ inputs.test-suite }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [${{ inputs.python-version }}]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache Conan packages
+      uses: actions/cache@v3
+      with:
+        path: ${{ env.CONAN_USER_HOME }}
+        key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py') }}
+        restore-keys: |
+          ${{ runner.os }}-conan-
+
+    - name: Bootstrap development environment
+      run: ${{ inputs.bootstrap-script }}
+
+    - name: Install test dependencies
+      run: |
+        pip install -r requirements-dev.txt
+
+    - name: Build C++ tests
+      if: inputs.test-suite == 'unit' || inputs.test-suite == 'all'
+      run: |
+        mkdir -p build-release
+        cd build-release
+        cmake .. -DCMAKE_BUILD_TYPE=Debug
+        make -j$(nproc)
+
+    - name: Run unit tests
+      if: inputs.test-suite == 'unit' || inputs.test-suite == 'all'
+      run: |
+        cd build-release
+        ctest --output-on-failure --output-junit ../test-results/unit_tests.xml
+
+    - name: Run integration tests
+      if: inputs.test-suite == 'integration' || inputs.test-suite == 'all'
+      env:
+        NUCLEUS_HARDWARE_SIMULATION: ${{ inputs.run-hardware-simulation }}
+        NUCLEUS_TEST_RESULTS_DIR: ${{ github.workspace }}/test-results
+        PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/test:${{ github.workspace }}/test_harness
+      run: |
+        python scripts/test_runner.py --integration-only --report-dir ./test-results
+
+    - name: Run hardware simulation tests
+      if: inputs.run-hardware-simulation && (inputs.test-suite == 'integration' || inputs.test-suite == 'all')
+      run: |
+        python test_harness/demo.py
+
+    - name: Generate coverage report
+      if: inputs.enable-coverage
+      run: |
+        python scripts/test_runner.py --coverage --report-dir ./coverage-results
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ inputs.test-suite }}
+        path: |
+          test-results/
+          coverage-results/
+        retention-days: 7
+
+    - name: Upload coverage reports
+      if: inputs.enable-coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage-results/coverage.xml
+        flags: ${{ inputs.test-suite }}
+        name: codecov-${{ inputs.test-suite }}
+        fail_ci_if_error: false

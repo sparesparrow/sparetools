@@ -1,5 +1,18 @@
 # SpareTools Package Ecosystem - Quick Reference Card
 
+## 🚀 Quick Start Commands
+
+```bash
+# New project from template
+python bootstrap-obd.py --template=mia --name=my-project
+
+# Install packages
+conan install --requires=sparetools-openssl/3.3.2 --build=missing
+
+# Validate setup
+python scripts/audit-conan-recipes.py
+```
+
 ## At a Glance
 
 **11 packages** | **7 production** | **4 deprecated** | **v2.0.0** | **Conan 2.x**
@@ -331,6 +344,62 @@ conan create packages/sparetools-openssl --version=3.3.2
 
 ---
 
+## MIA Integration
+
+### Quick Setup for MIA Contributors
+
+```bash
+# 1. Install Conan 2.x
+pip install conan==2.21.0
+
+# 2. Configure remote
+conan remote add sparesparrow-conan \
+  https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+  --force
+
+# 3. Use in conanfile.py
+requires = [
+    "sparetools-openssl/3.3.2",
+]
+```
+
+### Example MIA Consumer
+
+```python
+from conan import ConanFile
+
+class MIAProjectConan(ConanFile):
+    name = "mia-project"
+    version = "1.0.0"
+    
+    requires = [
+        "sparetools-openssl/3.3.2",
+    ]
+    
+    tool_requires = [
+        "sparetools-cpython/3.12.7",  # If needed
+    ]
+    
+    python_requires = "sparetools-base/2.0.0"  # For utilities
+```
+
+### Installation
+
+```bash
+# Install dependencies
+conan install . --build=missing
+
+# Build project
+conan build .
+```
+
+**See Also:**
+- [MIA Integration Guide](MIA-INTEGRATION.md) - Complete integration guide
+- [MIA Contributor Guide](MIA-CONTRIBUTOR-GUIDE.md) - Setup guide for contributors
+- [Cross-Repo Testing](CROSS-REPO-TESTING.md) - Testing cross-repo dependencies
+
+---
+
 ## One-Liner Reference
 
 ```bash
@@ -348,6 +417,6 @@ conan test packages/sparetools-openssl/test_package sparetools-openssl/3.3.2@
 
 ---
 
-**Quick Reference v1.0**  
-Last Updated: 2025-11-01  
-See PACKAGE-ECOSYSTEM-SUMMARY.md for complete reference
+**Quick Reference v2.0**  
+Last Updated: 2025-12-03  
+See [Packages](PACKAGES.md) for complete reference

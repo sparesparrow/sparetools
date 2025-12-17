@@ -1,0 +1,216 @@
+name: CI - Build and Test
+
+# CI/CD Pipeline for {{project_name}}
+# Validates builds across multiple platforms and build methods
+# Expected duration: 15-45 minutes (cached: 8-15 minutes)
+# Failure rate target: <5%
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ '{{' }} github.workflow }}-${{ '{{' }} github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+
+env:
+  CONAN_VERSION: "2.21.0"
+  VERSION_BASE: "{{base_version}}"
+  VERSION_CPYTHON: "{{cpython_version}}"
+  VERSION_OPENSSL: "{{openssl_version}}"
+
+jobs:
+  # Change detection
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      packages-changed: ${{ '{{' }} steps.changes.outputs.packages }}
+      skip-build: ${{ '{{' }} steps.skip.outputs.skip-build }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            packages:
+              - 'packages/**/*.py'
+              - 'packages/**/conanfile.py'
+              - 'conanfile.py'
+
+      - name: Determine if build can be skipped
+        id: skip
+        run: |
+          if [[ "${{ '{{' }} steps.changes.outputs.packages }}" == "false" ]]; then
+            echo "skip-build=true" >> $GITHUB_OUTPUT
+            echo "✅ No package changes, skipping build"
+          else
+            echo "skip-build=false" >> $GITHUB_OUTPUT
+            echo "🔨 Package changes detected, running build"
+          fi
+
+  # Validate Python files
+  validate-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install validation tools
+        run: |
+          pip install ruff pylint mypy
+
+      - name: Validate conanfiles
+        run: |
+          # Find all conanfile.py files
+          find . -name "conanfile.py" -type f | while read file; do
+            echo "Validating $file"
+            python -m py_compile "$file"
+            ruff check "$file" || true
+          done
+
+      - name: Validate Python code
+        run: |
+          echo "🔍 Running Python code validation..."
+          ruff check . || echo "⚠️ Code quality issues found"
+          mypy . || echo "⚠️ Type checking issues found"
+
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: validation-reports
+          path: |
+            *.log
+          retention-days: 7
+
+  # Build and test
+  build-test:
+    needs: [detect-changes, validate-python]
+    if: needs.detect-changes.outputs.skip-build == 'false'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "Linux GCC"
+            os: ubuntu-22.04
+            profile: linux-gcc
+
+          - name: "Linux Clang"
+            os: ubuntu-22.04
+            profile: linux-clang
+
+          - name: "macOS"
+            os: macos-13
+            profile: macos
+
+    runs-on: ${{ '{{' }} matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Conan
+        run: |
+          pip install conan==${{ '{{' }} env.CONAN_VERSION }}
+          conan --version
+
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+
+      - name: Cache Conan artifacts
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2
+          key: conan-${{ '{{' }} matrix.os }}-${{ '{{' }} matrix.profile }}-${{ '{{' }} hashFiles('**/conanfile.py') }}-${{ '{{' }} env.VERSION_CPYTHON }}
+          restore-keys: |
+            conan-${{ '{{' }} matrix.os }}-${{ '{{' }} matrix.profile }}-${{ '{{' }} env.VERSION_CPYTHON }}
+            conan-${{ '{{' }} matrix.os }}-${{ '{{' }} matrix.profile }}-
+            conan-${{ '{{' }} matrix.os }}-cpython-
+            conan-${{ '{{' }} matrix.os }}-
+            conan-
+
+      # Build dependencies first
+      - name: Build dependencies
+        run: |
+          echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
+          # Build any required dependencies
+          # conan create packages/sparetools-base --version=${{ '{{' }} env.VERSION_BASE }} --build=missing
+
+      # Build project
+      - name: Build {{project_name}}
+        run: |
+          conan create . --version={{version}} --build=missing
+
+      # Test project
+      - name: Test {{project_name}}
+        run: |
+          conan test test_package {{project_name}}/{{version}}
+
+      - name: Display Build Info
+        if: always()
+        run: |
+          echo "## 📦 Build Results" >> $GITHUB_STEP_SUMMARY
+          conan list "{{project_name}}/*" >> $GITHUB_STEP_SUMMARY || true
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📍 Package Location" >> $GITHUB_STEP_SUMMARY
+          conan cache path "{{project_name}}/{{version}}:*" | head -1 >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Save build artifacts (on failure only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ '{{' }} matrix.os }}-${{ '{{' }} matrix.profile }}
+          path: |
+            ~/.conan2/p/*/p/lib/*.a
+            ~/.conan2/p/*/p/include/
+          retention-days: 7
+
+  # CI Summary
+  ci-summary:
+    needs: [detect-changes, build-test]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI Results
+        run: |
+          echo "## 🎯 CI Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ '{{' }} needs.build-test.result }}" == "success" ] || \
+             [ "${{ '{{' }} needs.detect-changes.outputs.skip-build }}" == "true" ]; then
+            echo "✅ **CI PASSED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "All builds and tests completed successfully." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "❌ **CI FAILED**" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Build Status: ${{ '{{' }} needs.build-test.result }}" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi

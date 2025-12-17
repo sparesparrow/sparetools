@@ -1,0 +1,91 @@
+from conan import ConanFile
+from conan.tools.files import copy
+import os
+
+class MiaProject(ConanFile):
+    name = "mia-project"
+    version = "1.0.0"
+    description = "{{project_description}}"
+    license = "MIT"
+    author = "Your Name"
+    url = "https://github.com/yourusername/mia-project"
+    topics = ("python", "cryptography", "mia", "python")
+
+    # Use SpareTools base utilities
+    python_requires = "sparetools-base/2.0.0"
+
+    # Use system Python for now
+    # tool_requires = (
+    #     "sparetools-cpython/3.12.7",
+    # )
+
+    # Runtime dependencies - MIA only uses Python's standard ssl module
+    requires = ()
+
+    # Options
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False],
+        "with_tests": [True, False],
+    }
+    default_options = {
+        "shared": False,
+        "fPIC": True,
+        "with_tests": True,
+    }
+
+    # Settings
+    settings = "os", "compiler", "build_type", "arch"
+
+    # Source files to export
+    exports_sources = (
+        "pyproject.toml",
+        "src/*",
+        "scripts/*",
+        "requirements*.txt",
+    )
+
+    def configure(self):
+        # OpenSSL settings
+        self.options["sparetools-openssl/*"].shared = self.options.shared
+        self.options["sparetools-openssl/*"].fPIC = self.options.fPIC
+
+    def requirements(self):
+        # Additional Python packages can be added here
+        pass
+
+    def layout(self):
+        # Use Python layout
+        self.folders.source = "."
+        self.folders.build = "build"
+        self.folders.generators = "build/conan"
+
+
+    def build(self):
+        # Build Python package - skip pip install for now
+        # self.run("python -m pip install -e .")
+
+        # Build any C extensions if needed
+        # self.run("python setup.py build_ext --inplace")
+        pass
+
+    def package(self):
+        # Package Python source
+        copy(self, "*.py", self.source_folder, os.path.join(self.package_folder, "src"))
+        copy(self, "pyproject.toml", self.source_folder, self.package_folder)
+
+        # Package compiled extensions
+        copy(self, "*.so", self.build_folder, os.path.join(self.package_folder, "src"), keep_path=False)
+        copy(self, "*.pyd", self.build_folder, os.path.join(self.package_folder, "src"), keep_path=False)
+
+    def package_info(self):
+        # Set Python path
+        self.conf_info.define("user.cpython:site_packages", os.path.join(self.package_folder, "src"))
+
+        # Set environment variables for consumers
+        self.env_info.PYTHONPATH.append(os.path.join(self.package_folder, "src"))
+
+    def package_id(self):
+        # Package ID should be platform-independent for Python packages
+        # unless they contain compiled extensions
+        pass

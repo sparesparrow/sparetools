@@ -1,4 +1,4 @@
-# SpareTools OpenSSL DevOps Ecosystem
+# SpareTools Conan Package Ecosystem
 
 [![Build Status](https://img.shields.io/github/actions/workflow/status/sparesparrow/sparetools/ci.yml?branch=main&label=build&logo=github)](https://github.com/sparesparrow/sparetools/actions)
 [![Security](https://img.shields.io/github/actions/workflow/status/sparesparrow/sparetools/security.yml?branch=main&label=security&logo=github)](https://github.com/sparesparrow/sparetools/actions)
@@ -6,7 +6,7 @@
 [![Conan](https://img.shields.io/badge/conan-2.21.0%2B-orange.svg)](https://conan.io)
 [![Python](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org)
 
-Modern Conan 2.x ecosystem for OpenSSL development with multi-build methods, integrated security scanning, and zero-copy deployment pattern.
+Modern Conan 2.x ecosystem for package development with integrated security scanning, zero-copy deployment patterns, and cross-platform tooling.
 
 ---
 
@@ -17,26 +17,47 @@ Modern Conan 2.x ecosystem for OpenSSL development with multi-build methods, int
 ```bash
 # Add remote (one-time)
 conan remote add sparesparrow-conan \
-  https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+  https://dl.cloudsmith.io/public/sparesparrow-conan/sparetools/
 
-# Install OpenSSL
-conan install --requires=sparetools-openssl/3.3.2 --build=missing
+# Install Python runtime
+conan install --tool-requires=sparetools-cpython/3.12.7 --build=missing
+
+# Install OBD simulation tools
+conan install --requires=sparetools-obd-sim/2.0.0 --build=missing
 ```
 
 ### Build from Source
 
 ```bash
-# Default Perl Configure build
-conan create packages/sparetools-openssl --version=3.3.2 --build=missing
+# Build Python runtime
+conan create packages/sparetools-cpython --version=3.12.7 --build=missing
 
-# With CMake
-conan create packages/sparetools-openssl --version=3.3.2 \
-  -o build_method=cmake --build=missing
+# Build OBD simulation tools
+conan create packages/sparetools-obd-sim --version=2.0.0 --build=missing
 
-# With FIPS enabled
-conan create packages/sparetools-openssl --version=3.3.2 \
-  -pr:b packages/sparetools-openssl-tools/profiles/features/fips-enabled \
-  --build=missing
+# Build shared development tools
+conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
+```
+
+---
+
+## 📋 Repository Separation Notice
+
+**December 2025**: OpenSSL packages have been separated into a dedicated repository for better focus and maintainability.
+
+### OpenSSL Packages Moved
+- `sparetools-openssl` → [sparesparrow/openssl-conan](https://github.com/sparesparrow/openssl-conan)
+- `sparetools-openssl-tools` → Moved to OpenSSL repository
+
+### Migration Guide
+For existing users of OpenSSL packages:
+```bash
+# Add new OpenSSL remote
+conan remote add sparesparrow-openssl \
+  https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/
+
+# Update package references
+# sparetools-openssl/3.3.2 -> from sparesparrow-openssl remote
 ```
 
 ---
@@ -47,56 +68,41 @@ conan create packages/sparetools-openssl --version=3.3.2 \
 
 ```mermaid
 graph TD
-    subgraph "Production Packages v2.0.0"
-        openssl[sparetools-openssl/3.3.2<br/>MAIN DELIVERABLE]
-        tools[sparetools-openssl-tools/2.0.0]
+    subgraph "Foundation Packages"
         base[sparetools-base/2.0.0<br/>FOUNDATION]
-        cpython[sparetools-cpython/3.12.7]
-        shared[sparetools-shared-dev-tools/2.0.0]
-        bootstrap[sparetools-bootstrap/2.0.0]
+        cpython[sparetools-cpython/3.12.7<br/>PYTHON RUNTIME]
+        shared[sparetools-shared-dev-tools/2.0.0<br/>DEV TOOLS]
+        bootstrap[sparetools-bootstrap/2.0.0<br/>BOOTSTRAP]
+        obd[sparetools-obd-sim/2.0.0<br/>OBD SIMULATION]
     end
 
     subgraph "Dependencies"
-        openssl -.->|tool_requires| tools
-        openssl -.->|tool_requires| cpython
-        openssl -->|python_requires| base
-
-        tools -->|python_requires| base
         shared -->|python_requires| base
         cpython -->|python_requires| base
         bootstrap -->|python_requires| base
+        obd -->|python_requires| base
+        obd -.->|tool_requires| cpython
     end
 
-    style openssl fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
     style base fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
-    style tools fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
     style cpython fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:2px
     style shared fill:#FFC107,stroke:#F57C00,color:#000,stroke-width:2px
     style bootstrap fill:#607D8B,stroke:#37474F,color:#fff,stroke-width:2px
+    style obd fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
 ```
 
-### Multi-Build System
+### Package Types
 
-```mermaid
-graph LR
-    A[sparetools-openssl] --> B{build_method option}
+**Foundation Layer:**
+- `sparetools-base`: Core utilities, security gates, zero-copy patterns
+- `sparetools-cpython`: Prebuilt Python 3.12.7 runtime environment
 
-    B -->|perl<br/>default| C[Perl Configure<br/>✅ Production]
-    B -->|cmake| D[CMake Build<br/>✅ Modern]
-    B -->|autotools| E[Autotools<br/>✅ Unix]
-    B -->|python| F[Python configure.py<br/>⚠️ Experimental]
+**Tooling Layer:**
+- `sparetools-shared-dev-tools`: Development and build automation tools
+- `sparetools-bootstrap`: Package bootstrap and initialization utilities
 
-    C --> G[OpenSSL 3.3.2]
-    D --> G
-    E --> G
-    F --> G
-
-    style C fill:#4CAF50,stroke:#2E7D32,color:#fff
-    style D fill:#2196F3,stroke:#1565C0,color:#fff
-    style E fill:#FF9800,stroke:#E65100,color:#fff
-    style F fill:#FFC107,stroke:#F57C00,color:#000
-    style G fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
-```
+**Application Layer:**
+- `sparetools-obd-sim`: OBD-II simulation tools for automotive development
 
 ---
 

@@ -1,8 +1,0 @@
-[options]
-sparetools-openssl/*:build_method=cmake
-
-[conf]
-# CMake build method - modern tooling
-tools.cmake.cmaketoolchain:generator=Ninja
-tools.build:skip_test=False
-
