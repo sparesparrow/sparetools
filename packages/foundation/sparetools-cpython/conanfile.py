@@ -1,11 +1,16 @@
 import os
+import sys
 from conan import ConanFile
 from conan.tools.files import save, copy
 from conan.tools.gnu import Autotools, AutotoolsToolchain
 from conan.errors import ConanException
 
+# Import base class from shared scripts
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../scripts'))
+from recipe_base import SpareToolsBaseConan
 
-class CPythonToolConan(ConanFile):
+
+class CPythonToolConan(SpareToolsBaseConan):
     """CPython 3.12.7 built directly to Conan cache - Zero-copy architecture"""
     
     name = "sparetools-cpython"
@@ -184,8 +189,12 @@ class CPythonToolConan(ConanFile):
         if os.path.exists(python3_12_bin) and not os.path.exists(python_bin_sym):
             os.symlink("python3.12", python_bin_sym)
         
+        # Apply security gates and generate SBOM as final step
+        self.apply_security_gates()
+        self.generate_sbom()
+
         self.output.info(f"✅ Package verified: {python_bin}")
-    
+
     def package_id(self):
         """Package ID depends on OS and architecture only"""
         self.info.clear()

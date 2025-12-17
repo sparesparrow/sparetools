@@ -1,26 +1,31 @@
-from sparetools_recipe_base import SpareToolsConsumerBase
+import os
+import sys
+from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy
-import os
+
+# Import base class from shared scripts
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../scripts'))
+from recipe_base import ConsumerPackageConan
 
 
-class SpareToolsClipHistAndroidConan(SpareToolsConsumerBase):
+class SpareToolsClipHistAndroidConan(ConsumerPackageConan):
     name = "sparetools-cliphist-android"
     version = "1.0.0"
+    package_type = "application"
     description = "ClipHist Android consumer application for SpareTools ecosystem"
+    license = "Apache-2.0"
+    url = "https://github.com/sparesparrow/sparetools"
     topics = ("android", "clipboard", "encryption", "security")
 
-    # Application package for Android
-    package_type = "application"
+    # Declare consumer context
+    consumer_domain = "android"
 
     # Android-specific settings
     settings = "os", "arch", "compiler", "build_type"
 
-    # Android build requirements
-    python_requires = (
-        "sparetools-base/2.0.0",
-        "sparetools-recipe-base/1.0.0"
-    )
+    # Use SpareTools base utilities
+    python_requires = "sparetools-base/2.0.0"
 
     # Android-specific tool requirements
     tool_requires = (
@@ -72,6 +77,10 @@ class SpareToolsClipHistAndroidConan(SpareToolsConsumerBase):
 
         # Copy source files for development
         super().package()
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def _get_android_abi(self):
         """Map Conan architecture to Android ABI."""

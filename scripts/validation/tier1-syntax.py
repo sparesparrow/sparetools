@@ -178,8 +178,7 @@ class SyntaxValidator:
             self.validate_consumer(consumer)
 
         # Report results
-        print("
-Validation Results:")
+        print("\nValidation Results:")
         print(f"  Python files validated: {len(self.results['python_files'])}")
         print(f"  Conan files validated: {len(self.results['conan_files'])}")
         print(f"  Errors: {len(self.results['errors'])}")
