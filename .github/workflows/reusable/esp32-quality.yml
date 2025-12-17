@@ -1,0 +1,76 @@
+name: Quality Checks
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        type: string
+        default: '3.12'
+        required: false
+      bootstrap-script:
+        description: 'Bootstrap script command'
+        type: string
+        default: 'python scripts/bootstrap.py'
+        required: false
+      run-static-analysis:
+        description: 'Run static analysis'
+        type: boolean
+        default: true
+        required: false
+
+env:
+  SPARETOOLS_PROJECT_TYPE: embedded/esp32
+  SPARETOOLS_PROJECT_NAME: nucleus-esp32
+
+jobs:
+  quality-checks:
+    name: Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements-dev.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Bootstrap development environment
+      run: ${{ inputs.bootstrap-script }}
+
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files --show-diff-on-failure
+
+    - name: Run static analysis
+      if: inputs.run-static-analysis
+      run: |
+        # Run mypy type checking
+        python -m mypy src/ test_harness/ scripts/ --ignore-missing-imports
+
+        # Run flake8 linting
+        python -m flake8 src/ test_harness/ scripts/
+
+        # Run black format checking
+        python -m black --check --diff src/ test_harness/ scripts/
+
+    - name: Upload quality check results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: quality-check-results
+        path: |
+          .mypy_cache/
+          .coverage/
+        retention-days: 7

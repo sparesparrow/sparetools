@@ -1,0 +1,107 @@
+name: Security Scanning
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: 'Python version to use'
+        type: string
+        default: '3.12'
+        required: false
+      scan-type:
+        description: 'Security scan type (full, quick)'
+        type: string
+        default: 'full'
+        required: false
+      generate-sbom:
+        description: 'Generate SBOM'
+        type: boolean
+        default: true
+        required: false
+
+env:
+  SPARETOOLS_PROJECT_TYPE: embedded/esp32
+  SPARETOOLS_PROJECT_NAME: nucleus-esp32
+
+jobs:
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install security tools
+      run: |
+        pip install cyclonedx-bom
+        # Trivy is available in the runner
+
+    - name: Run Trivy filesystem scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: ${{ inputs.scan-type == 'full' && 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' || 'HIGH,CRITICAL' }}
+
+    - name: Run Trivy config scan
+      if: inputs.scan-type == 'full'
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'config'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-config.sarif'
+
+    - name: Generate SBOM
+      if: inputs.generate-sbom
+      run: |
+        # Generate CycloneDX SBOM for Python dependencies
+        cyclonedx-bom -o sbom.json -j -t poetry .
+
+        # Generate SPDX SBOM for C++ dependencies (if available)
+        # This would require additional tooling for Conan dependencies
+
+    - name: Upload security scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: trivy-results.sarif
+
+    - name: Upload config scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: inputs.scan-type == 'full' && always()
+      with:
+        sarif_file: trivy-config.sarif
+
+    - name: Upload SBOM
+      if: inputs.generate-sbom
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-sbom
+        path: |
+          sbom.json
+        retention-days: 90
+
+    - name: Fail on high/critical vulnerabilities
+      run: |
+        # Check Trivy results for critical issues
+        if grep -q '"severity": "CRITICAL"' trivy-results.sarif; then
+          echo "❌ Critical security vulnerabilities found!"
+          exit 1
+        fi
+
+        if grep -q '"severity": "HIGH"' trivy-results.sarif; then
+          echo "⚠️  High severity security issues found"
+          # Don't fail on high severity for now, just warn
+        fi
+
+        echo "✅ No critical security vulnerabilities found"

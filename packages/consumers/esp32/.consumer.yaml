@@ -1,0 +1,35 @@
+name: esp32
+display_name: "ESP32 Firmware Projects"
+description: "ESP32 microcontroller firmware with PlatformIO, testing, and CI/CD integration"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - sparetools-cpython/3.12.7
+    - sparetools-bootstrap/2.0.0
+    - sparetools-test-harness/2.0.0
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+
+packages:
+  - sparetools-nucleus
+
+examples: []
+
+documentation:
+  main: ../../../docs/consumers/esp32/
+  integration: ../../../docs/consumers/esp32/ESP32-INTEGRATION.md
+
+ci_workflows:
+  - esp32-build
+  - esp32-testing
+  - esp32-quality
+  - esp32-security
+
+platforms:
+  esp32: ["esp32", "esp32-s2", "esp32-s3", "esp32-c3", "esp32-c6"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]
+  platformio: ["6.1.0+"]
+  esp_idf: ["5.0+"]

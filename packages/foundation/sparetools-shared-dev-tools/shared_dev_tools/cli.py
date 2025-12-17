@@ -49,6 +49,114 @@ def conan_command(args):
     return 0
 
 
+def test_command(args):
+    """Handle test-related commands."""
+    from pathlib import Path
+
+    project_root = Path.cwd()
+
+    if args.project_type == 'esp32':
+        return run_esp32_tests(project_root, args)
+    else:
+        print(f"Unsupported project type: {args.project_type}")
+        print("Supported types: esp32")
+        return 1
+
+
+def run_esp32_tests(project_root: Path, args) -> int:
+    """Run ESP32 project tests."""
+    try:
+        # Import test runner
+        from shared_dev_tools.test_runner import ESP32TestRunner
+
+        runner = ESP32TestRunner(project_root, verbose=args.verbose)
+
+        # Configure test options
+        test_options = {
+            'unit_only': args.unit_only,
+            'integration_only': args.integration_only,
+            'hardware_only': args.hardware_only,
+            'coverage': args.coverage,
+            'parallel': not args.no_parallel,
+            'report_dir': Path(args.report_dir) if args.report_dir else None,
+            'formats': args.format if args.format else ['console']
+        }
+
+        # Run tests
+        return runner.run_tests(**test_options)
+
+    except ImportError as e:
+        print(f"❌ Test runner not available: {e}")
+        return 1
+    except Exception as e:
+        print(f"❌ Test execution failed: {e}")
+        return 1
+
+
+def bootstrap_command(args):
+    """Handle bootstrap-related commands."""
+    from pathlib import Path
+
+    project_root = Path.cwd()
+
+    if args.project_type == 'esp32':
+        return bootstrap_esp32_project(project_root, args.dry_run, args.verbose)
+    else:
+        print(f"Unsupported project type: {args.project_type}")
+        print("Supported types: esp32")
+        return 1
+
+
+def bootstrap_esp32_project(project_root: Path, dry_run: bool = False, verbose: bool = False):
+    """Bootstrap an ESP32 project."""
+    try:
+        # Import ESP32 bootstrap components
+        from sparetools_bootstrap.esp32.platformio_setup import PlatformIOSetup
+        from sparetools_bootstrap.esp32.esp32_config import ESP32ConfigManager
+
+        print("🚀 ESP32 Project Bootstrap")
+        print(f"Project root: {project_root}")
+
+        # Initialize bootstrap components
+        platformio_setup = PlatformIOSetup(project_root, dry_run, verbose)
+        config_manager = ESP32ConfigManager(project_root, dry_run, verbose)
+
+        # Generate ESP32 configuration
+        config = config_manager.generate_config("esp32-project", "embedded/esp32")
+
+        # Setup PlatformIO
+        if not platformio_setup.setup(config.get('platformio', {})):
+            print("❌ PlatformIO setup failed")
+            return 1
+
+        # Save configuration
+        if not config_manager.save_config(config):
+            print("❌ Configuration save failed")
+            return 1
+
+        # Generate environment file
+        env_file = project_root / '.env'
+        if not config_manager.generate_env_file(config, env_file):
+            print("❌ Environment file generation failed")
+            return 1
+
+        print("✅ ESP32 project bootstrap completed successfully")
+        print("\nNext steps:")
+        print("  1. Review generated configuration in .esp32-config.json")
+        print("  2. Update platformio.ini with your specific board configurations")
+        print("  3. Run 'pio run' to build your project")
+
+        return 0
+
+    except ImportError as e:
+        print(f"❌ Bootstrap components not available: {e}")
+        print("Make sure sparetools-bootstrap package is available")
+        return 1
+    except Exception as e:
+        print(f"❌ Bootstrap failed: {e}")
+        return 1
+
+
 def file_command(args):
     """Handle file-related commands."""
     if args.subcommand == 'symlink':
@@ -234,6 +342,23 @@ Examples:
     show_parser = config_subparsers.add_parser('show', help='Show configuration content')
     show_parser.add_argument('name', nargs='?', help='Configuration name')
 
+    # Bootstrap commands
+    bootstrap_parser = subparsers.add_parser('bootstrap', help='Project bootstrap operations')
+    bootstrap_parser.add_argument('project_type', choices=['esp32'], help='Project type to bootstrap')
+    bootstrap_parser.add_argument('--dry-run', action='store_true', help='Perform dry run without making changes')
+
+    # Test commands
+    test_parser = subparsers.add_parser('test', help='Test execution operations')
+    test_parser.add_argument('project_type', choices=['esp32'], help='Project type to test')
+    test_parser.add_argument('--unit-only', action='store_true', help='Run only unit tests')
+    test_parser.add_argument('--integration-only', action='store_true', help='Run only integration tests')
+    test_parser.add_argument('--hardware-only', action='store_true', help='Run only hardware tests')
+    test_parser.add_argument('--coverage', action='store_true', help='Generate coverage reports')
+    test_parser.add_argument('--no-parallel', action='store_true', help='Disable parallel test execution')
+    test_parser.add_argument('--report-dir', help='Directory for test reports')
+    test_parser.add_argument('--format', action='append', choices=['console', 'json', 'html', 'junit'],
+                           help='Output format (can be used multiple times)')
+
     # OpenSSL commands
     openssl_parser = subparsers.add_parser('openssl', help='OpenSSL development tools')
     openssl_subparsers = openssl_parser.add_subparsers(dest='subcommand')
@@ -275,7 +400,11 @@ Examples:
     setup_logging(args.verbose)
 
     try:
-        if args.command == 'conan':
+        if args.command == 'bootstrap':
+            return bootstrap_command(args)
+        elif args.command == 'test':
+            return test_command(args)
+        elif args.command == 'conan':
             return conan_command(args)
         elif args.command == 'file':
             return file_command(args)

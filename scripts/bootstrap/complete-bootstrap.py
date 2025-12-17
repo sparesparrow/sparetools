@@ -87,6 +87,8 @@ class BootstrapOrchestrator:
 
             # Check packages exist
             packages = config.get("packages", [])
+            if packages is None:
+                packages = []
             for package in packages:
                 package_dir = Path("packages") / "consumers" / name / package
                 if not package_dir.exists():

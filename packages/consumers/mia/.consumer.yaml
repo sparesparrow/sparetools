@@ -8,8 +8,6 @@ dependencies:
     - sparetools-bootstrap/2.0.0
   utilities:
     - sparetools-shared-dev-tools/2.0.0
-  openssl:
-    - sparetools-openssl/3.3.2
 
 packages:
   - sparetools-mia
@@ -36,4 +34,3 @@ platforms:
 supported_versions:
   cpython: ["3.12.7"]
   conan: ["2.21.0+"]
-  openssl: ["3.3.2"]

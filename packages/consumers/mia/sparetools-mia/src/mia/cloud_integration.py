@@ -3,7 +3,7 @@
 import logging
 import json
 import ssl
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 
 class CloudIntegration:

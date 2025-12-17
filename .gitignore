@@ -52,3 +52,12 @@ _Build/
 
 # MIA bootstrap cache
 .mia/
+
+# Conan test package environment files
+test_package/conanbuildenv*.sh
+test_package/conanrunenv*.sh
+**/test_package/conanbuildenv*.sh
+**/test_package/conanrunenv*.sh
+
+# Build reports and temporary files
+build_report.json

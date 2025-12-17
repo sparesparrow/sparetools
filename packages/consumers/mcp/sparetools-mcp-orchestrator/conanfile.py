@@ -3,12 +3,11 @@ import sys
 from conan import ConanFile
 from conan.tools.files import copy
 
-# Import base class from shared scripts
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../scripts'))
-from recipe_base import ConsumerPackageConan
+# Use SpareTools base utilities
+python_requires = "sparetools-base/2.0.0"
 
 
-class SpareToolsMcpOrchestratorConan(ConsumerPackageConan):
+class SpareToolsMcpOrchestratorConan(ConanFile):
     """MCP Orchestrator - AI-powered development orchestration using Model Context Protocol."""
 
     name = "sparetools-mcp-orchestrator"

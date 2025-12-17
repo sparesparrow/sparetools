@@ -3,11 +3,10 @@ import sys
 from conan import ConanFile
 from conan.tools.files import copy
 
-# Import base class from shared scripts
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../scripts'))
-from recipe_base import SpareToolsBaseConan
+# Use SpareTools base utilities
+python_requires = "sparetools-base/2.0.0"
 
-class SpareToolsSharedDevToolsConan(SpareToolsBaseConan):
+class SpareToolsSharedDevToolsConan(ConanFile):
     name = "sparetools-shared-dev-tools"
     version = "2.0.0"
     package_type = "python-require"

@@ -4,12 +4,11 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.files import copy
 
-# Import base class from shared scripts
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../scripts'))
-from recipe_base import ConsumerPackageConan
+# Use SpareTools base utilities
+python_requires = "sparetools-base/2.0.0"
 
 
-class SpareToolsMcpServerCppConan(ConsumerPackageConan):
+class SpareToolsMcpServerCppConan(ConanFile):
     """MCP Server C++ - High-performance MCP server implementation in C++."""
 
     name = "sparetools-mcpserver-cpp"

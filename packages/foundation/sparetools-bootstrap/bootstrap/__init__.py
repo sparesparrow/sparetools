@@ -34,6 +34,11 @@ from .openssl.fips_validator import FIPSValidator
 from .openssl.sbom_generator import SBOMGenerator
 from .openssl.crypto_config import CryptoConfigManager
 
+# Import ESP32-specific tools
+from .esp32.platformio_setup import PlatformIOSetup
+from .esp32.esp32_config import ESP32ConfigManager
+from .esp32.board_config import ESP32BoardConfig
+
 # Re-export for backward compatibility and cleaner imports
 __all__ = [
     # Core utilities
@@ -43,6 +48,9 @@ __all__ = [
 
     # OpenSSL-specific tools
     'FIPSValidator', 'SBOMGenerator', 'CryptoConfigManager',
+
+    # ESP32-specific tools
+    'PlatformIOSetup', 'ESP32ConfigManager', 'ESP32BoardConfig',
 
     # Version info
     '__version__'
