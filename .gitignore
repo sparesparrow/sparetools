@@ -52,3 +52,7 @@ _Build/
 
 # MIA bootstrap cache
 .mia/
+
+# CPython source code (downloaded during build)
+packages/foundation/sparetools-cpython/Python-*
+packages/foundation/sparetools-cpython/!(conanfile.py|README.md|test_package)

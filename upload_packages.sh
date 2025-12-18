@@ -1,51 +1,61 @@
 #!/bin/bash
-# Upload all SpareTools packages to a remote repository
+# SpareTools Package Upload Script
 
-if [ $# -eq 0 ]; then
-    echo "Usage: $0 <remote-name>"
-    echo "Example: $0 cloudsmith"
-    echo ""
-    echo "Available remotes:"
-    conan remote list
+set -e  # Exit on any error
+
+echo "=== SpareTools Package Upload Script ==="
+echo
+
+# Check if authenticated
+echo "Checking authentication status..."
+if ! conan remote list-users | grep -q "sparetools.*authenticated"; then
+    echo "❌ Not authenticated with sparetools remote"
+    echo "Please run: conan remote login sparetools <your-cloudsmith-username>"
     exit 1
 fi
 
-REMOTE="$1"
+echo "✅ Authenticated with sparetools remote"
+echo
 
-echo "☁️  Uploading SpareTools packages to remote: $REMOTE"
+# Function to upload package
+upload_package() {
+    local package=$1
+    echo "📦 Uploading $package..."
 
-# Upload foundation packages first
-echo "📤 Uploading foundation packages..."
+    if conan upload "$package" -r sparetools -c --force; then
+        echo "✅ Successfully uploaded $package"
+    else
+        echo "❌ Failed to upload $package"
+        return 1
+    fi
+}
 
-conan upload --name sparetools-recipe-base --version 1.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-base --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-cpython --version 3.12.7 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-test-harness --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-shared-dev-tools --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-bootstrap --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
+echo "=== Uploading Foundation Packages ==="
 
-# Upload consumer packages
-echo "📤 Uploading consumer packages..."
+# Core foundation packages
+upload_package "sparetools-cpython/3.12.7"
+upload_package "sparetools-base/2.0.0"
+upload_package "sparetools-bootstrap/2.0.0"
 
-conan upload --name sparetools-obd-sim --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-cliphist-android --version 1.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-openssl --version 3.3.2 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-openssl-tools --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-mia --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-mcp-orchestrator --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-tinymcp --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-mcpserver-cpp --version 2.0.0 --user sparetools --channel stable -r "$REMOTE" --force
-conan upload --name sparetools-nucleus --version 0.1.0 --user sparetools --channel stable -r "$REMOTE" --force
+echo
+echo "=== Uploading Consumer Packages ==="
 
-# Upload deprecated packages
-echo "📤 Uploading deprecated packages..."
+# MIA and other consumers
+upload_package "sparetools-mia/2.0.0"
 
-conan upload --name sparetools-openssl-autotools --version 3.3.2 --user sparetools --channel stable -r "$REMOTE" --force || echo "⚠️  Failed to upload deprecated package"
-conan upload --name sparetools-openssl-cmake --version 3.3.2 --user sparetools --channel stable -r "$REMOTE" --force || echo "⚠️  Failed to upload deprecated package"
-conan upload --name sparetools-openssl-hybrid --version 3.3.2 --user sparetools --channel stable -r "$REMOTE" --force || echo "⚠️  Failed to upload deprecated package"
-conan upload --name sparetools-openssl-tools-mini --version 1.0.0 --user sparetools --channel stable -r "$REMOTE" --force || echo "⚠️  Failed to upload deprecated package"
+echo
+echo "=== Uploading Python Tool Packages ==="
 
-echo "✅ All packages uploaded successfully!"
-echo ""
-echo "📋 To verify uploaded packages:"
-echo "  conan list 'sparetools*' -r $REMOTE"
+# Python tools (if built)
+# upload_package "sparetools-fs-tools/*"
+# upload_package "sparetools-proc-tools/*"
+# upload_package "sparetools-net-tools/*"
+
+echo
+echo "=== Upload Complete ==="
+echo
+echo "To verify uploads, run:"
+echo "conan search '*' -r sparetools"
+echo
+echo "To use packages in new projects:"
+echo 'conan install sparetools-mia/2.0.0@ -r sparetools'
