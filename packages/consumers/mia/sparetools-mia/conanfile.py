@@ -31,8 +31,8 @@ class SpareToolsMiaConan(ConanFile):
 
     def package(self):
         """Package MIA components."""
-        # Copy Python modules
-        copy(self, "*.py", self.source_folder, os.path.join(self.package_folder, "src"), keep_path=True)
+        # Copy Python modules - copy the src directory contents directly
+        copy(self, "*", os.path.join(self.source_folder, "src"), os.path.join(self.package_folder, "src"), keep_path=True)
 
         # Copy scripts
         copy(self, "*", os.path.join(self.source_folder, "scripts"), os.path.join(self.package_folder, "bin"), keep_path=False)
@@ -48,11 +48,14 @@ class SpareToolsMiaConan(ConanFile):
         """Provide MIA package information."""
         self.cpp_info.libs = []
 
-        # Add Python path
-        self.buildenv_info.append_path("PYTHONPATH", os.path.join(self.package_folder, "src"))
+        # Add Python path for both build and runtime
+        python_src_path = os.path.join(self.package_folder, "src")
+        self.buildenv_info.append_path("PYTHONPATH", python_src_path)
+        self.runenv_info.append_path("PYTHONPATH", python_src_path)
 
         # Add scripts to PATH
         self.buildenv_info.append_path("PATH", os.path.join(self.package_folder, "bin"))
+        self.runenv_info.append_path("PATH", os.path.join(self.package_folder, "bin"))
 
         # Environment for cloud integration
         self.runenv_info.define("MIA_ROOT", self.package_folder)

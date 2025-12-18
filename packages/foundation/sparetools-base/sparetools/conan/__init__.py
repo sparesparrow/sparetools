@@ -27,11 +27,24 @@ from .core import (
     get_all_package_config_folders,
     get_configuration_safe,
     setup_parallel_download,
-    setup_cloudsmith_remote,
-    setup_github_packages_remote,
+)
+
+from .repositories import (
+    RepositoryType,
+    RepositoryConfig,
+    RepositoryManager,
+    setup_cloudsmith_repository,
+    setup_github_repository,
+    setup_generic_conan_remote,
     enable_conan_remote,
     disable_conan_remote,
-    clean_conan_remotes,
+    remove_conan_remote,
+)
+
+from .config import (
+    ConanRepositoryConfig,
+    create_config_template,
+    load_repositories_from_config,
 )
 
 from . import launcher
@@ -62,12 +75,21 @@ __all__ = [
     "get_configuration_safe",
     "setup_parallel_download",
 
-    # Remote management
-    "setup_cloudsmith_remote",
-    "setup_github_packages_remote",
+    # Repository management
+    "RepositoryType",
+    "RepositoryConfig",
+    "RepositoryManager",
+    "setup_cloudsmith_repository",
+    "setup_github_repository",
+    "setup_generic_conan_remote",
     "enable_conan_remote",
     "disable_conan_remote",
-    "clean_conan_remotes",
+    "remove_conan_remote",
+
+    # Configuration
+    "ConanRepositoryConfig",
+    "create_config_template",
+    "load_repositories_from_config",
 
     # Launcher module
     "launcher",
