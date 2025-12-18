@@ -13,6 +13,7 @@ class SpareToolsBaseConan(ConanFile):
 
     def package(self):
         copy(self, "*.py", src=self.source_folder, dst=self.package_folder, keep_path=True)
+        copy(self, "sparetools/**/*.py", src=self.source_folder, dst=self.package_folder, keep_path=True)
 
     def package_info(self):
         self.cpp_info.libs = []
