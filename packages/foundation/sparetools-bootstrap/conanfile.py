@@ -16,7 +16,7 @@ except ImportError:
 
 class SpareToolsBootstrapConan(SpareToolsBaseConan):
     name = "sparetools-bootstrap"
-    version = "2.0.1"
+    version = "2.0.2"
     package_type = "python-require"
     description = "Bootstrap utilities for SpareTools ecosystem"
     license = "Apache-2.0"
