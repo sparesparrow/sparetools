@@ -1,0 +1,91 @@
+# SpareTools Zipapp Manifest
+# This file defines all Python zipapps that should be built for SpareTools
+# Each entry specifies a CLI tool that will be packaged as a standalone .pyz file
+
+zipapps:
+  # Main bootstrap tool - OBD-II simulation and project templating
+  - name: "sparetools-bootstrap"
+    source: "bootstrap-obd.py"
+    output: "sparetools-bootstrap.pyz"
+    description: "Multi-purpose bootstrap script for OBD-II simulation and project templating"
+
+  # Audit and validation tools
+  - name: "sparetools-audit-conan"
+    source: "scripts/audit-conan-recipes.py"
+    output: "sparetools-audit-conan.pyz"
+    description: "Audit script for Conan recipes in packages/"
+
+  - name: "sparetools-validate-openssl"
+    source: "scripts/validate-openssl-compatibility.py"
+    output: "sparetools-validate-openssl.pyz"
+    description: "Validate OpenSSL compatibility across SpareTools packages"
+
+  # CI/CD tools
+  - name: "sparetools-matrix-generator"
+    source: "scripts/ci-cd/matrix-generator.py"
+    output: "sparetools-matrix-generator.pyz"
+    description: "Generate CI/CD build matrices for GitHub Actions"
+
+  - name: "sparetools-report-generator"
+    source: "scripts/ci-cd/report-generator.py"
+    output: "sparetools-report-generator.pyz"
+    description: "Generate CI/CD reports from workflow data"
+
+  - name: "sparetools-artifact-uploader"
+    source: "scripts/ci-cd/artifact-uploader.py"
+    output: "sparetools-artifact-uploader.pyz"
+    description: "Upload CI/CD artifacts to various destinations"
+
+  # Validation tier scripts
+  - name: "sparetools-validate-tier1"
+    source: "scripts/validation/tier1-syntax.py"
+    output: "sparetools-validate-tier1.pyz"
+    description: "Tier 1 validation: syntax and basic file validation"
+
+  - name: "sparetools-validate-tier2"
+    source: "scripts/validation/tier2-dependencies.py"
+    output: "sparetools-validate-tier2.pyz"
+    description: "Tier 2 validation: dependency analysis"
+
+  - name: "sparetools-validate-tier3"
+    source: "scripts/validation/tier3-cross-consumer.py"
+    output: "sparetools-validate-tier3.pyz"
+    description: "Tier 3 validation: cross-consumer compatibility"
+
+  - name: "sparetools-validate-tier4"
+    source: "scripts/validation/tier4-integration.py"
+    output: "sparetools-validate-tier4.pyz"
+    description: "Tier 4 validation: integration testing"
+
+  - name: "sparetools-validate-tier5"
+    source: "scripts/validation/tier5-security.py"
+    output: "sparetools-validate-tier5.pyz"
+    description: "Tier 5 validation: security scanning"
+
+  # Testing tools
+  - name: "sparetools-test-runner"
+    source: "scripts/testing/test_runner.py"
+    output: "sparetools-test-runner.pyz"
+    description: "Unified test runner for SpareTools packages"
+
+  - name: "sparetools-test-cross-repo"
+    source: "scripts/testing/test-cross-repo-resolution.py"
+    output: "sparetools-test-cross-repo.pyz"
+    description: "Test cross-repository dependency resolution"
+
+  # Utility tools
+  - name: "sparetools-doc-linker"
+    source: "scripts/utilities/doc-linker.py"
+    output: "sparetools-doc-linker.pyz"
+    description: "Generate documentation links and cross-references"
+
+  # Bootstrap helpers
+  - name: "sparetools-bootstrap-helper"
+    source: "scripts/bootstrap/bootstrap.py"
+    output: "sparetools-bootstrap-helper.pyz"
+    description: "Helper script for bootstrap operations"
+
+  - name: "sparetools-complete-bootstrap"
+    source: "scripts/bootstrap/complete-bootstrap.py"
+    output: "sparetools-complete-bootstrap.pyz"
+    description: "Complete bootstrap workflow orchestration"

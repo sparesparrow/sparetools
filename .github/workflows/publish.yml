@@ -2,8 +2,10 @@ name: Publish Packages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, develop ]
     tags: [ 'v*' ]
+  pull_request:
+    branches: [ main, develop ]
   workflow_dispatch:
     inputs:
       version:
@@ -19,13 +21,30 @@ on:
           - cloudsmith
           - github
         default: "both"
+      mode:
+        description: "Publishing mode"
+        required: true
+        type: choice
+        options:
+          - production
+          - dry-run
+        default: "production"
+
+env:
+  CONAN_VERSION: "2.21.0"
+  VERSION_BASE: "2.0.0"
+  VERSION_CPYTHON: "3.12.7"
+  VERSION_OPENSSL: "${{ github.event.inputs.version || '3.3.2' }}"
 
 jobs:
-  check-existing-packages:
+  # Version validation and setup
+  validate-versions:
+    name: Validate Versions
     runs-on: ubuntu-latest
     outputs:
-      needs_build: ${{ steps.check.outputs.needs_build }}
-      existing_packages: ${{ steps.check.outputs.existing_packages }}
+      version: ${{ steps.version.outputs.version }}
+      openssl_version: ${{ steps.version.outputs.openssl_version }}
+      is_production: ${{ steps.mode.outputs.is_production }}
 
     steps:
       - uses: actions/checkout@v4
@@ -35,45 +54,47 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Conan
+      - name: Validate version consistency
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install conan==2.21.0
+          echo "🔍 Validating version consistency..."
+          python scripts/release/bump-version.py validate
 
-      - name: Configure Conan remotes
+      - name: Determine publishing mode
+        id: mode
         run: |
-          conan profile detect --force
-          conan remote add sparesparrow-conan \
-            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
-            --force || true
-
-      - name: Check existing packages in Cloudsmith
-        id: check
-        run: |
-          echo "🔍 Checking for existing packages in Cloudsmith..."
-
-          # Check if packages already exist
-          if conan list "sparetools-base/2.0.0" -r sparesparrow-conan >/dev/null 2>&1 && \
-             conan list "sparetools-cpython/3.12.7" -r sparesparrow-conan >/dev/null 2>&1 && \
-             conan list "sparetools-shared-dev-tools/2.0.0" -r sparesparrow-conan >/dev/null 2>&1 && \
-             conan list "sparetools-bootstrap/2.0.0" -r sparesparrow-conan >/dev/null 2>&1 && \
-             conan list "sparetools-openssl-tools/2.0.0" -r sparesparrow-conan >/dev/null 2>&1; then
-            echo "✅ All packages exist in Cloudsmith - skipping build"
-            echo "needs_build=false" >> $GITHUB_OUTPUT
-            echo "existing_packages=true" >> $GITHUB_OUTPUT
+          # Determine if this is a production publish
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "is_production=true" >> $GITHUB_OUTPUT
+            echo "🎯 Production publish (tagged release)"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.mode }}" == "production" ]]; then
+            echo "is_production=true" >> $GITHUB_OUTPUT
+            echo "🎯 Production publish (manual trigger)"
           else
-            echo "🔨 Some packages missing - will build"
-            echo "needs_build=true" >> $GITHUB_OUTPUT
-            echo "existing_packages=false" >> $GITHUB_OUTPUT
+            echo "is_production=false" >> $GITHUB_OUTPUT
+            echo "🧪 Dry-run mode (PR/main branch)"
           fi
 
-  build-all-packages:
-    needs: check-existing-packages
-    if: needs.check-existing-packages.outputs.needs_build == 'true'
+      - name: Extract version info
+        id: version
+        run: |
+          # Get base version
+          VERSION_BASE=$(cat VERSION.txt | head -1 | tr -d '\n')
+          echo "version=$VERSION_BASE" >> $GITHUB_OUTPUT
+
+          # OpenSSL version (from input or default)
+          VERSION_OPENSSL="${{ env.VERSION_OPENSSL }}"
+          echo "openssl_version=$VERSION_OPENSSL" >> $GITHUB_OUTPUT
+
+          echo "📋 Versions: Base=$VERSION_BASE, OpenSSL=$VERSION_OPENSSL"
+
+  # Build packages for publishing
+  build-packages:
+    name: Build Packages
+    needs: validate-versions
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.list.outputs.packages }}
-    
+
     steps:
       - uses: actions/checkout@v4
 
@@ -96,65 +117,66 @@ jobs:
 
       # Build packages in dependency order
       - name: Build sparetools-base
-        run: conan create packages/sparetools-base --version=2.0.0 --build=missing
+        run: |
+          echo "🏗️ Building sparetools-base/${{ env.VERSION_BASE }}..."
+          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: Build sparetools-cpython
         run: |
-          echo "🐍 Building CPython (may take 5-30 minutes, especially on Windows)..."
-          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
+          echo "🐍 Building sparetools-cpython/${{ env.VERSION_CPYTHON }} (may take 5-30 minutes)..."
+          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
         timeout-minutes: 40
 
       - name: Build sparetools-shared-dev-tools
-        run: conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
+        run: |
+          echo "🔧 Building sparetools-shared-dev-tools/${{ env.VERSION_BASE }}..."
+          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: Build sparetools-bootstrap
-        run: conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
+        run: |
+          echo "🚀 Building sparetools-bootstrap/${{ env.VERSION_BASE }}..."
+          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: Build sparetools-openssl-tools
-        run: conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
+        run: |
+          echo "🔐 Building sparetools-openssl-tools/${{ env.VERSION_BASE }}..."
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: Build sparetools-openssl
         run: |
-          VERSION="${{ github.event.inputs.version || '3.3.2' }}"
-          conan create packages/sparetools-openssl --version=$VERSION --build=missing
+          echo "🔒 Building sparetools-openssl/${{ env.VERSION_OPENSSL }}..."
+          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+
+      - name: Build consumer packages (production channel)
+        if: needs.validate-versions.outputs.is_production == 'true'
+        run: |
+          echo "📦 Building consumer packages for production..."
+          # OBD simulation
+          conan create packages/consumers/sparetools-obd-sim --version=${{ env.VERSION_BASE }} --build=missing
+          # MCP orchestrator
+          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: List built packages
         id: list
         run: |
           echo "📦 Built packages:"
-          conan list "sparetools-*/*"
-          
+          conan list "sparetools-*/*" --format=compact
+
           # Create package list for publishing
           PACKAGES=$(conan list "sparetools-*/*" --format=compact | grep -v "^$" | tr '\n' ' ')
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
 
-  list-existing-packages:
-    needs: check-existing-packages
-    if: needs.check-existing-packages.outputs.needs_build == 'false'
+
+  # Dry-run publish (for PRs and main branch)
+  publish-dry-run:
+    name: Publish Dry Run
+    needs: [validate-versions, build-packages]
+    if: needs.validate-versions.outputs.is_production == 'false'
     runs-on: ubuntu-latest
-    outputs:
-      packages: ${{ steps.list.outputs.packages }}
 
-    steps:
-      - name: List existing packages
-        id: list
-        run: |
-          echo "📦 Using existing packages from Cloudsmith:"
-          PACKAGES="sparetools-base/2.0.0 sparetools-cpython/3.12.7 sparetools-shared-dev-tools/2.0.0 sparetools-bootstrap/2.0.0 sparetools-openssl-tools/2.0.0 sparetools-openssl/${{ github.event.inputs.version || '3.3.2' }}"
-          echo "$PACKAGES"
-          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
-
-
-  publish-cloudsmith:
-    needs: [check-existing-packages, build-all-packages, list-existing-packages]
-    if: |
-      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))) ||
-      (github.event_name == 'workflow_dispatch' && (inputs.registry == 'cloudsmith' || inputs.registry == 'both'))
-    runs-on: ubuntu-latest
-    
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -164,7 +186,60 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install conan==2.21.0
-          
+
+      - name: Configure Conan remotes
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            --force || true
+          conan remote add github-packages \
+            https://maven.pkg.github.com/${{ github.repository_owner }}/sparetools \
+            --force || true
+
+      - name: Rebuild packages for dry-run
+        run: |
+          echo "🔄 Rebuilding packages for dry-run validation..."
+          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
+          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+
+      - name: Dry-run Cloudsmith upload
+        run: |
+          echo "🧪 Dry-run: Cloudsmith upload simulation..."
+          echo "Would upload: sparetools-base/${{ env.VERSION_BASE }} sparetools-cpython/${{ env.VERSION_CPYTHON }} sparetools-shared-dev-tools/${{ env.VERSION_BASE }} sparetools-bootstrap/${{ env.VERSION_BASE }} sparetools-openssl-tools/${{ env.VERSION_BASE }} sparetools-openssl/${{ env.VERSION_OPENSSL }}"
+          conan upload "sparetools-*/*" -r sparesparrow-conan --dry-run
+          echo "✅ Dry-run completed (no actual upload)"
+
+      - name: Dry-run GitHub Packages upload
+        run: |
+          echo "🧪 Dry-run: GitHub Packages upload simulation..."
+          conan upload "sparetools-*/*" -r github-packages --dry-run
+          echo "✅ Dry-run completed (no actual upload)"
+
+  # Production publish to Cloudsmith
+  publish-cloudsmith:
+    name: Publish to Cloudsmith
+    needs: [validate-versions, build-packages]
+    if: needs.validate-versions.outputs.is_production == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Conan
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install conan==2.21.0
+
       - name: Configure Conan
         run: |
           conan profile detect --force
@@ -182,17 +257,19 @@ jobs:
           fi
           echo "✅ Cloudsmith credentials verified"
 
-      - name: Restore built packages
+      - name: Rebuild packages for production
         run: |
-          # Rebuild packages (they're cached)
-          conan create packages/sparetools-base --version=2.0.0 --build=missing
-          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
-          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
-          conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
-          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
-          
-          VERSION="${{ github.event.inputs.version || '3.3.2' }}"
-          conan create packages/sparetools-openssl --version=$VERSION --build=missing
+          echo "🏗️ Rebuilding packages for production publish..."
+          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
+          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+
+          # Consumer packages for production
+          conan create packages/consumers/sparetools-obd-sim --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: Authenticate with Cloudsmith
         env:
@@ -200,25 +277,24 @@ jobs:
         run: |
           conan remote login sparesparrow-conan sparesparrow --password "$CLOUDSMITH_API_KEY"
 
-      - name: Upload packages to Cloudsmith
+      - name: Upload to Cloudsmith
         run: |
-          echo "📤 Uploading packages to Cloudsmith..."
+          echo "📤 Publishing to Cloudsmith..."
           conan upload "sparetools-*/*" -r sparesparrow-conan --confirm --retry 3 --retry-wait 5
-          echo "✅ Packages published to Cloudsmith"
+          echo "✅ Successfully published to Cloudsmith"
 
-  publish-github:
-    needs: [check-existing-packages, build-all-packages, list-existing-packages]
-    if: |
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) ||
-      (github.event_name == 'workflow_dispatch' && (inputs.registry == 'github' || inputs.registry == 'both'))
+  # Production publish to GitHub Packages
+  publish-github-packages:
+    name: Publish to GitHub Packages
+    needs: [validate-versions, build-packages]
+    if: needs.validate-versions.outputs.is_production == 'true'
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -228,7 +304,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install conan==2.21.0
-          
+
       - name: Configure Conan with GitHub Packages
         run: |
           conan profile detect --force
@@ -236,38 +312,42 @@ jobs:
             https://maven.pkg.github.com/${{ github.repository_owner }}/sparetools \
             --force || true
 
-      - name: Restore built packages
+      - name: Rebuild packages for GitHub Packages
         run: |
-          # Rebuild packages (they're cached)
-          conan create packages/sparetools-base --version=2.0.0 --build=missing
-          conan create packages/sparetools-cpython --version=3.12.7 --build=missing
-          conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing
-          conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
-          conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing
-          
-          VERSION="${{ github.event.inputs.version || '3.3.2' }}"
-          conan create packages/sparetools-openssl --version=$VERSION --build=missing
+          echo "🏗️ Rebuilding packages for GitHub Packages..."
+          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
+          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+
+          # Consumer packages for production
+          conan create packages/consumers/sparetools-obd-sim --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=${{ env.VERSION_BASE }} --build=missing
 
       - name: Authenticate with GitHub Packages
         run: |
           conan remote login github-packages ${{ github.actor }} --password "${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Upload packages to GitHub Packages
+      - name: Upload to GitHub Packages
         run: |
-          echo "📤 Uploading packages to GitHub Packages..."
+          echo "📤 Publishing to GitHub Packages..."
           conan upload "sparetools-*/*" -r github-packages --confirm --retry 3 --retry-wait 5
-          echo "✅ Packages published to GitHub Packages"
+          echo "✅ Successfully published to GitHub Packages"
 
-  create-github-release:
-    needs: [check-existing-packages, build-all-packages, list-existing-packages, publish-github]
+  # Create GitHub release (only for tagged releases)
+  create-release:
+    name: Create GitHub Release
+    needs: [validate-versions, publish-cloudsmith, publish-github-packages]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Extract version from tag
         id: version
         run: |
@@ -275,33 +355,56 @@ jobs:
           VERSION=${TAG#v}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          
+
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           name: SpareTools ${{ steps.version.outputs.tag }}
           body: |
-            ## SpareTools OpenSSL ${{ steps.version.outputs.version }}
-            
-            ### Packages Published
-            - sparetools-base/2.0.0
-            - sparetools-cpython/3.12.7
-            - sparetools-shared-dev-tools/2.0.0
-            - sparetools-bootstrap/2.0.0
-            - sparetools-openssl-tools/2.0.0
-            - sparetools-openssl/${{ steps.version.outputs.version }}
-            
-            ### Installation
+            ## 🎉 SpareTools ${{ steps.version.outputs.tag }}
+
+            ### 📦 Packages Published
+
+            **Foundation Layer:**
+            - `sparetools-base/${{ env.VERSION_BASE }}`
+            - `sparetools-cpython/${{ env.VERSION_CPYTHON }}`
+            - `sparetools-shared-dev-tools/${{ env.VERSION_BASE }}`
+            - `sparetools-bootstrap/${{ env.VERSION_BASE }}`
+
+            **Tools Layer:**
+            - `sparetools-openssl-tools/${{ env.VERSION_BASE }}`
+
+            **Consumer Layer:**
+            - `sparetools-obd-sim/${{ env.VERSION_BASE }}`
+            - `sparetools-mcp-orchestrator/${{ env.VERSION_BASE }}`
+            - `sparetools-openssl/${{ env.VERSION_OPENSSL }}`
+
+            ### 🚀 Installation
+
+            **From Cloudsmith:**
             ```bash
-            conan remote add sparesparrow-conan \
-              https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \
+            conan remote add sparesparrow-conan \\
+              https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ \\
               --force || true
-            conan install --requires=sparetools-openssl/${{ steps.version.outputs.version }}
+
+            conan install --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
             ```
-            
-            ### Registries
+
+            **From GitHub Packages:**
+            ```bash
+            conan remote add github-packages \\
+              https://maven.pkg.github.com/${{ github.repository_owner }}/sparetools \\
+              --force || true
+
+            conan install --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
+            ```
+
+            ### 📋 Registries
             - **Cloudsmith**: https://cloudsmith.io/~sparesparrow-conan/repos/openssl-conan/
             - **GitHub Packages**: https://github.com/${{ github.repository }}/packages
+
+            ### 🔧 CLI Tools
+            This release also includes standalone CLI tools as zipapps attached to this release.
           draft: false
           prerelease: false
         env:

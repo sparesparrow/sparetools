@@ -20,6 +20,9 @@ build/
 dist/
 *.log
 
+# Allow our build scripts (but ignore build artifacts)
+!scripts/build/
+
 # IDE
 .vscode/
 .idea/
@@ -56,3 +59,10 @@ _Build/
 # CPython source code (downloaded during build)
 packages/foundation/sparetools-cpython/Python-*
 packages/foundation/sparetools-cpython/!(conanfile.py|README.md|test_package)
+
+# Publishing build artifacts
+dist/
+*.pyz
+
+# Build artifacts from publishing workflows
+_build_artifacts/

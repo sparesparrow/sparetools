@@ -62,6 +62,29 @@ conan remote add sparesparrow-openssl \
 
 ---
 
+## 🚀 Install CLI Tools (Zipapps)
+
+For quick access to SpareTools CLI utilities without full environment setup, use our Python zipapp distributions:
+
+```bash
+# Install bootstrap tool (includes OBD-II simulation and project templating)
+curl -s https://api.github.com/repos/sparesparrow/sparetools/releases/latest | \
+  sed -n 's/"browser_download_url": //p' | \
+  grep 'sparetools-bootstrap\.pyz' | \
+  xargs wget -qO sparetools-bootstrap.pyz
+
+chmod +x sparetools-bootstrap.pyz
+sudo mv sparetools-bootstrap.pyz /usr/local/bin/sparetools-bootstrap
+
+# Now use it
+sparetools-bootstrap --help
+sparetools-bootstrap --template=mia --name=my-project
+```
+
+**Available zipapps**: bootstrap, audit, validation, CI/CD, and testing tools. See [Zipapp Distribution](docs/ZIPAPP-DISTRIBUTION.md) for complete list.
+
+---
+
 ## 📊 Architecture at a Glance
 
 ### Package Ecosystem
@@ -233,6 +256,7 @@ conan upload "sparetools-*/*" -r sparesparrow-conan --confirm
 - **[Testing Guide](docs/TESTING-GUIDE.md)** - Comprehensive testing procedures
 
 ### Operations
+- **[Publishing Guide](docs/PUBLISHING-GUIDE.md)** - Package publishing to Cloudsmith and GitHub Packages
 - **[CI/CD Guide](docs/CI-CD-GUIDE.md)** - GitHub Actions workflows and operations
 - **[CI/CD Troubleshooting](docs/CI-CD-TROUBLESHOOTING.md)** - Common workflow issues
 - **[GitHub Secrets Setup](docs/GITHUB-SECRETS-SETUP.md)** - Configure CI/CD secrets
@@ -243,6 +267,7 @@ conan upload "sparetools-*/*" -r sparesparrow-conan --confirm
 - **[OpenSSL 3.6.0 Analysis](docs/OPENSSL-360-BUILD-ANALYSIS.md)** - Deep dive on 3.6.0 builds
 - **[Assembly Optimizations](docs/ASSEMBLY-OPTIMIZATIONS.md)** - Performance tuning
 - **[Workspace Guide](docs/WORKSPACE-GUIDE.md)** - VS Code setup
+- **[Zipapp Distribution](docs/ZIPAPP-DISTRIBUTION.md)** - Creating and distributing Python zipapps
 
 ### Changelog
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and breaking changes
@@ -301,6 +326,7 @@ Apache License 2.0 - see [LICENSE](LICENSE) for details.
 | Resource | Description |
 |----------|-------------|
 | [Packages](docs/PACKAGES.md) | Complete package reference |
+| [Publishing Guide](docs/PUBLISHING-GUIDE.md) | Package publishing workflows |
 | [Architecture](ARCHITECTURE.md) | System design diagrams |
 | [Quick Reference](docs/QUICK-REFERENCE.md) | Command cheat sheet |
 | [CI/CD Guide](docs/CI-CD-GUIDE.md) | Workflow operations |

@@ -191,8 +191,12 @@ class CPythonToolConan(ConanFile):
         if os.path.exists(python3_12_bin) and not os.path.exists(python_bin_sym):
             os.symlink("python3.12", python_bin_sym)
         
-        # Install cloudsmith-cli for package management
-        self._install_cloudsmith_cli(python_bin)
+        # Install cloudsmith-cli if not already present
+        cloudsmith_bin = os.path.join(bin_dir, "cloudsmith")
+        if not os.path.exists(cloudsmith_bin):
+            self._install_cloudsmith_cli(python_bin)
+        else:
+            self.output.info("✅ cloudsmith-cli already installed")
 
         # Apply security gates and generate SBOM as final step
         # TODO: Re-implement security gates and SBOM generation
