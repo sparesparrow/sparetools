@@ -275,7 +275,7 @@ jobs:
         env:
           CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
         run: |
-          conan remote login sparesparrow-conan sparesparrow --password "$CLOUDSMITH_API_KEY"
+          conan remote login sparesparrow-conan spare-sparrow --password "$CLOUDSMITH_API_KEY"
 
       - name: Upload to Cloudsmith
         run: |
