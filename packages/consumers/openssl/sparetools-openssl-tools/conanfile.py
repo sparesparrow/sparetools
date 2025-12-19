@@ -23,7 +23,7 @@ class SpareToolsOpenSSLToolsConan(ConsumerPackageConan):
     consumer_domain = "openssl"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     # Source files to export
     exports_sources = (

@@ -13,7 +13,7 @@ class SpareToolsNucleusConan(ConanFile):
     package_type = "application"
 
     # This is an ESP32 consumer package in the SpareTools ecosystem
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     # Optional metadata
     license = "MIT"

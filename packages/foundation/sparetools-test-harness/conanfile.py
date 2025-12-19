@@ -11,7 +11,7 @@ class SparetoolsTestHarnessConan(ConanFile):
 
     # Require bundled Python and base utilities
     tool_requires = "sparetools-cpython/3.12.7"
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     exports_sources = "sparetools_test_harness/**/*.py"
 

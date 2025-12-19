@@ -4,7 +4,7 @@ from conan import ConanFile
 from conan.tools.files import copy
 
 # Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.0"
+python_requires = "sparetools-base/2.0.3"
 
 class SpareToolsSharedDevToolsConan(ConanFile):
     name = "sparetools-shared-dev-tools"
@@ -15,7 +15,7 @@ class SpareToolsSharedDevToolsConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
 
     # Use sparetools-base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     exports_sources = "shared_dev_tools/**", "scripts/**"
 

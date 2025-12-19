@@ -128,7 +128,7 @@ Set callback function for custom result handling.
 
 ### Requirements
 - `sparetools-cpython/3.12.7` (tool_requires)
-- `sparetools-base/2.0.0` (python_requires)
+- `sparetools-base/2.0.3` (python_requires)
 
 ### Python Requirements
 - Python 3.8+ (automatically provided by bundled CPython)

@@ -39,7 +39,7 @@ class MyConsumerApp(SpareToolsConsumerBase):
     name = "my-consumer-app"
     version = "1.0.0"
     description = "My consumer application"
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
     # ... additional package-specific configuration
 ```
 

@@ -23,7 +23,7 @@ class SpareToolsBootstrapConan(SpareToolsBaseConan):
     url = "https://github.com/sparesparrow/sparetools"
     
     # CRITICAL FIX: Add missing foundation dependency
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
     
     exports_sources = "bootstrap/**", "scripts/**"
     

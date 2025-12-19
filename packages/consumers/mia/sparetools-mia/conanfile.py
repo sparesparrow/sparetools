@@ -15,11 +15,11 @@ class SpareToolsMiaConan(ConanFile):
     topics = ("iot", "connectivity", "device-management", "cloud", "mia")
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     # Runtime dependencies
     requires = (
-        "sparetools-base/2.0.0",
+        "sparetools-base/2.0.3",
     )
 
     # Source files to export

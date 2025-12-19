@@ -27,7 +27,7 @@ class SpareToolsOpenSSLConan(OpenSSLBaseConan):
     consumer_domain = "openssl"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     # Build method selection
     options = {

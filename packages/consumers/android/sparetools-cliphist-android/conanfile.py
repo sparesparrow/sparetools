@@ -25,7 +25,7 @@ class SpareToolsClipHistAndroidConan(ConsumerPackageConan):
     settings = "os", "arch", "compiler", "build_type"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
 
     # Android-specific tool requirements
     tool_requires = (

@@ -10,7 +10,7 @@ class SparetoolsOBDSimConan(ConanFile):
     license = "Apache-2.0"
     url = "https://github.com/sparesparrow/sparetools"
 
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
     tool_requires = "sparetools-cpython/3.12.7"
 
     exports_sources = "sparetools_obd/**"

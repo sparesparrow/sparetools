@@ -12,7 +12,7 @@ class SparetoolsOBDSimConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
     tool_requires = "sparetools-cpython/3.12.7"
 
     exports_sources = "sparetools_obd/**"
