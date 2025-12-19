@@ -8,7 +8,7 @@ python_requires = "sparetools-base/2.0.0"
 
 class SpareToolsSharedDevToolsConan(ConanFile):
     name = "sparetools-shared-dev-tools"
-    version = "2.0.2"
+    version = "2.0.3"
     package_type = "python-require"
     description = "Shared development tools for SpareTools ecosystem"
     license = "Apache-2.0"

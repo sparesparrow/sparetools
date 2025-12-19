@@ -3,7 +3,7 @@ from conan.tools.files import copy
 
 class SparetoolsTestHarnessConan(ConanFile):
     name = "sparetools-test-harness"
-    version = "2.0.2"
+    version = "2.0.3"
     package_type = "python-require"
     description = "Unified test harness for SpareTools projects (ngapy-style)"
     license = "Apache-2.0"

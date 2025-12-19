@@ -5,7 +5,7 @@ from conan.tools.files import copy
 
 class SparetoolsOBDSimConan(ConanFile):
     name = "sparetools-obd-sim"
-    version = "2.0.2"
+    version = "2.0.3"
     package_type = "python-require"
     description = "OBD-II simulation tooling packaged for SpareTools and MIA"
     license = "Apache-2.0"
