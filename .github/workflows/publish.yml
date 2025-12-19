@@ -32,9 +32,6 @@ on:
 
 env:
   CONAN_VERSION: "2.21.0"
-  VERSION_BASE: "2.0.0"
-  VERSION_CPYTHON: "3.12.7"
-  VERSION_OPENSSL: "${{ github.event.inputs.version || '3.3.2' }}"
 
 jobs:
   # Version validation and setup
@@ -82,10 +79,15 @@ jobs:
           echo "version=$VERSION_BASE" >> $GITHUB_OUTPUT
 
           # OpenSSL version (from input or default)
-          VERSION_OPENSSL="${{ env.VERSION_OPENSSL }}"
+          VERSION_OPENSSL="${{ github.event.inputs.version || '3.3.2' }}"
           echo "openssl_version=$VERSION_OPENSSL" >> $GITHUB_OUTPUT
 
-          echo "📋 Versions: Base=$VERSION_BASE, OpenSSL=$VERSION_OPENSSL"
+          # Set environment variables for subsequent jobs
+          echo "VERSION_BASE=$VERSION_BASE" >> $GITHUB_ENV
+          echo "VERSION_CPYTHON=3.12.7" >> $GITHUB_ENV
+          echo "VERSION_OPENSSL=$VERSION_OPENSSL" >> $GITHUB_ENV
+
+          echo "📋 Versions: Base=$VERSION_BASE, CPython=3.12.7, OpenSSL=$VERSION_OPENSSL"
 
   # Build packages for publishing
   build-packages:
@@ -94,7 +96,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       packages: ${{ steps.list.outputs.packages }}
-
+    
     steps:
       - uses: actions/checkout@v4
 
@@ -118,50 +120,50 @@ jobs:
       # Build packages in dependency order
       - name: Build sparetools-base
         run: |
-          echo "🏗️ Building sparetools-base/${{ env.VERSION_BASE }}..."
-          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
+          echo "🏗️ Building sparetools-base/$VERSION_BASE..."
+          conan create packages/foundation/sparetools-base --version=$VERSION_BASE --build=missing
 
       - name: Build sparetools-cpython
         run: |
-          echo "🐍 Building sparetools-cpython/${{ env.VERSION_CPYTHON }} (may take 5-30 minutes)..."
-          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
+          echo "🐍 Building sparetools-cpython/$VERSION_CPYTHON (may take 5-30 minutes)..."
+          conan create packages/foundation/sparetools-cpython --version=$VERSION_CPYTHON --build=missing
         timeout-minutes: 40
 
       - name: Build sparetools-shared-dev-tools
         run: |
-          echo "🔧 Building sparetools-shared-dev-tools/${{ env.VERSION_BASE }}..."
-          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
+          echo "🔧 Building sparetools-shared-dev-tools/$VERSION_BASE..."
+          conan create packages/foundation/sparetools-shared-dev-tools --version=$VERSION_BASE --build=missing
 
       - name: Build sparetools-bootstrap
         run: |
-          echo "🚀 Building sparetools-bootstrap/${{ env.VERSION_BASE }}..."
-          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
+          echo "🚀 Building sparetools-bootstrap/$VERSION_BASE..."
+          conan create packages/foundation/sparetools-bootstrap --version=$VERSION_BASE --build=missing
 
       - name: Build sparetools-openssl-tools
         run: |
-          echo "🔐 Building sparetools-openssl-tools/${{ env.VERSION_BASE }}..."
-          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
+          echo "🔐 Building sparetools-openssl-tools/$VERSION_BASE..."
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=$VERSION_BASE --build=missing
 
       - name: Build sparetools-openssl
         run: |
-          echo "🔒 Building sparetools-openssl/${{ env.VERSION_OPENSSL }}..."
-          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+          echo "🔒 Building sparetools-openssl/$VERSION_OPENSSL..."
+          conan create packages/consumers/openssl/sparetools-openssl --version=$VERSION_OPENSSL --build=missing
 
       - name: Build consumer packages (production channel)
         if: needs.validate-versions.outputs.is_production == 'true'
         run: |
           echo "📦 Building consumer packages for production..."
           # OBD simulation
-          conan create packages/consumers/sparetools-obd-sim --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/sparetools-obd-sim --version=$VERSION_BASE --build=missing
           # MCP orchestrator
-          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=$VERSION_BASE --build=missing
 
       - name: List built packages
         id: list
         run: |
           echo "📦 Built packages:"
           conan list "sparetools-*/*" --format=compact
-
+          
           # Create package list for publishing
           PACKAGES=$(conan list "sparetools-*/*" --format=compact | grep -v "^$" | tr '\n' ' ')
           echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
@@ -226,10 +228,10 @@ jobs:
     needs: [validate-versions, build-packages]
     if: needs.validate-versions.outputs.is_production == 'true'
     runs-on: ubuntu-latest
-
+    
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -239,7 +241,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install conan==2.21.0
-
+          
       - name: Configure Conan
         run: |
           conan profile detect --force
@@ -260,16 +262,16 @@ jobs:
       - name: Rebuild packages for production
         run: |
           echo "🏗️ Rebuilding packages for production publish..."
-          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
-          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+          conan create packages/foundation/sparetools-base --version=$VERSION_BASE --build=missing
+          conan create packages/foundation/sparetools-cpython --version=$VERSION_CPYTHON --build=missing
+          conan create packages/foundation/sparetools-shared-dev-tools --version=$VERSION_BASE --build=missing
+          conan create packages/foundation/sparetools-bootstrap --version=$VERSION_BASE --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=$VERSION_BASE --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl --version=$VERSION_OPENSSL --build=missing
 
           # Consumer packages for production
-          conan create packages/consumers/sparetools-obd-sim --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/sparetools-obd-sim --version=$VERSION_BASE --build=missing
+          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=$VERSION_BASE --build=missing
 
       - name: Authenticate with Cloudsmith
         env:
@@ -291,10 +293,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-
+    
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -304,7 +306,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install conan==2.21.0
-
+          
       - name: Configure Conan with GitHub Packages
         run: |
           conan profile detect --force
@@ -315,16 +317,16 @@ jobs:
       - name: Rebuild packages for GitHub Packages
         run: |
           echo "🏗️ Rebuilding packages for GitHub Packages..."
-          conan create packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/foundation/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
-          conan create packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+          conan create packages/foundation/sparetools-base --version=$VERSION_BASE --build=missing
+          conan create packages/foundation/sparetools-cpython --version=$VERSION_CPYTHON --build=missing
+          conan create packages/foundation/sparetools-shared-dev-tools --version=$VERSION_BASE --build=missing
+          conan create packages/foundation/sparetools-bootstrap --version=$VERSION_BASE --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl-tools --version=$VERSION_BASE --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl --version=$VERSION_OPENSSL --build=missing
 
           # Consumer packages for production
-          conan create packages/consumers/sparetools-obd-sim --version=${{ env.VERSION_BASE }} --build=missing
-          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=${{ env.VERSION_BASE }} --build=missing
+          conan create packages/consumers/sparetools-obd-sim --version=$VERSION_BASE --build=missing
+          conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=$VERSION_BASE --build=missing
 
       - name: Authenticate with GitHub Packages
         run: |
@@ -344,10 +346,10 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-
+    
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Extract version from tag
         id: version
         run: |
@@ -355,7 +357,7 @@ jobs:
           VERSION=${TAG#v}
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
+          
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -398,7 +400,7 @@ jobs:
 
             conan install --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }}
             ```
-
+            
             ### 📋 Registries
             - **Cloudsmith**: https://cloudsmith.io/~sparesparrow-conan/repos/openssl-conan/
             - **GitHub Packages**: https://github.com/${{ github.repository }}/packages
