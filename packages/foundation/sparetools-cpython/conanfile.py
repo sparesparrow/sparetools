@@ -16,8 +16,8 @@ class CPythonToolConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
-    
+    python_requires = "sparetools-base/2.0.2"
+
     settings = "os", "arch", "compiler", "build_type"
     options = {
         "shared": [True, False],
@@ -29,9 +29,9 @@ class CPythonToolConan(ConanFile):
         "fips": False,
         "optimize": "2",
     }
-    
+
     # Use sparetools-base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.2"
     
     def source(self):
         """Download CPython source"""
