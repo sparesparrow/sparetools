@@ -1,7 +1,7 @@
 """
 Source Control Management Module
 
-Provides utilities for SCM operations (git, etc.)
+Provides utilities for SCM operations (git, GitHub API, etc.)
 """
 
 from .git import (
@@ -16,7 +16,16 @@ from .git import (
     apply_stash,
 )
 
+from .github import (
+    GitHubClient,
+    GitHubAPIError,
+    RateLimitExceeded,
+    ResourceNotFoundError,
+    AuthenticationError,
+)
+
 __all__ = [
+    # Git utilities
     "GitHandler",
     "get_repository_sha",
     "clone_repository",
@@ -26,4 +35,11 @@ __all__ = [
     "get_uncommitted_changes",
     "stash_changes",
     "apply_stash",
+
+    # GitHub API client
+    "GitHubClient",
+    "GitHubAPIError",
+    "RateLimitExceeded",
+    "ResourceNotFoundError",
+    "AuthenticationError",
 ]
