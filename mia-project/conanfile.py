@@ -11,16 +11,30 @@ class MiaProject(ConanFile):
     url = "https://github.com/yourusername/mia-project"
     topics = ("python", "cryptography", "mia", "python")
 
-    # Use SpareTools base utilities
+    # Foundation layer
     python_requires = "sparetools-base/2.0.0"
 
-    # Use system Python for now
-    # tool_requires = (
-    #     "sparetools-cpython/3.12.7",
-    # )
+    # Runtime + testing
+    tool_requires = (
+        "sparetools-cpython/3.12.7",
+        "sparetools-test-harness/2.0.0",
+        "sparetools-obd-sim/2.0.0",
+    )
 
-    # Runtime dependencies - MIA only uses Python's standard ssl module
-    requires = ()
+    # Interface contracts (ICD)
+    build_requires = (
+        "sparetools-icd/2.0.0",
+        "sparetools-tinymcp/2.0.0",
+        "sparetools-mcp-orchestrator/2.0.0",
+    )
+
+    # Runtime dependencies
+    requires = (
+        "zeromq/4.3.5",
+        "flatbuffers/23.5.26",
+        "paho-mqtt/1.6.1",  # For NucleusESP32 MQTT option
+        "sparetools-mia/2.0.0",
+    )
 
     # Options
     options = {

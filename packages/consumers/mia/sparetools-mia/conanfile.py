@@ -4,22 +4,39 @@ from conan.tools.files import copy
 
 
 class SpareToolsMiaConan(ConanFile):
-    """MIA (Modular IoT Architecture) - IoT connectivity and device management."""
+    """MIA (Modular IoT Architecture) - AI-orchestrated IoT platform."""
 
     name = "sparetools-mia"
     version = "2.0.0"
     package_type = "python-require"
-    description = "Modular IoT Architecture with device management, connectivity, and cloud integration"
+    description = "AI-orchestrated IoT platform with MCP integration, hardware control, and self-healing capabilities"
     license = "Apache-2.0"
     url = "https://github.com/sparesparrow/sparetools"
-    topics = ("iot", "connectivity", "device-management", "cloud", "mia")
+    topics = ("iot", "ai-orchestration", "mcp", "hardware-control", "self-healing", "mia")
 
     # Use SpareTools base utilities
     python_requires = "sparetools-base/2.0.3"
 
+    # Runtime + testing
+    tool_requires = (
+        "sparetools-cpython/3.12.7",
+        "sparetools-test-harness/2.0.0",
+        "sparetools-obd-sim/2.0.0",
+    )
+
+    # Interface contracts (ICD)
+    build_requires = (
+        "sparetools-icd/2.0.0",
+        "sparetools-tinymcp/2.0.0",
+        "sparetools-mcp-orchestrator/2.0.0",
+    )
+
     # Runtime dependencies
     requires = (
         "sparetools-base/2.0.3",
+        "zeromq/4.3.5",
+        "flatbuffers/23.5.26",
+        "paho-mqtt/1.6.1",  # For NucleusESP32 MQTT option
     )
 
     # Source files to export
