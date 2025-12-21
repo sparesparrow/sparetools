@@ -1,0 +1,23 @@
+{
+  "name": "enterprise_security",
+  "description": "Enterprise-grade security profile with full hardware acceleration and secure boot",
+  "crypto_backend": "mbedTLS",
+  "algorithms": {
+    "aes": {
+      "key_sizes": ["AES_256"],
+      "modes": ["CBC", "GCM", "CTR"]
+    },
+    "sha": ["SHA_256", "SHA_384", "SHA_512"],
+    "ecc": ["P256", "P384", "P521"],
+    "rng": true,
+    "hmac": true,
+    "hkdf": true
+  },
+  "hardware_acceleration": true,
+  "secure_boot": true,
+  "flash_encryption": true,
+  "fips_mode": true,
+  "psa_crypto": true,
+  "certificate_validation": true,
+  "key_derivation": true
+}

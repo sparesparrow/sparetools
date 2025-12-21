@@ -1,0 +1,48 @@
+[include]
+../conan_profiles/esp32_base.prof
+
+[settings]
+os=Linux
+arch=xtensa
+compiler=gcc
+compiler.version=12
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[options]
+# Security hardening options
+openssl:shared=False
+openssl:fips=True
+*:shared=False
+*:fPIC=True
+# Enable stack protection and other security features
+esp32_idf:enable_secure_boot=True
+esp32_idf:enable_flash_encryption=True
+
+[build_requires]
+# Security-focused toolchain
+xtensa-esp32-elf-gcc/12.2.0
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+tools.build:jobs=4
+tools.compilation:verbosity=verbose
+# Security hardening flags
+tools.build:cxxflags=["-fstack-protector-strong", "-fPIE", "-fstack-clash-protection", "-fcf-protection", "-Wformat-security", "-Werror=format-security"]
+tools.build:cflags=["-fstack-protector-strong", "-fPIE", "-fstack-clash-protection", "-fcf-protection", "-Wformat-security", "-Werror=format-security"]
+tools.build:defines=["_FORTIFY_SOURCE=2", "ESP32_SECURITY_HARDENED=1"]
+# Linker security options
+tools.build:ldflags=["-Wl,-z,relro", "-Wl,-z,now", "-Wl,-z,noexecstack", "-pie"]
+
+[profile_conan]
+# PlatformIO integration settings for security
+platform=espressif32
+board=esp32dev
+framework=espidf
+# Additional security build flags
+build_flags=
+  -DCONFIG_SECURE_BOOT_ENABLE=1
+  -DCONFIG_FLASH_ENCRYPTION_ENABLE=1
+  -DCONFIG_MBEDTLS_HARDWARE_AES=1
+  -DCONFIG_MBEDTLS_HARDWARE_MPI=1
+  -DCONFIG_MBEDTLS_HARDWARE_SHA=1

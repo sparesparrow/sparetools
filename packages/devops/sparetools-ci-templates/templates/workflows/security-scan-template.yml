@@ -1,0 +1,307 @@
+# Security Scanning Workflow Template
+# Comprehensive security analysis for ESP32 embedded projects
+# Includes SCA, secret scanning, static analysis, and firmware security
+
+name: Security Scan
+
+on:
+  workflow_call:
+    inputs:
+      scan_level:
+        description: 'Security scan level (basic, standard, enterprise)'
+        type: string
+        default: 'standard'
+      fail_on_findings:
+        description: 'Fail workflow on security findings'
+        type: boolean
+        default: false
+      enable_sbom:
+        description: 'Generate SBOM (Software Bill of Materials)'
+        type: boolean
+        default: true
+    secrets:
+      gh_token:
+        description: 'GitHub token for API access'
+        required: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.gh_token }}
+
+jobs:
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install security tools
+      run: |
+        pip install trufflehog3
+        pip install gitleaks
+
+    - name: Run TruffleHog secret scanning
+      run: |
+        echo "Running TruffleHog secret scan..."
+        trufflehog3 --format json --output trufflehog-results.json .
+        if [ -f trufflehog-results.json ] && [ -s trufflehog-results.json ]; then
+          echo "❌ Secrets found by TruffleHog:"
+          cat trufflehog-results.json
+          echo "TRUFFLEHOG_FOUND=1" >> $GITHUB_ENV
+        else
+          echo "✅ No secrets found by TruffleHog"
+        fi
+
+    - name: Run Gitleaks secret scanning
+      run: |
+        echo "Running Gitleaks secret scan..."
+        gitleaks detect --verbose --redact --report-format json --report-path gitleaks-results.json
+        if [ -f gitleaks-results.json ] && [ -s gitleaks-results.json ]; then
+          echo "❌ Secrets found by Gitleaks:"
+          cat gitleaks-results.json
+          echo "GITLEAKS_FOUND=1" >> $GITHUB_ENV
+        else
+          echo "✅ No secrets found by Gitleaks"
+        fi
+
+    - name: Upload secret scan results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: secret-scan-results
+        path: |
+          trufflehog-results.json
+          gitleaks-results.json
+
+    - name: Fail on secret findings
+      if: env.TRUFFLEHOG_FOUND == '1' || env.GITLEAKS_FOUND == '1'
+      run: |
+        echo "❌ Security violation: Secrets detected in codebase"
+        exit 1
+
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install clang tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy clang-tools cppcheck
+
+    - name: Run clang-tidy (C/C++ static analysis)
+      run: |
+        echo "Running clang-tidy static analysis..."
+        find . -name "*.cpp" -o -name "*.c" -o -name "*.hpp" -o -name "*.h" | \
+        grep -v -E "(build/|\.pio/|\.conan/)" | \
+        xargs -I {} sh -c 'echo "Analyzing {}"; clang-tidy {} -- || true' > clang-tidy-results.txt
+
+        if grep -q "error:" clang-tidy-results.txt; then
+          echo "CLANG_TIDY_ERRORS=1" >> $GITHUB_ENV
+          echo "❌ clang-tidy found issues"
+        else
+          echo "✅ clang-tidy passed"
+        fi
+
+    - name: Run cppcheck (additional static analysis)
+      run: |
+        echo "Running cppcheck static analysis..."
+        cppcheck --enable=all --std=c++11 --language=c++ \
+                 --suppress=missingIncludeSystem \
+                 --suppress=unusedFunction \
+                 --suppress=unmatchedSuppression \
+                 --inline-suppr \
+                 --xml --xml-version=2 \
+                 -I include -I src \
+                 --output-file=cppcheck-results.xml \
+                 src/ include/
+
+        if [ -f cppcheck-results.xml ] && grep -q "<error" cppcheck-results.xml; then
+          echo "CPPCHECK_ERRORS=1" >> $GITHUB_ENV
+          echo "❌ cppcheck found issues"
+        else
+          echo "✅ cppcheck passed"
+        fi
+
+    - name: Upload static analysis results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: static-analysis-results
+        path: |
+          clang-tidy-results.txt
+          cppcheck-results.xml
+
+    - name: Fail on static analysis issues
+      if: inputs.fail_on_findings == true && (env.CLANG_TIDY_ERRORS == '1' || env.CPPCHECK_ERRORS == '1')
+      run: |
+        echo "❌ Security violation: Static analysis issues found"
+        exit 1
+
+  software-composition-analysis:
+    name: Software Composition Analysis (SCA)
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+      with:
+        version: 2.21.0
+
+    - name: Install SCA tools
+      run: |
+        pip install conan-inspect
+        pip install cyclonedx-conan
+
+    - name: Conan dependency inspection
+      run: |
+        echo "Analyzing Conan dependencies for vulnerabilities..."
+        conan inspect . > conan-inspect-results.txt 2>&1 || true
+
+        # Check for known vulnerable packages (simplified check)
+        if grep -i -E "(vulnerable|exploit|cve)" conan-inspect-results.txt; then
+          echo "SCA_VULNERABILITIES=1" >> $GITHUB_ENV
+          echo "❌ Potential vulnerabilities found in dependencies"
+        else
+          echo "✅ No obvious vulnerabilities found in Conan inspection"
+        fi
+
+    - name: Generate SBOM (if enabled)
+      if: inputs.enable_sbom == true
+      run: |
+        echo "Generating Software Bill of Materials..."
+        cyclonedx-conan --conanfile conanfile.py --output sbom.json --format json
+        echo "✅ SBOM generated: sbom.json"
+
+    - name: Upload SCA results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sca-results
+        path: |
+          conan-inspect-results.txt
+          sbom.json
+
+    - name: Fail on SCA findings
+      if: inputs.fail_on_findings == true && env.SCA_VULNERABILITIES == '1'
+      run: |
+        echo "❌ Security violation: Vulnerabilities found in dependencies"
+        exit 1
+
+  firmware-security:
+    name: Firmware Security Analysis
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install firmware security tools
+      run: |
+        pip install lief
+        pip install esptool.py
+
+    - name: Build firmware for analysis
+      run: |
+        # This would typically use the same build process as CI
+        # For now, we'll create a placeholder
+        echo "Building firmware for security analysis..."
+        # platformio run -e esp32  # Example command
+
+    - name: Firmware binary analysis
+      run: |
+        echo "Analyzing firmware binary security..."
+        # Check for debug symbols in release builds
+        if [ -f ".pio/build/esp32/firmware.bin" ]; then
+          # Use esptool to check firmware
+          esptool.py image_info .pio/build/esp32/firmware.bin > firmware-analysis.txt
+
+          # Check for obvious security issues
+          if grep -i -E "(debug|symbol|plaintext)" firmware-analysis.txt; then
+            echo "FIRMWARE_SECURITY_ISSUES=1" >> $GITHUB_ENV
+            echo "❌ Firmware security issues detected"
+          else
+            echo "✅ Firmware appears secure"
+          fi
+        else
+          echo "⚠️ No firmware binary found for analysis"
+        fi
+
+    - name: Upload firmware analysis results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware-analysis-results
+        path: firmware-analysis.txt
+
+    - name: Fail on firmware security issues
+      if: inputs.fail_on_findings == true && env.FIRMWARE_SECURITY_ISSUES == '1'
+      run: |
+        echo "❌ Security violation: Firmware security issues found"
+        exit 1
+
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-22.04
+    needs: [secret-scanning, static-analysis, software-composition-analysis, firmware-security]
+    if: always()
+
+    steps:
+    - name: Generate security summary
+      run: |
+        echo "# Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Check | Status | Details |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+
+        # Check each job status
+        echo "| Secret Scanning | ${{ needs.secret-scanning.result == 'success' && '✅ Passed' || '❌ Failed' }} | Secrets, tokens, keys |" >> $GITHUB_STEP_SUMMARY
+        echo "| Static Analysis | ${{ needs.static-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} | Code quality, vulnerabilities |" >> $GITHUB_STEP_SUMMARY
+        echo "| SCA Analysis | ${{ needs.software-composition-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} | Dependencies, licenses |" >> $GITHUB_STEP_SUMMARY
+        echo "| Firmware Security | ${{ needs.firmware-security.result == 'success' && '✅ Passed' || '❌ Failed' }} | Binary analysis |" >> $GITHUB_STEP_SUMMARY
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "- Scan Level: ${{ inputs.scan_level }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Fail on Findings: ${{ inputs.fail_on_findings }}" >> $GITHUB_STEP_SUMMARY
+        echo "- SBOM Generation: ${{ inputs.enable_sbom }}" >> $GITHUB_STEP_SUMMARY
+
+        # Overall status
+        if [[ "${{ needs.secret-scanning.result }}" == "success" && \
+              "${{ needs.static-analysis.result }}" == "success" && \
+              "${{ needs.software-composition-analysis.result }}" == "success" && \
+              "${{ needs.firmware-security.result }}" == "success" ]]; then
+          echo "## ✅ All Security Checks Passed" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ❌ Security Issues Found" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi

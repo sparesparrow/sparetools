@@ -1,0 +1,22 @@
+# SpareTools Central Version Configuration (BOM)
+# This file defines all package versions used across the ecosystem
+
+foundation:
+  base: "2.0.3"
+  cpython: "3.12.7"
+  bootstrap: "2.0.0"
+  test-harness: "2.0.0"
+  shared-dev-tools: "2.0.0"
+
+testing:
+  gtest: "1.14.0"
+  gmock: "1.14.0"
+
+embedded:
+  lvgl: "8.3.11"
+  openssl: "3.3.2"
+  freertos: "10.5.1"
+  hal-sunton: "1.0.0"
+
+security:
+  crypto-suite: "1.0.0"

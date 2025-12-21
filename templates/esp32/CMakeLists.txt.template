@@ -26,11 +26,32 @@ endif()
 # Enable testing
 enable_testing()
 
-# Configure Conan integration
-if(EXISTS ${CMAKE_BINARY_DIR}/conan/conan_toolchain.cmake)
-    include(${CMAKE_BINARY_DIR}/conan/conan_toolchain.cmake)
-elseif(EXISTS ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
-    include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+# Configure Conan integration with enhanced error handling
+set(CONAN_TOOLCHAIN_FOUND FALSE)
+
+# Try different possible locations for Conan toolchain
+set(CONAN_TOOLCHAIN_PATHS
+    "${CMAKE_BINARY_DIR}/conan/conan_toolchain.cmake"
+    "${CMAKE_BINARY_DIR}/conan_toolchain.cmake"
+    "${CMAKE_SOURCE_DIR}/conan_toolchain.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/conan_toolchain.cmake"
+)
+
+foreach(TOOLCHAIN_PATH ${CONAN_TOOLCHAIN_PATHS})
+    if(EXISTS ${TOOLCHAIN_PATH})
+        message(STATUS "Found Conan toolchain: ${TOOLCHAIN_PATH}")
+        include(${TOOLCHAIN_PATH})
+        set(CONAN_TOOLCHAIN_FOUND TRUE)
+        break()
+    endif()
+endforeach()
+
+if(NOT CONAN_TOOLCHAIN_FOUND)
+    message(WARNING "Conan toolchain not found. Make sure to run 'conan install' first.")
+    message(WARNING "Expected locations checked:")
+    foreach(TOOLCHAIN_PATH ${CONAN_TOOLCHAIN_PATHS})
+        message(WARNING "  - ${TOOLCHAIN_PATH}")
+    endforeach()
 endif()
 
 # Configure code coverage
@@ -86,6 +107,42 @@ endif()
 # Find Conan dependencies
 find_package(GTest REQUIRED)
 
+# Find SpareTools HAL and crypto packages (if available)
+find_package(sparetools-hal-sunton QUIET)
+find_package(sparetools-crypto-suite QUIET)
+
+# ESP32-specific configurations
+if(ESP32_BUILD OR CMAKE_SYSTEM_NAME STREQUAL "Generic")
+    message(STATUS "Configuring for ESP32 build")
+
+    # ESP32 compiler definitions
+    add_definitions(
+        -DESP32=1
+        -DCONFIG_IDF_TARGET_ESP32=1
+        -DMBEDTLS_CONFIG_FILE="mbedtls/esp_config.h"
+    )
+
+    # ESP32-specific compiler flags
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        add_compile_options(
+            -mlongcalls
+            -mtext-section-literals
+            -fstrict-volatile-bitfields
+            -fno-reorder-blocks
+            -fno-defer-pop
+        )
+    endif()
+
+    # Configure hardware acceleration for crypto
+    if(sparetools-crypto-suite_FOUND)
+        add_definitions(
+            -DCONFIG_MBEDTLS_HARDWARE_AES=1
+            -DCONFIG_MBEDTLS_HARDWARE_MPI=1
+            -DCONFIG_MBEDTLS_HARDWARE_SHA=1
+        )
+    endif()
+endif()
+
 # Define source files for each module
 set(CORE_SOURCES
     src/main.cpp
@@ -97,6 +154,17 @@ target_include_directories(core_lib PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/include
 )
+
+# Link SpareTools libraries
+if(sparetools-hal-sunton_FOUND)
+    target_link_libraries(core_lib PUBLIC sparetools-hal-sunton::sparetools-hal-sunton)
+    target_compile_definitions(core_lib PUBLIC SPARETOOLS_HAL_SUNTON_ENABLED=1)
+endif()
+
+if(sparetools-crypto-suite_FOUND)
+    target_link_libraries(core_lib PUBLIC sparetools-crypto-suite::sparetools-crypto-suite)
+    target_compile_definitions(core_lib PUBLIC SPARETOOLS_CRYPTO_SUITE_ENABLED=1)
+endif()
 
 # Create main firmware executable (for ESP32 this would be handled by PlatformIO)
 if(NOT ESP32_BUILD)
@@ -294,10 +362,16 @@ message(STATUS "========================================")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 message(STATUS "C Standard: ${CMAKE_C_STANDARD}")
+message(STATUS "ESP32 Build: ${ESP32_BUILD}")
 message(STATUS "Coverage: ${ENABLE_COVERAGE}")
 message(STATUS "Clang-Tidy: ${ENABLE_CLANG_TIDY}")
 message(STATUS "Cppcheck: ${ENABLE_CPPCHECK}")
 message(STATUS "ASan: ${ENABLE_ASAN}")
 message(STATUS "UBSan: ${ENABLE_UBSAN}")
 message(STATUS "Testing: Enabled")
+message(STATUS "---------------------------------------")
+message(STATUS "SpareTools Integration:")
+message(STATUS "  HAL (Sunton): ${sparetools-hal-sunton_FOUND}")
+message(STATUS "  Crypto Suite: ${sparetools-crypto-suite_FOUND}")
+message(STATUS "  Conan Toolchain: ${CONAN_TOOLCHAIN_FOUND}")
 message(STATUS "========================================")

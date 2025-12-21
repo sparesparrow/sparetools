@@ -1,0 +1,19 @@
+{
+  "name": "basic_security",
+  "description": "Basic security profile with AES-256 and SHA-256",
+  "crypto_backend": "mbedTLS",
+  "algorithms": {
+    "aes": {
+      "key_sizes": ["AES_256"],
+      "modes": ["CBC", "GCM"]
+    },
+    "sha": ["SHA_256"],
+    "ecc": ["P256"],
+    "rng": true
+  },
+  "hardware_acceleration": true,
+  "secure_boot": false,
+  "flash_encryption": false,
+  "fips_mode": false,
+  "psa_crypto": true
+}

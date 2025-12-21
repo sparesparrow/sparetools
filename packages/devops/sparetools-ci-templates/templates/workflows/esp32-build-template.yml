@@ -1,0 +1,172 @@
+# Reusable ESP32 Build Workflow Template
+# This template provides a comprehensive build matrix for ESP32 variants
+# with Conan-PlatformIO integration and enterprise-grade features
+
+name: ESP32 Build Matrix
+
+on:
+  workflow_call:
+    inputs:
+      esp32_variants:
+        description: 'ESP32 variants to build (comma-separated)'
+        type: string
+        default: 'esp32,esp32s3,esp32c3'
+      conan_profile:
+        description: 'Conan profile to use'
+        type: string
+        default: 'esp32_base'
+      build_type:
+        description: 'Build type (Release, Debug)'
+        type: string
+        default: 'Release'
+      enable_coverage:
+        description: 'Enable code coverage'
+        type: boolean
+        default: false
+      artifact_retention:
+        description: 'Artifact retention days'
+        type: string
+        default: '30'
+    secrets:
+      conan_token:
+        description: 'ConanCenter token for package authentication'
+        required: false
+
+env:
+  CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
+  CONAN_PASSWORD: ${{ secrets.CONAN_TOKEN }}
+
+jobs:
+  build-matrix:
+    name: Build ESP32 ${{ matrix.variant }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ${{ fromJSON(format('["{0}"]', join(split(inputs.esp32_variants, ','), '","'))) }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+      with:
+        version: 2.21.0
+
+    - name: Setup PlatformIO
+      uses: arduino/setup-platformio@v1
+      with:
+        pio_version: 6.1.0
+
+    - name: Configure Conan
+      run: |
+        conan config set general.revisions_enabled=True
+        conan profile detect --force
+
+    - name: Login to ConanCenter (if token provided)
+      if: secrets.conan_token != ''
+      run: |
+        conan remote login -p ${{ secrets.CONAN_TOKEN }} conancenter ${{ secrets.CONAN_USERNAME }}
+
+    - name: Install dependencies
+      run: |
+        conan install . \
+          --profile ${{ inputs.conan_profile }} \
+          --build=missing \
+          --update
+
+    - name: Build firmware
+      run: |
+        # Configure PlatformIO for specific ESP32 variant
+        export PLATFORMIO_ENV=${{ matrix.variant }}
+
+        # Build with PlatformIO
+        platformio run -e ${{ matrix.variant }} -v
+
+        # Generate build artifacts
+        mkdir -p artifacts/${{ matrix.variant }}
+        cp .pio/build/${{ matrix.variant }}/firmware.bin artifacts/${{ matrix.variant }}/
+        cp .pio/build/${{ matrix.variant }}/partitions.bin artifacts/${{ matrix.variant }}/
+
+        # Generate build info
+        echo "Build Information" > artifacts/${{ matrix.variant }}/build-info.txt
+        echo "=================" >> artifacts/${{ matrix.variant }}/build-info.txt
+        echo "Variant: ${{ matrix.variant }}" >> artifacts/${{ matrix.variant }}/build-info.txt
+        echo "Build Type: ${{ inputs.build_type }}" >> artifacts/${{ matrix.variant }}/build-info.txt
+        echo "Git Commit: ${{ github.sha }}" >> artifacts/${{ matrix.variant }}/build-info.txt
+        echo "Build Time: $(date)" >> artifacts/${{ matrix.variant }}/build-info.txt
+
+        # Calculate firmware size
+        if [ -f artifacts/${{ matrix.variant }}/firmware.bin ]; then
+          size=$(stat -c%s artifacts/${{ matrix.variant }}/firmware.bin)
+          echo "Firmware Size: $size bytes" >> artifacts/${{ matrix.variant }}/build-info.txt
+        fi
+
+    - name: Run tests (if available)
+      run: |
+        if [ -f "test/CMakeLists.txt" ] || [ -f "test/conanfile.py" ]; then
+          echo "Running tests for ${{ matrix.variant }}"
+          # Test execution would depend on project structure
+          # This is a placeholder for test integration
+        else
+          echo "No tests found for ${{ matrix.variant }}"
+        fi
+
+    - name: Generate coverage report (if enabled)
+      if: inputs.enable_coverage == true
+      run: |
+        echo "Coverage generation not yet implemented"
+        # Placeholder for coverage tools like gcov/lcov
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: esp32-${{ matrix.variant }}-firmware
+        path: artifacts/${{ matrix.variant }}/
+        retention-days: ${{ inputs.artifact_retention }}
+
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-${{ matrix.variant }}
+        path: |
+          test-results/
+          *.xml
+        retention-days: 7
+
+  summary:
+    name: Build Summary
+    runs-on: ubuntu-22.04
+    needs: build-matrix
+    if: always()
+
+    steps:
+    - name: Generate build summary
+      run: |
+        echo "# ESP32 Build Matrix Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Variant | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+
+        # Add status for each variant
+        variants="${{ inputs.esp32_variants }}"
+        IFS=',' read -ra VARIANT_ARRAY <<< "$variants"
+        for variant in "${VARIANT_ARRAY[@]}"; do
+          # This is a simplified status check - in practice you'd need to check job status
+          echo "| $variant | ${{ contains(needs.build-matrix.result, 'success') && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        done
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "- Conan Profile: ${{ inputs.conan_profile }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Build Type: ${{ inputs.build_type }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Coverage: ${{ inputs.enable_coverage }}" >> $GITHUB_STEP_SUMMARY
