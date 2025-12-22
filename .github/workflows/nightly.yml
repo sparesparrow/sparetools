@@ -21,7 +21,7 @@ permissions:
 
 env:
   CONAN_VERSION: "2.21.0"
-  VERSION_BASE: "2.0.0"
+  VERSION_BASE: "2.0.3"
   VERSION_CPYTHON: "3.12.7"
   VERSION_OPENSSL: "3.3.2"
 
@@ -97,7 +97,7 @@ jobs:
         with:
           path: ~/.conan2
           # Optimized cache key: includes OS, profile, build method, and package versions
-          key: conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-${{ matrix.build_method }}-${{ hashFiles('packages/**/conanfile.py', 'packages/sparetools-openssl-tools/profiles/**') }}-${{ env.VERSION_CPYTHON }}
+          key: conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-${{ matrix.build_method }}-${{ hashFiles('packages/**/conanfile.py', 'packages/consumers/openssl/sparetools-openssl-tools/profiles/**') }}-${{ env.VERSION_CPYTHON }}
           restore-keys: |
             conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-${{ matrix.build_method }}-
             conan-nightly-${{ matrix.os }}-${{ matrix.profile_base }}-
@@ -114,14 +114,14 @@ jobs:
           conan create packages/sparetools-cpython --version=${{ env.VERSION_CPYTHON }} --build=missing
           conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
           conan export packages/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
-          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+          conan export packages/consumers/openssl/sparetools-openssl-tools --version=2.0.0
           
       - name: Build OpenSSL with profile
         run: |
           echo "🔨 Building OpenSSL with ${{ matrix.build_method }} method..."
           
-          PROFILE_BASE="packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile_base }}"
-          PROFILE_METHOD="packages/sparetools-openssl-tools/profiles/build-methods/${{ matrix.build_method }}-configure"
+          PROFILE_BASE="packages/consumers/openssl/sparetools-openssl-tools/profiles/base/${{ matrix.profile_base }}"
+          PROFILE_METHOD="packages/consumers/openssl/sparetools-openssl-tools/profiles/build-methods/${{ matrix.build_method }}-configure"
           
           if [ -f "$PROFILE_BASE" ] && [ -f "$PROFILE_METHOD" ]; then
             conan create packages/sparetools-openssl --version=3.3.2 \
