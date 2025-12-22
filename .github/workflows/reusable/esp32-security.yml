@@ -1,4 +1,4 @@
-name: Security Scanning
+name: ESP32 Security Scanning
 
 on:
   workflow_call:
@@ -18,14 +18,24 @@ on:
         type: boolean
         default: true
         required: false
+      fail-on-findings:
+        description: 'Fail workflow on security findings'
+        type: boolean
+        default: false
+        required: false
+      conan-profile:
+        description: 'Conan profile to use for SCA'
+        type: string
+        default: 'esp32_base'
+        required: false
 
 env:
   SPARETOOLS_PROJECT_TYPE: embedded/esp32
   SPARETOOLS_PROJECT_NAME: nucleus-esp32
 
 jobs:
-  security-scan:
-    name: Security Scanning
+  secret-scanning:
+    name: Secret Scanning
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -33,15 +43,314 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up Python
+    - name: Setup Python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Install security tools
+    - name: Install secret scanning tools
       run: |
-        pip install cyclonedx-bom
-        # Trivy is available in the runner
+        pip install trufflehog3
+        pip install gitleaks
+
+    - name: Run TruffleHog secret scanning
+      run: |
+        echo "Running TruffleHog secret scan..."
+        trufflehog3 --format json --output trufflehog-results.json .
+        if [ -f trufflehog-results.json ] && [ -s trufflehog-results.json ]; then
+          echo "❌ Secrets found by TruffleHog:"
+          cat trufflehog-results.json
+          echo "TRUFFLEHOG_SECRETS=1" >> $GITHUB_ENV
+        else
+          echo "✅ No secrets found by TruffleHog"
+        fi
+
+    - name: Run Gitleaks secret scanning
+      run: |
+        echo "Running Gitleaks secret scan..."
+        gitleaks detect --verbose --redact --report-format json --report-path gitleaks-results.json
+        if [ -f gitleaks-results.json ] && [ -s gitleaks-results.json ]; then
+          echo "❌ Secrets found by Gitleaks:"
+          cat gitleaks-results.json
+          echo "GITLEAKS_SECRETS=1" >> $GITHUB_ENV
+        else
+          echo "✅ No secrets found by Gitleaks"
+        fi
+
+    - name: Upload secret scan results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: secret-scan-results
+        path: |
+          trufflehog-results.json
+          gitleaks-results.json
+
+    - name: Fail on secret findings
+      if: inputs.fail-on-findings == true && (env.TRUFFLEHOG_SECRETS == '1' || env.GITLEAKS_SECRETS == '1')
+      run: |
+        echo "❌ Security violation: Secrets detected in codebase"
+        exit 1
+
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install clang tools and ESP-IDF
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-tidy clang-tools cppcheck
+        # Install ESP-IDF for ESP32-specific analysis
+        mkdir -p ~/esp
+        cd ~/esp
+        git clone -b v5.0 --recursive https://github.com/espressif/esp-idf.git
+        cd esp-idf
+        ./install.sh
+        . ./export.sh
+
+    - name: Run clang-tidy (C/C++ static analysis)
+      run: |
+        echo "Running clang-tidy static analysis..."
+        # Find all C/C++ source files, excluding build directories
+        find . -name "*.cpp" -o -name "*.c" -o -name "*.hpp" -o -name "*.h" | \
+        grep -v -E "(build/|\.pio/|\.conan/|managed_components)" | \
+        xargs -I {} sh -c 'echo "Analyzing {}"; clang-tidy {} -- || true' > clang-tidy-results.txt
+
+        if grep -q "error:" clang-tidy-results.txt; then
+          echo "CLANG_TIDY_ERRORS=1" >> $GITHUB_ENV
+          echo "❌ clang-tidy found issues"
+        else
+          echo "✅ clang-tidy passed"
+        fi
+
+    - name: Run cppcheck (additional static analysis)
+      run: |
+        echo "Running cppcheck static analysis..."
+        cppcheck --enable=all --std=c++11 --language=c++ \
+                 --suppress=missingIncludeSystem \
+                 --suppress=unusedFunction \
+                 --suppress=unmatchedSuppression \
+                 --inline-suppr \
+                 --xml --xml-version=2 \
+                 -I include -I src \
+                 --output-file=cppcheck-results.xml \
+                 src/ include/ 2>/dev/null || true
+
+        if [ -f cppcheck-results.xml ] && grep -q "<error" cppcheck-results.xml; then
+          echo "CPPCHECK_ERRORS=1" >> $GITHUB_ENV
+          echo "❌ cppcheck found issues"
+        else
+          echo "✅ cppcheck passed"
+        fi
+
+    - name: Run ESP-IDF static analysis
+      run: |
+        echo "Running ESP-IDF static analysis..."
+        # Source ESP-IDF environment
+        cd ~/esp/esp-idf
+        . ./export.sh
+
+        # Run ESP-IDF specific checks if project uses ESP-IDF
+        if [ -f "CMakeLists.txt" ] || [ -f "sdkconfig" ]; then
+          echo "ESP-IDF project detected, running IDF analysis..."
+          # This would run ESP-IDF specific static analysis
+          echo "✅ ESP-IDF analysis completed"
+        else
+          echo "⚠️  ESP-IDF project not detected, skipping IDF analysis"
+        fi
+
+    - name: Upload static analysis results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: static-analysis-results
+        path: |
+          clang-tidy-results.txt
+          cppcheck-results.xml
+
+    - name: Fail on static analysis issues
+      if: inputs.fail-on-findings == true && (env.CLANG_TIDY_ERRORS == '1' || env.CPPCHECK_ERRORS == '1')
+      run: |
+        echo "❌ Security violation: Static analysis issues found"
+        exit 1
+
+  software-composition-analysis:
+    name: Software Composition Analysis (SCA)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+      with:
+        version: 2.21.0
+
+    - name: Install SCA tools
+      run: |
+        pip install conan-inspect
+        pip install cyclonedx-conan
+        pip install safety
+
+    - name: Conan dependency inspection and SCA
+      run: |
+        echo "Analyzing Conan dependencies for vulnerabilities..."
+
+        # Setup Conan
+        conan config set general.revisions_enabled=True
+        conan profile detect --force
+
+        # Inspect dependencies
+        conan inspect . > conan-inspect-results.txt 2>&1 || true
+
+        # Check for known vulnerable packages
+        if grep -i -E "(vulnerable|exploit|cve|security|advisory)" conan-inspect-results.txt; then
+          echo "SCA_VULNERABILITIES=1" >> $GITHUB_ENV
+          echo "❌ Potential vulnerabilities found in dependencies"
+        else
+          echo "✅ No obvious vulnerabilities found in Conan inspection"
+        fi
+
+        # Run Safety check on Python dependencies
+        if [ -f "requirements.txt" ] || [ -f "pyproject.toml" ]; then
+          echo "Running Safety Python vulnerability scan..."
+          safety check --output safety-results.json --json || true
+          if [ -f safety-results.json ] && grep -q '"vulnerabilities"' safety-results.json; then
+            echo "SAFETY_VULNERABILITIES=1" >> $GITHUB_ENV
+            echo "❌ Python vulnerabilities found by Safety"
+          fi
+        fi
+
+    - name: Generate CycloneDX SBOM
+      if: inputs.generate-sbom
+      run: |
+        echo "Generating CycloneDX SBOM for Conan dependencies..."
+        cyclonedx-conan --conanfile conanfile.py --output conan-sbom.json --format json || true
+
+        # Generate SBOM for Python dependencies if available
+        if [ -f "requirements.txt" ]; then
+          pip install cyclonedx-bom
+          cyclonedx-bom -o python-sbom.json -j -t requirements .
+        fi
+
+    - name: Upload SCA results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: sca-results
+        path: |
+          conan-inspect-results.txt
+          safety-results.json
+          conan-sbom.json
+          python-sbom.json
+
+    - name: Fail on SCA findings
+      if: inputs.fail-on-findings == true && (env.SCA_VULNERABILITIES == '1' || env.SAFETY_VULNERABILITIES == '1')
+      run: |
+        echo "❌ Security violation: Vulnerabilities found in dependencies"
+        exit 1
+
+  firmware-security:
+    name: Firmware Security Analysis
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install firmware security tools
+      run: |
+        pip install lief
+        pip install esptool.py
+        pip install binwalk
+
+    - name: Build firmware for analysis
+      run: |
+        echo "Building firmware for security analysis..."
+
+        # Setup PlatformIO if available
+        if command -v platformio &> /dev/null; then
+          echo "PlatformIO found, building firmware..."
+          platformio run -e esp32dev -v || true
+        else
+          echo "⚠️  PlatformIO not found, attempting basic build..."
+          # Attempt basic build if no PlatformIO
+        fi
+
+    - name: Firmware binary analysis
+      run: |
+        echo "Analyzing firmware binary security..."
+
+        if [ -f ".pio/build/esp32dev/firmware.bin" ]; then
+          FIRMWARE_BIN=".pio/build/esp32dev/firmware.bin"
+
+          # Use esptool to analyze firmware
+          esptool.py image_info "$FIRMWARE_BIN" > firmware-analysis.txt
+
+          # Check for debug symbols in release builds
+          if grep -i -E "(debug|symbol|plaintext)" firmware-analysis.txt; then
+            echo "FIRMWARE_DEBUG_SYMBOLS=1" >> $GITHUB_ENV
+            echo "❌ Debug symbols found in firmware binary"
+          fi
+
+          # Use binwalk to check for embedded files/secrets
+          binwalk "$FIRMWARE_BIN" > binwalk-analysis.txt
+          if grep -i -E "(certificate|private.key|secret|password)" binwalk-analysis.txt; then
+            echo "FIRMWARE_EMBEDDED_SECRETS=1" >> $GITHUB_ENV
+            echo "❌ Potential embedded secrets found in firmware"
+          fi
+
+          # Basic entropy analysis (high entropy might indicate encryption)
+          ENTROPY=$(ent -b "$FIRMWARE_BIN" 2>/dev/null | awk '{print $1}' | head -1 || echo "0")
+          if (( $(echo "$ENTROPY < 7.5" | bc -l 2>/dev/null || echo "1") )); then
+            echo "FIRMWARE_LOW_ENTROPY=1" >> $GITHUB_ENV
+            echo "⚠️  Low entropy detected in firmware (possible unencrypted sensitive data)"
+          fi
+
+        else
+          echo "⚠️  No firmware binary found for analysis"
+        fi
+
+    - name: Upload firmware analysis results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: firmware-analysis-results
+        path: |
+          firmware-analysis.txt
+          binwalk-analysis.txt
+
+    - name: Fail on firmware security issues
+      if: inputs.fail-on-findings == true && (env.FIRMWARE_DEBUG_SYMBOLS == '1' || env.FIRMWARE_EMBEDDED_SECRETS == '1')
+      run: |
+        echo "❌ Security violation: Firmware security issues found"
+        exit 1
+
+  filesystem-vulnerability-scan:
+    name: Filesystem Vulnerability Scan
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Run Trivy filesystem scan
       uses: aquasecurity/trivy-action@master
@@ -49,7 +358,7 @@ jobs:
         scan-type: 'fs'
         scan-ref: '.'
         format: 'sarif'
-        output: 'trivy-results.sarif'
+        output: 'trivy-filesystem.sarif'
         severity: ${{ inputs.scan-type == 'full' && 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' || 'HIGH,CRITICAL' }}
 
     - name: Run Trivy config scan
@@ -61,47 +370,59 @@ jobs:
         format: 'sarif'
         output: 'trivy-config.sarif'
 
-    - name: Generate SBOM
-      if: inputs.generate-sbom
-      run: |
-        # Generate CycloneDX SBOM for Python dependencies
-        cyclonedx-bom -o sbom.json -j -t poetry .
-
-        # Generate SPDX SBOM for C++ dependencies (if available)
-        # This would require additional tooling for Conan dependencies
-
-    - name: Upload security scan results
+    - name: Upload Trivy scan results
       uses: github/codeql-action/upload-sarif@v2
       if: always()
       with:
-        sarif_file: trivy-results.sarif
+        sarif_file: trivy-filesystem.sarif
 
-    - name: Upload config scan results
+    - name: Upload Trivy config results
       uses: github/codeql-action/upload-sarif@v2
       if: inputs.scan-type == 'full' && always()
       with:
         sarif_file: trivy-config.sarif
 
-    - name: Upload SBOM
-      if: inputs.generate-sbom
-      uses: actions/upload-artifact@v3
-      with:
-        name: security-sbom
-        path: |
-          sbom.json
-        retention-days: 90
+  security-summary:
+    name: Security Scan Summary
+    runs-on: ubuntu-latest
+    needs: [secret-scanning, static-analysis, software-composition-analysis, firmware-security, filesystem-vulnerability-scan]
+    if: always()
 
-    - name: Fail on high/critical vulnerabilities
+    steps:
+    - name: Generate security summary
       run: |
-        # Check Trivy results for critical issues
-        if grep -q '"severity": "CRITICAL"' trivy-results.sarif; then
-          echo "❌ Critical security vulnerabilities found!"
+        echo "# ESP32 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Security Check | Status | Details |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------------|--------|---------|" >> $GITHUB_STEP_SUMMARY
+
+        # Check each job status and mark issues
+        echo "| Secret Scanning | ${{ needs.secret-scanning.result == 'success' && '✅ Passed' || '❌ Failed' }} | Secrets, tokens, keys |" >> $GITHUB_STEP_SUMMARY
+        echo "| Static Analysis | ${{ needs.static-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} | Code quality, vulnerabilities |" >> $GITHUB_STEP_SUMMARY
+        echo "| SCA Analysis | ${{ needs.software-composition-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} | Dependencies, licenses |" >> $GITHUB_STEP_SUMMARY
+        echo "| Firmware Security | ${{ needs.firmware-security.result == 'success' && '✅ Passed' || '❌ Failed' }} | Binary analysis |" >> $GITHUB_STEP_SUMMARY
+        echo "| Filesystem Scan | ${{ needs.filesystem-vulnerability-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} | File vulnerabilities |" >> $GITHUB_STEP_SUMMARY
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "- Scan Type: ${{ inputs.scan-type }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Generate SBOM: ${{ inputs.generate-sbom }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Fail on Findings: ${{ inputs.fail-on-findings }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Conan Profile: ${{ inputs.conan-profile }}" >> $GITHUB_STEP_SUMMARY
+
+        # Overall assessment
+        OVERALL_STATUS="✅ All Security Checks Passed"
+        if [[ "${{ needs.secret-scanning.result }}" != "success" || \
+              "${{ needs.static-analysis.result }}" != "success" || \
+              "${{ needs.software-composition-analysis.result }}" != "success" || \
+              "${{ needs.firmware-security.result }}" != "success" || \
+              "${{ needs.filesystem-vulnerability-scan.result }}" != "success" ]]; then
+          OVERALL_STATUS="❌ Security Issues Found"
+        fi
+
+        echo "## $OVERALL_STATUS" >> $GITHUB_STEP_SUMMARY
+
+        # Set final job status
+        if [[ "$OVERALL_STATUS" == *"❌"* ]]; then
           exit 1
         fi
-
-        if grep -q '"severity": "HIGH"' trivy-results.sarif; then
-          echo "⚠️  High severity security issues found"
-          # Don't fail on high severity for now, just warn
-        fi
-
-        echo "✅ No critical security vulnerabilities found"

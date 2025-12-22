@@ -20,15 +20,15 @@ class SpareToolsMiaConan(ConanFile):
     # Runtime + testing
     tool_requires = (
         "sparetools-cpython/3.12.7",
-        "sparetools-test-harness/2.0.0",
-        "sparetools-obd-sim/2.0.0",
+        "sparetools-test-harness/2.0.3",
+        "sparetools-obd-sim/2.0.3",
     )
 
     # Interface contracts (ICD)
     build_requires = (
-        "sparetools-icd/2.0.0",
+        # "sparetools-icd/2.0.0",  # TODO: Package not yet created - see docs/PROJECT-RELATIONSHIPS-ANALYSIS.md
         "sparetools-tinymcp/2.0.0",
-        "sparetools-mcp-orchestrator/2.0.0",
+        "sparetools-mcp-orchestrator/2.0.3",
         "sparetools-mcpserver-cpp/2.0.0",
     )
 

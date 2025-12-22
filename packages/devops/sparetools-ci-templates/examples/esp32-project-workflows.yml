@@ -1,0 +1,231 @@
+# Example ESP32 Project Workflows
+# This file shows how to use the SpareTools CI templates in a real project
+
+# Main CI workflow that calls the reusable templates
+name: ESP32 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+# Define reusable workflows for this project
+jobs:
+  # Security scanning (runs on every PR and push)
+  security:
+    name: Security Scan
+    uses: sparesparrow/sparetools/.github/workflows/security-scan-template.yml@main
+    with:
+      scan_level: 'standard'
+      fail_on_findings: ${{ github.event_name == 'pull_request' }}
+      enable_sbom: true
+    secrets:
+      gh_token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build matrix for multiple ESP32 variants
+  build:
+    name: ESP32 Build Matrix
+    uses: sparesparrow/sparetools/.github/workflows/esp32-build-template.yml@main
+    needs: security
+    with:
+      esp32_variants: 'esp32,esp32s3,esp32c3'
+      conan_profile: 'esp32_base'
+      build_type: 'Release'
+      enable_coverage: ${{ github.ref == 'refs/heads/main' }}
+    secrets:
+      conan_token: ${{ secrets.CONAN_TOKEN }}
+
+  # Quality checks (linting, formatting, etc.)
+  quality:
+    name: Code Quality
+    runs-on: ubuntu-22.04
+    needs: security
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install quality tools
+      run: |
+        pip install clang-format cpplint pre-commit
+
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files --verbose
+
+    - name: Code formatting check
+      run: |
+        find . -name "*.cpp" -o -name "*.hpp" -o -name "*.c" -o -name "*.h" | \
+        xargs clang-format --dry-run --Werror --style=file
+
+  # Release workflow (only on main branch)
+  release:
+    name: Release
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-22.04
+    needs: [security, build, quality]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Setup Node.js (for release tools)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install release tools
+      run: |
+        npm install -g semantic-release
+        pip install twine
+
+    - name: Create GitHub release
+      run: |
+        # Create release with build artifacts
+        gh release create "v$(date +%Y%m%d_%H%M%S)" \
+          --title "Release $(date +%Y-%m-%d)" \
+          --notes "Automated release from main branch" \
+          artifacts/*/*.bin
+
+    - name: Publish to ConanCenter (if applicable)
+      if: contains(github.event.head_commit.message, 'feat:') || contains(github.event.head_commit.message, 'fix:')
+      run: |
+        # Source conan helpers
+        source .github/scripts/conan-ci-helpers.sh
+
+        # Login and upload
+        setup_conan
+        conan_create_upload
+
+# Additional workflow examples:
+
+---
+# Nightly build workflow
+name: Nightly Build
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  nightly-build:
+    uses: sparesparrow/sparetools/.github/workflows/esp32-build-template.yml@main
+    with:
+      esp32_variants: 'esp32,esp32s3,esp32c3,esp32c6'
+      conan_profile: 'esp32_security'
+      build_type: 'Debug'
+      enable_coverage: true
+    secrets:
+      conan_token: ${{ secrets.CONAN_TOKEN }}
+
+---
+# Performance regression testing
+name: Performance Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  performance:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install performance tools
+      run: |
+        pip install pytest-benchmark
+        pip install matplotlib
+
+    - name: Run performance benchmarks
+      run: |
+        # Build optimized version
+        platformio run -e esp32 --target build
+
+        # Run benchmarks (this would need custom benchmark code)
+        python test/run_benchmarks.py
+
+    - name: Compare with baseline
+      run: |
+        # Compare current results with stored baseline
+        python scripts/compare_performance.py benchmark_results.json baseline.json
+
+    - name: Upload benchmark results
+      uses: actions/upload-artifact@v4
+      with:
+        name: benchmark-results
+        path: benchmark_results.json
+
+---
+# Dependency vulnerability scanning
+name: Dependency Security Scan
+
+on:
+  schedule:
+    # Weekly vulnerability scan
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+
+jobs:
+  vuln-scan:
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+      with:
+        version: 2.21.0
+
+    - name: Run vulnerability scan
+      run: |
+        # Source conan helpers
+        source .github/scripts/conan-ci-helpers.sh
+
+        # Setup and scan
+        setup_conan
+        scan_dependencies
+
+        # Generate SBOM
+        generate_sbom weekly-sbom.json
+
+    - name: Upload vulnerability report
+      uses: actions/upload-artifact@v4
+      with:
+        name: vulnerability-report
+        path: |
+          conan-inspect.txt
+          weekly-sbom.json
+
+    - name: Create security issue (if vulnerabilities found)
+      if: failure()
+      run: |
+        gh issue create \
+          --title "Security Alert: Vulnerable Dependencies Found" \
+          --body "Automated security scan detected vulnerable dependencies. See attached reports." \
+          --label "security" \
+          --assignee ${{ github.actor }}

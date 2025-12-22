@@ -17,4 +17,5 @@ __all__ = [
     "build",
     "config_loader",
     "scripts",
+    "conan_pio_bridge",
 ]

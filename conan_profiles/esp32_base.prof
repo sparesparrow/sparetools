@@ -1,0 +1,27 @@
+[settings]
+os=Linux
+arch=xtensa
+compiler=gcc
+compiler.version=12
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[options]
+# ESP32 base configuration
+*:shared=False
+*:fPIC=True
+
+[build_requires]
+# ESP32 toolchain requirements
+xtensa-esp32-elf-gcc/12.2.0
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+tools.build:jobs=4
+tools.compilation:verbosity=verbose
+
+[profile_conan]
+# PlatformIO integration settings
+platform=espressif32
+board=esp32dev
+framework=espidf

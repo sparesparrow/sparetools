@@ -1,12 +1,17 @@
-name: ESP32 Build Workflow
+name: ESP32 Multi-Board Build Matrix
 
 on:
   workflow_call:
     inputs:
-      esp32-boards:
-        description: 'ESP32 board configurations to build (JSON array)'
+      esp32-variants:
+        description: 'ESP32 variants to build (comma-separated)'
         type: string
-        default: '["esp32dev"]'
+        default: 'esp32,esp32s3,esp32c3'
+        required: false
+      conan-profile:
+        description: 'Conan profile to use'
+        type: string
+        default: 'esp32_base'
         required: false
       python-version:
         description: 'Python version to use'
@@ -19,9 +24,24 @@ on:
         default: 'python scripts/bootstrap.py'
         required: false
       enable-caching:
-        description: 'Enable PlatformIO caching'
+        description: 'Enable build caching'
         type: boolean
         default: true
+        required: false
+      build-optimization:
+        description: 'Enable build optimizations'
+        type: boolean
+        default: true
+        required: false
+      generate-size-report:
+        description: 'Generate detailed size report'
+        type: boolean
+        default: true
+        required: false
+      artifact-retention:
+        description: 'Artifact retention days'
+        type: string
+        default: '30'
         required: false
 
 env:
@@ -29,67 +49,308 @@ env:
   SPARETOOLS_PROJECT_NAME: nucleus-esp32
 
 jobs:
-  build-esp32:
-    name: Build ESP32 Firmware
+  build-matrix:
+    name: Build ESP32 ${{ matrix.variant }}
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        board: ${{ fromJson(inputs.esp32-boards) }}
+        variant: ${{ fromJSON(format('["{0}"]', join(split(inputs.esp32-variants, ','), '","'))) }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: ${{ inputs.python-version }}
 
-    - name: Cache PlatformIO
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+      with:
+        version: 2.21.0
+
+    - name: Setup PlatformIO
+      uses: arduino/setup-platformio@v1
+      with:
+        pio_version: 6.1.0
+
+    - name: Cache build dependencies
       if: inputs.enable-caching
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: |
+          ~/.conan
           ~/.platformio
           .pio
-        key: ${{ runner.os }}-platformio-${{ hashFiles('platformio.ini', 'boards/**') }}
+          .conan_pio_cache
+        key: ${{ runner.os }}-esp32-build-${{ matrix.variant }}-${{ hashFiles('conanfile.py', 'platformio.ini', 'CMakeLists.txt') }}
         restore-keys: |
-          ${{ runner.os }}-platformio-
+          ${{ runner.os }}-esp32-build-${{ matrix.variant }}-
+          ${{ runner.os }}-esp32-build-
 
     - name: Bootstrap development environment
       run: ${{ inputs.bootstrap-script }}
 
-    - name: Install ESP32 PlatformIO platform
+    - name: Configure Conan
       run: |
-        pio platform install espressif32 --with-package framework-arduinoespressif32
+        conan config set general.revisions_enabled=True
+        conan profile detect --force
 
-    - name: Build ESP32 firmware (${{ matrix.board }})
+    - name: Install Conan dependencies
       run: |
-        pio run -e ${{ matrix.board }}
+        echo "Installing Conan dependencies for ${{ matrix.variant }}..."
+        conan install . \
+          --profile ${{ inputs.conan-profile }} \
+          --build=missing \
+          --update
+
+    - name: Configure PlatformIO for ESP32 variant
+      run: |
+        echo "Configuring PlatformIO for ${{ matrix.variant }}..."
+
+        # Map variant to PlatformIO environment
+        case "${{ matrix.variant }}" in
+          "esp32")
+            PIO_ENV="esp32dev"
+            ;;
+          "esp32s3")
+            PIO_ENV="esp32-s3-devkitc-1"
+            ;;
+          "esp32c3")
+            PIO_ENV="esp32-c3-devkitm-1"
+            ;;
+          "esp32c6")
+            PIO_ENV="esp32-c6-devkitc-1"
+            ;;
+          *)
+            PIO_ENV="${{ matrix.variant }}"
+            ;;
+        esac
+
+        echo "PIO_ENV=$PIO_ENV" >> $GITHUB_ENV
+
+        # Set optimization flags if enabled
+        if [ "${{ inputs.build-optimization }}" = "true" ]; then
+          export PLATFORMIO_BUILD_FLAGS="-Os -ffunction-sections -fdata-sections -Wl,--gc-sections -flto"
+        fi
+
+    - name: Build firmware with Conan-PlatformIO integration
+      run: |
+        echo "Building firmware for ${{ matrix.variant }} (PlatformIO env: $PIO_ENV)..."
+
+        # Check if conan_pio_bridge is available
+        if [ -f "scripts/conan_pio_bridge.py" ]; then
+          echo "Using Conan-PlatformIO bridge..."
+          python scripts/conan_pio_bridge.py \
+            --conan-profile ${{ inputs.conan-profile }} \
+            --pio-env $PIO_ENV \
+            --packages "lvgl/8.3.11,openssl/3.3.2"
+        fi
+
+        # Build with PlatformIO
+        platformio run -e $PIO_ENV --verbose
+
+    - name: Generate build size report
+      if: inputs.generate-size-report
+      run: |
+        echo "Generating build size report for ${{ matrix.variant }}..."
+
+        BUILD_DIR=".pio/build/$PIO_ENV"
+
+        if [ -f "$BUILD_DIR/firmware.bin" ]; then
+          # Get firmware size
+          FIRMWARE_SIZE=$(stat -c%s "$BUILD_DIR/firmware.bin")
+          echo "Firmware Size: $FIRMWARE_SIZE bytes"
+
+          # Get ELF size information
+          if [ -f "$BUILD_DIR/firmware.elf" ]; then
+            echo "ELF Section Sizes:" > size-report.txt
+            xtensa-esp32-elf-size "$BUILD_DIR/firmware.elf" >> size-report.txt
+
+            echo "" >> size-report.txt
+            echo "Detailed Size Analysis:" >> size-report.txt
+            xtensa-esp32-elf-size -A "$BUILD_DIR/firmware.elf" >> size-report.txt
+
+            # Calculate percentages
+            TEXT_SIZE=$(xtensa-esp32-elf-size "$BUILD_DIR/firmware.elf" | tail -1 | awk '{print $1}')
+            DATA_SIZE=$(xtensa-esp32-elf-size "$BUILD_DIR/firmware.elf" | tail -1 | awk '{print $2}')
+            BSS_SIZE=$(xtensa-esp32-elf-size "$BUILD_DIR/firmware.elf" | tail -1 | awk '{print $3}')
+            TOTAL_SIZE=$((TEXT_SIZE + DATA_SIZE + BSS_SIZE))
+
+            echo "" >> size-report.txt
+            echo "Summary:" >> size-report.txt
+            echo "  Text (code): $TEXT_SIZE bytes" >> size-report.txt
+            echo "  Data: $DATA_SIZE bytes" >> size-report.txt
+            echo "  BSS: $BSS_SIZE bytes" >> size-report.txt
+            echo "  Total: $TOTAL_SIZE bytes" >> size-report.txt
+            echo "  Firmware: $FIRMWARE_SIZE bytes" >> size-report.txt
+          fi
+
+          # Check against size limits
+          FLASH_LIMIT=4194304  # 4MB
+          if [ "$FIRMWARE_SIZE" -gt "$FLASH_LIMIT" ]; then
+            echo "❌ Firmware size ($FIRMWARE_SIZE bytes) exceeds flash limit ($FLASH_LIMIT bytes)"
+            echo "SIZE_OVER_LIMIT=1" >> $GITHUB_ENV
+          else
+            AVAILABLE=$((FLASH_LIMIT - FIRMWARE_SIZE))
+            echo "✅ Firmware fits in flash (available: $AVAILABLE bytes)"
+          fi
+        else
+          echo "⚠️  No firmware.bin found"
+        fi
 
     - name: Verify firmware artifacts
       run: |
-        ls -la .pio/build/${{ matrix.board }}/
-        # Check that essential files exist
-        test -f .pio/build/${{ matrix.board }}/firmware.bin || exit 1
-        test -f .pio/build/${{ matrix.board }}/partitions.bin || exit 1
-        test -f .pio/build/${{ matrix.board }}/bootloader.bin || exit 1
+        echo "Verifying build artifacts for ${{ matrix.variant }}..."
+
+        BUILD_DIR=".pio/build/$PIO_ENV"
+
+        # Check essential files
+        ESSENTIAL_FILES=(
+          "firmware.bin"
+          "partitions.bin"
+          "bootloader.bin"
+          "firmware.elf"
+        )
+
+        MISSING_FILES=()
+        for file in "${ESSENTIAL_FILES[@]}"; do
+          if [ ! -f "$BUILD_DIR/$file" ]; then
+            MISSING_FILES+=("$file")
+          fi
+        done
+
+        if [ ${#MISSING_FILES[@]} -gt 0 ]; then
+          echo "❌ Missing essential files: ${MISSING_FILES[*]}"
+          exit 1
+        fi
+
+        echo "✅ All essential build artifacts present"
+
+    - name: Run basic firmware tests
+      run: |
+        echo "Running basic firmware validation for ${{ matrix.variant }}..."
+
+        # Check firmware magic bytes
+        if [ -f ".pio/build/$PIO_ENV/firmware.bin" ]; then
+          MAGIC_BYTES=$(hexdump -C ".pio/build/$PIO_ENV/firmware.bin" | head -1 | awk '{print $2$3$4$5}')
+          EXPECTED_MAGIC="e9"
+
+          if [[ $MAGIC_BYTES == *"$EXPECTED_MAGIC"* ]]; then
+            echo "✅ Firmware has valid ESP32 magic bytes"
+          else
+            echo "❌ Invalid firmware magic bytes: $MAGIC_BYTES"
+            exit 1
+          fi
+        fi
+
+    - name: Create firmware package
+      run: |
+        echo "Creating firmware package for ${{ matrix.variant }}..."
+
+        PACKAGE_DIR="firmware-${{ matrix.variant }}"
+        BUILD_DIR=".pio/build/$PIO_ENV"
+
+        mkdir -p "$PACKAGE_DIR"
+
+        # Copy firmware files
+        cp "$BUILD_DIR/firmware.bin" "$PACKAGE_DIR/" 2>/dev/null || true
+        cp "$BUILD_DIR/partitions.bin" "$PACKAGE_DIR/" 2>/dev/null || true
+        cp "$BUILD_DIR/bootloader.bin" "$PACKAGE_DIR/" 2>/dev/null || true
+        cp "$BUILD_DIR/firmware.elf" "$PACKAGE_DIR/" 2>/dev/null || true
+
+        # Create build metadata
+        cat > "$PACKAGE_DIR/build-info.json" << EOF
+        {
+          "variant": "${{ matrix.variant }}",
+          "platformio_env": "$PIO_ENV",
+          "conan_profile": "${{ inputs.conan-profile }}",
+          "build_time": "$(date -Iseconds)",
+          "commit": "${{ github.sha }}",
+          "repository": "${{ github.repository }}",
+          "workflow": "${{ github.workflow }}",
+          "run_id": "${{ github.run_id }}"
+        }
+        EOF
+
+        # Copy size report if available
+        cp size-report.txt "$PACKAGE_DIR/" 2>/dev/null || true
 
     - name: Upload firmware artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: esp32-firmware-${{ matrix.board }}
+        name: esp32-${{ matrix.variant }}-firmware
+        path: firmware-${{ matrix.variant }}/
+        retention-days: ${{ inputs.artifact-retention }}
+
+    - name: Upload build logs and reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-reports-${{ matrix.variant }}
         path: |
-          .pio/build/${{ matrix.board }}/firmware.bin
-          .pio/build/${{ matrix.board }}/partitions.bin
-          .pio/build/${{ matrix.board }}/bootloader.bin
-          .pio/build/${{ matrix.board }}/firmware.elf
+          size-report.txt
+          .pio/build/${{ env.PIO_ENV }}/*.log
+          .pio/build/${{ env.PIO_ENV }}/*.json
         retention-days: 30
 
-    - name: Upload build logs
-      uses: actions/upload-artifact@v3
-      if: always()
-      with:
-        name: build-logs-${{ matrix.board }}
-        path: |
-          .pio/build/${{ matrix.board }}/*.log
-        retention-days: 7
+    - name: Fail on size limits exceeded
+      if: env.SIZE_OVER_LIMIT == '1'
+      run: |
+        echo "❌ Firmware size exceeds flash capacity limits"
+        exit 1
+
+  build-summary:
+    name: Build Matrix Summary
+    runs-on: ubuntu-latest
+    needs: build-matrix
+    if: always()
+
+    steps:
+    - name: Generate build summary
+      run: |
+        echo "# ESP32 Build Matrix Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Variant | Status | Artifacts |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------|--------|-----------|" >> $GITHUB_STEP_SUMMARY
+
+        # Add status for each variant
+        VARIANTS="${{ inputs.esp32-variants }}"
+        IFS=',' read -ra VARIANT_ARRAY <<< "$VARIANTS"
+        for variant in "${VARIANT_ARRAY[@]}"; do
+          # Check if variant build succeeded
+          if [[ "${{ contains(needs.build-matrix.result, 'success') }}" == "true" ]]; then
+            STATUS="✅ Success"
+            ARTIFACTS="[Download](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          else
+            STATUS="❌ Failed"
+            ARTIFACTS="N/A"
+          fi
+          echo "| $variant | $STATUS | $ARTIFACTS |" >> $GITHUB_STEP_SUMMARY
+        done
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Configuration" >> $GITHUB_STEP_SUMMARY
+        echo "- ESP32 Variants: \`${{ inputs.esp32-variants }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Conan Profile: \`${{ inputs.conan-profile }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- Build Optimization: ${{ inputs.build-optimization }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Size Reporting: ${{ inputs.generate-size-report }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Caching: ${{ inputs.enable-caching }}" >> $GITHUB_STEP_SUMMARY
+
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## Build Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- Total Variants: ${{ length(split(inputs.esp32-variants, ',')) }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Successful Builds: ${{ needs.build-matrix.result == 'success' && length(split(inputs.esp32-variants, ',')) || 0 }}" >> $GITHUB_STEP_SUMMARY
+        echo "- Failed Builds: ${{ needs.build-matrix.result != 'success' && length(split(inputs.esp32-variants, ',')) || 0 }}" >> $GITHUB_STEP_SUMMARY
+
+        # Overall status
+        if [[ "${{ needs.build-matrix.result }}" == "success" ]]; then
+          echo "## ✅ All Builds Successful" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ❌ Build Failures Detected" >> $GITHUB_STEP_SUMMARY
+          exit 1
+        fi
