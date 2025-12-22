@@ -1,0 +1,71 @@
+// Hardware Interface Control Document
+// FlatBuffers schema for GPIO and Serial telemetry operations
+
+namespace sparetools.icd.hardware;
+
+// GPIO Pin Modes
+enum GPIOMode: byte {
+    INPUT = 0,
+    OUTPUT = 1,
+    INPUT_PULLUP = 2,
+    INPUT_PULLDOWN = 3
+}
+
+// GPIO Command - Control GPIO pins
+table GPIOCommand {
+    pin: int;           // GPIO pin number (0-40)
+    state: bool;        // Desired state (true = HIGH, false = LOW)
+    mode: GPIOMode;     // Pin mode
+    timestamp: uint64;  // Command timestamp in microseconds
+}
+
+table GPIOResponse {
+    pin: int;           // GPIO pin number
+    state: bool;        // Current state
+    success: bool;      // Operation success
+    error_message: string; // Error message if failed
+    timestamp: uint64;  // Response timestamp
+}
+
+// Serial Telemetry - Key-value sensor data
+table SerialTelemetry {
+    timestamp: uint64;     // Timestamp in microseconds
+    sensor_id: string;     // Sensor identifier
+    data_type: string;     // Data type (e.g., "temperature", "voltage")
+    value: float;          // Numeric value
+    unit: string;          // Unit (e.g., "celsius", "volts")
+    raw_data: [ubyte];     // Raw binary data if needed
+}
+
+table SerialCommand {
+    command: string;       // Command string
+    parameters: [string];  // Command parameters
+    timeout_ms: uint32;    // Timeout in milliseconds
+    timestamp: uint64;     // Command timestamp
+}
+
+table SerialResponse {
+    command: string;       // Original command
+    success: bool;         // Command success
+    response_data: string; // Response data
+    error_message: string; // Error message if failed
+    timestamp: uint64;     // Response timestamp
+}
+
+// Union for all hardware messages
+union HardwareMessage {
+    GPIOCommand,
+    GPIOResponse,
+    SerialTelemetry,
+    SerialCommand,
+    SerialResponse
+}
+
+table HardwareEnvelope {
+    message_type: HardwareMessage;
+    message_id: uint64;    // Unique message ID
+    source: string;        // Source component (e.g., "gpio-worker", "serial-bridge")
+}
+
+// Root table for hardware ICD
+root_type HardwareEnvelope;

@@ -32,6 +32,8 @@ class MiaCore:
         self.device_manager = None
         self.connectivity_manager = None
         self.cloud_integration = None
+        self.mcp_server = None
+        self.mcp_orchestrator = None
 
         self.logger.info("MIA Core initialized")
 
@@ -45,7 +47,37 @@ class MiaCore:
         self.connectivity_manager = ConnectivityManager(self.config.get("connectivity", {}))
         self.cloud_integration = CloudIntegration(self.config.get("cloud", {}))
 
+        # Initialize MCP components
+        self._initialize_mcp_components()
+
         self.logger.info("MIA components initialized")
+
+    def _initialize_mcp_components(self):
+        """Initialize MCP (Model Context Protocol) components."""
+        try:
+            # Import MCP components
+            from .mcp.hardware_server import MIAHardwareMCPServer
+            from .orchestrator import MIAOrchestrator
+
+            # Get MCP configuration
+            mcp_config = self.config.get("mcp", {})
+
+            # Initialize MCP server with worker addresses from config
+            hardware_config = mcp_config.get("hardware", {})
+            self.mcp_server = MIAHardwareMCPServer(
+                gpio_worker_address=hardware_config.get("gpio_worker", "tcp://127.0.0.1:5555"),
+                obd_worker_address=hardware_config.get("obd_worker", "tcp://127.0.0.1:5556"),
+                rf_worker_address=hardware_config.get("rf_worker", "tcp://127.0.0.1:5557")
+            )
+
+            # Initialize MCP orchestrator
+            self.mcp_orchestrator = MIAOrchestrator()
+
+            self.logger.info("MCP components initialized")
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize MCP components: {e}")
+            # Continue without MCP if initialization fails
 
     def discover_devices(self) -> List[Dict[str, Any]]:
         """Discover available IoT devices.
@@ -127,7 +159,44 @@ class MiaCore:
         if self.cloud_integration:
             status["components"]["cloud"] = self.cloud_integration.get_status()
 
+        # Add MCP status
+        if self.mcp_server or self.mcp_orchestrator:
+            status["components"]["mcp"] = self._get_mcp_status()
+
         return status
+
+    def _get_mcp_status(self) -> Dict[str, Any]:
+        """Get MCP components status."""
+        mcp_status = {}
+
+        if self.mcp_server:
+            mcp_status["server"] = {
+                "initialized": True,
+                "tools_count": 4,  # set_gpio_pin, query_obd, start_rf_capture, replay_rf_signal
+                "worker_addresses": {
+                    "gpio": self.mcp_server.gpio_address,
+                    "obd": self.mcp_server.obd_address,
+                    "rf": self.mcp_server.rf_address
+                }
+            }
+        else:
+            mcp_status["server"] = {"initialized": False}
+
+        if self.mcp_orchestrator:
+            # Get orchestrator status asynchronously
+            try:
+                import asyncio
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                orch_status = loop.run_until_complete(self.mcp_orchestrator.get_system_status())
+                mcp_status["orchestrator"] = orch_status
+                loop.close()
+            except Exception as e:
+                mcp_status["orchestrator"] = {"error": str(e)}
+        else:
+            mcp_status["orchestrator"] = {"initialized": False}
+
+        return mcp_status
 
     def validate_security(self) -> Dict[str, Any]:
         """Validate system security using SpareTools security gates.
@@ -149,3 +218,23 @@ class MiaCore:
 
             self.logger.info(f"Security validation: {'PASSED' if results.get('passed', False) else 'FAILED'}")
             return results
+
+    async def start_mcp_server(self):
+        """Start the MCP server."""
+        if self.mcp_server:
+            await self.mcp_server.start()
+            self.logger.info("MCP server started")
+        else:
+            self.logger.warning("MCP server not initialized")
+
+    async def stop_mcp_server(self):
+        """Stop the MCP server."""
+        if self.mcp_server:
+            await self.mcp_server.stop()
+            self.logger.info("MCP server stopped")
+        else:
+            self.logger.warning("MCP server not initialized")
+
+    def get_mcp_orchestrator(self):
+        """Get the MCP orchestrator instance for advanced operations."""
+        return self.mcp_orchestrator

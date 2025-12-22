@@ -1,0 +1,273 @@
+version: '3.8'
+
+services:
+  # MIA Hardware MCP Server
+  mia-hardware-mcp:
+    build:
+      context: ..
+      dockerfile: Dockerfile.hardware
+    container_name: mia-hardware-mcp
+    ports:
+      - "8001:8001"
+    environment:
+      - MCP_SERVER_NAME=mia-hardware
+      - MCP_SERVER_PORT=8001
+      - ZMQ_GPIO_PORT=5555
+      - ZMQ_OBD_PORT=5556
+      - ZMQ_RF_PORT=5557
+      - NUCLEUS_INTERFACE=serial
+      - NUCLEUS_SERIAL_PORT=/dev/ttyACM0
+    devices:
+      - /dev/gpiomem:/dev/gpiomem:rwm
+      - /dev/ttyACM0:/dev/ttyACM0:rwm
+      - /dev/ttyUSB0:/dev/ttyUSB0:rwm
+    privileged: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Filesystem MCP Server
+  filesystem-mcp:
+    build:
+      context: ..
+      dockerfile: Dockerfile.filesystem
+    container_name: filesystem-mcp
+    ports:
+      - "8002:8002"
+    environment:
+      - MCP_SERVER_NAME=filesystem
+      - MCP_SERVER_PORT=8002
+      - ALLOWED_ROOT_PATHS=/workspace,/tmp
+      - READ_ONLY_PATHS=/workspace/read-only
+    volumes:
+      - ../..:/workspace:rw
+      - /tmp:/tmp:rw
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MCP Prompts Server
+  mcp-prompts-server:
+    build:
+      context: ..
+      dockerfile: Dockerfile.prompts
+    container_name: mcp-prompts-server
+    ports:
+      - "8003:8003"
+    environment:
+      - MCP_SERVER_NAME=mcp-prompts
+      - MCP_SERVER_PORT=8003
+      - PROMPTS_DATA_PATH=/app/data/prompts
+    volumes:
+      - ../../../mcp-prompts/data:/app/data:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MIA Orchestrator
+  mia-orchestrator:
+    build:
+      context: ..
+      dockerfile: Dockerfile.orchestrator
+    container_name: mia-orchestrator
+    ports:
+      - "8000:8000"
+      - "5555:5555"  # GPIO worker
+      - "5556:5556"  # OBD worker
+      - "5557:5557"  # RF worker
+    environment:
+      - ORCHESTRATOR_PORT=8000
+      - MCP_HARDWARE_URL=http://mia-hardware-mcp:8001
+      - MCP_FILESYSTEM_URL=http://filesystem-mcp:8002
+      - MCP_PROMPTS_URL=http://mcp-prompts-server:8003
+      - WORKSPACE_PATH=/workspace
+      - LOG_LEVEL=INFO
+    volumes:
+      - ../..:/workspace:rw
+    depends_on:
+      - mia-hardware-mcp
+      - filesystem-mcp
+      - mcp-prompts-server
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  # ZeroMQ Workers (for direct hardware access)
+  gpio-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.gpio-worker
+    container_name: gpio-worker
+    expose:
+      - "5555"
+    environment:
+      - ZMQ_ADDRESS=tcp://0.0.0.0:5555
+      - GPIO_CHIP=/dev/gpiomem
+      - SIMULATION_MODE=false
+    devices:
+      - /dev/gpiomem:/dev/gpiomem:rwm
+    privileged: true
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  obd-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.obd-worker
+    container_name: obd-worker
+    expose:
+      - "5556"
+    environment:
+      - ZMQ_ADDRESS=tcp://0.0.0.0:5556
+      - SERIAL_PORT=/dev/ttyUSB0
+      - SIMULATION_MODE=false
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0:rwm
+    privileged: true
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rf-worker:
+    build:
+      context: ..
+      dockerfile: Dockerfile.rf-worker
+    container_name: rf-worker
+    expose:
+      - "5557"
+    environment:
+      - ZMQ_ADDRESS=tcp://0.0.0.0:5557
+      - NUCLEUS_SERIAL_PORT=/dev/ttyACM0
+      - NUCLEUS_INTERFACE=serial
+      - SIMULATION_MODE=false
+    devices:
+      - /dev/ttyACM0:/dev/ttyACM0:rwm
+    privileged: true
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Monitoring and Logging
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mia-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mia-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+  # Digital Twin for Testing
+  digital-twin:
+    build:
+      context: ..
+      dockerfile: Dockerfile.digital-twin
+    container_name: mia-digital-twin
+    ports:
+      - "8004:8004"
+    environment:
+      - DIGITAL_TWIN_PORT=8004
+      - SIMULATION_MODE=true
+      - FAULT_INJECTION_ENABLED=true
+    volumes:
+      - ../..:/workspace:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8004/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  default:
+    name: mia-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Health check coordination
+x-healthcheck-config: &healthcheck-config
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 40s

@@ -29,6 +29,7 @@ class SpareToolsMiaConan(ConanFile):
         "sparetools-icd/2.0.0",
         "sparetools-tinymcp/2.0.0",
         "sparetools-mcp-orchestrator/2.0.0",
+        "sparetools-mcpserver-cpp/2.0.0",
     )
 
     # Runtime dependencies
