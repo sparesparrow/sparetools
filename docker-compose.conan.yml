@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  conan-env:
+    build:
+      context: .
+      dockerfile: Dockerfile.conan
+    container_name: sparetools-conan
+    volumes:
+      # Mount the entire workspace
+      - .:/workspace
+      # Mount Conan cache for persistence
+      - conan-cache:/home/conan/.conan2
+    working_dir: /workspace
+    environment:
+      # Conan configuration
+      - CONAN_NON_INTERACTIVE=true
+      - CONAN_TRACE_FILE=/workspace/conan-trace.log
+      # Cloudsmith credentials (mount from host or pass as secrets)
+      - CLOUDSMITH_API_KEY=${CLOUDSMITH_API_KEY:-}
+    command: ["tail", "-f", "/dev/null"]  # Keep container running
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "conan", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Separate service for building packages
+  conan-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile.conan
+    container_name: sparetools-conan-builder
+    volumes:
+      - .:/workspace
+      - conan-cache:/home/conan/.conan2
+    working_dir: /workspace
+    environment:
+      - CONAN_NON_INTERACTIVE=true
+      - CONAN_TRACE_FILE=/workspace/conan-build-trace.log
+      - CLOUDSMITH_API_KEY=${CLOUDSMITH_API_KEY:-}
+    profiles:
+      - builder
+
+volumes:
+  conan-cache:
+    driver: local

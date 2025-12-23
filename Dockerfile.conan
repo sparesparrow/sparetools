@@ -1,0 +1,79 @@
+# Dockerfile for SpareTools Conan Environment
+# Provides a complete environment for building and publishing SpareTools packages
+
+FROM ubuntu:22.04
+
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV CONAN_VERSION=2.21.0
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    # Build tools
+    build-essential \
+    cmake \
+    ninja-build \
+    # Compilers
+    gcc \
+    g++ \
+    clang \
+    # Python
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-venv \
+    # Git and version control
+    git \
+    # SSL/TLS libraries (for OpenSSL builds)
+    libssl-dev \
+    # Compression libraries
+    zlib1g-dev \
+    # Networking tools
+    curl \
+    wget \
+    # Development tools
+    pkg-config \
+    autoconf \
+    automake \
+    libtool \
+    # Text processing
+    perl \
+    # Clean up
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python build dependencies
+RUN pip3 install --upgrade pip setuptools wheel
+
+# Install Conan
+RUN pip3 install conan==${CONAN_VERSION}
+
+# Create workspace directory
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+# Create user first
+RUN useradd --create-home --shell /bin/bash --uid 1000 conan
+RUN chown -R conan:conan /workspace
+
+# Switch to conan user for Conan setup
+USER conan
+
+# Ensure Conan home directory has correct permissions
+RUN mkdir -p ~/.conan2 && chmod 755 ~/.conan2
+
+# Create Conan profile and configure remotes
+RUN conan profile detect --force
+
+# Configure Conan remotes
+RUN conan remote add conancenter https://center2.conan.io --force && \
+    conan remote add sparesparrow-conan https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/conan/ --force
+
+# Set up Conan configuration for the user (Conan 2.x doesn't need explicit revisions_enabled)
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD conan --version || exit 1
+
+# Default command
+CMD ["conan", "--version"]
