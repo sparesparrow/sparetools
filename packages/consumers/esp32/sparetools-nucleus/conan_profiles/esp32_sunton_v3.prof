@@ -1,0 +1,86 @@
+[include]
+../../../conan_profiles/esp32_s3_sunton.prof
+
+[settings]
+os=Linux
+arch=xtensa
+compiler=gcc
+compiler.version=12
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[options]
+# NucleusESP32 specific options
+*:shared=False
+*:fPIC=True
+
+# HAL configuration for Sunton display
+sparetools-hal-sunton:with_lvgl=True
+sparetools-hal-sunton:with_touch=True
+
+# Crypto suite configuration for enterprise security
+sparetools-crypto-suite:crypto_backend=mbedTLS
+sparetools-crypto-suite:enable_hw_acceleration=True
+sparetools-crypto-suite:enable_secure_boot=True
+sparetools-crypto-suite:enable_flash_encryption=True
+sparetools-crypto-suite:enable_psa_crypto=True
+sparetools-crypto-suite:enable_fips=True
+
+# LVGL configuration optimized for Nucleus
+lvgl:shared=False
+lvgl:tft_espi=True
+lvgl:xpt2046=True
+
+[build_requires]
+# ESP32-S3 toolchain for Nucleus
+xtensa-esp32s3-elf-gcc/12.2.0
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+tools.build:jobs=4
+tools.compilation:verbosity=verbose
+
+# ESP32-S3 specific build configuration
+tools.build:defines=ESP32S3=1
+tools.build:cxxflags=["-mlongcalls", "-mfix-esp32-psram-cache-issue"]
+tools.build:cflags=["-mlongcalls", "-mfix-esp32-psram-cache-issue"]
+
+# Security hardening flags
+tools.build:cxxflags+=["-fstack-protector-strong", "-fPIE", "-fcf-protection", "-Wformat-security", "-Werror=format-security"]
+tools.build:cflags+=["-fstack-protector-strong", "-fPIE", "-fcf-protection", "-Wformat-security", "-Werror=format-security"]
+tools.build:defines=["_FORTIFY_SOURCE=2", "ESP32_SECURITY_HARDENED=1"]
+
+# Linker security options
+tools.build:ldflags=["-Wl,-z,relro", "-Wl,-z,now", "-Wl,-z,noexecstack", "-pie"]
+
+[profile_conan]
+# PlatformIO integration settings for NucleusESP32
+platform=espressif32
+board=esp32-s3-devkitc-1
+framework=espidf
+
+# Nucleus-specific build flags
+build_flags=
+  -Os
+  -ffunction-sections
+  -fdata-sections
+  -Wl,--gc-sections
+  -flto
+  -DNUCLEUS_ESP32=1
+  -DSPARETOOLS_ECOSYSTEM=1
+  -DCORE_DEBUG_LEVEL=0
+  -DCONFIG_MBEDTLS_HARDWARE_AES=1
+  -DCONFIG_MBEDTLS_HARDWARE_MPI=1
+  -DCONFIG_MBEDTLS_HARDWARE_SHA=1
+  ; Sunton display configuration
+  -DUSER_SETUP_LOADED=1
+  -DSunton_ESP32_2432S028=1
+  -DTFT_WIDTH=240
+  -DTFT_HEIGHT=320
+  -DTFT_MISO=19
+  -DTFT_MOSI=23
+  -DTFT_SCLK=18
+  -DTFT_CS=15
+  -DTFT_DC=2
+  -DTFT_RST=4
+  -DTFT_BL=32
