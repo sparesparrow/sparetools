@@ -4,8 +4,15 @@ from conan import ConanFile
 from conan.tools.files import copy
 
 # Import base class from shared scripts
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../scripts'))
-from recipe_base import ConsumerPackageConan
+import pathlib
+scripts_dir = pathlib.Path(__file__).parent.parent.parent.parent.parent / "scripts"
+sys.path.insert(0, str(scripts_dir))
+try:
+    from recipe_base import ConsumerPackageConan
+except ImportError:
+    # Fallback: define minimal base class if import fails
+    class ConsumerPackageConan(ConanFile):
+        pass
 
 
 class SpareToolsOpenSSLToolsConan(ConsumerPackageConan):

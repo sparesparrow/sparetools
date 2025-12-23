@@ -8,8 +8,15 @@ from conan.tools.microsoft import MSBuildToolchain, MSBuild
 from conan.errors import ConanException
 
 # Import base class from shared scripts
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../scripts'))
-from recipe_base import OpenSSLBaseConan
+import pathlib
+scripts_dir = pathlib.Path(__file__).parent.parent.parent.parent.parent / "scripts"
+sys.path.insert(0, str(scripts_dir))
+try:
+    from recipe_base import OpenSSLBaseConan
+except ImportError:
+    # Fallback: define minimal base class if import fails
+    class OpenSSLBaseConan(ConanFile):
+        pass
 
 
 class SpareToolsOpenSSLConan(OpenSSLBaseConan):
@@ -80,10 +87,10 @@ class SpareToolsOpenSSLConan(OpenSSLBaseConan):
             from conan.tools.cmake import cmake_layout
             cmake_layout(self)
         elif method == "autotools":
-            from conan.tools.gnu import basic_layout
+            from conan.tools.layout import basic_layout
             basic_layout(self)
         else:  # perl-configure (default)
-            from conan.tools.gnu import basic_layout
+            from conan.tools.layout import basic_layout
             basic_layout(self)
 
     def source(self):

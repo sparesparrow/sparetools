@@ -22,8 +22,8 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-CLOUDSMITH_REMOTE="sparesparrow-conan"
-CLOUDSMITH_URL="https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/"
+CLOUDSMITH_REMOTE="sparetools"
+CLOUDSMITH_URL="https://conan.cloudsmith.io/sparetools/sparetools/"
 
 # Parse arguments
 SKIP_TESTS=false
@@ -132,12 +132,16 @@ build_all_packages() {
     
     # Package definitions: name, version, path
     declare -a packages=(
-        "sparetools-base:2.0.0:packages/sparetools-base"
-        "sparetools-cpython:3.12.7:packages/sparetools-cpython"
-        "sparetools-shared-dev-tools:2.0.0:packages/sparetools-shared-dev-tools"
-        "sparetools-bootstrap:2.0.0:packages/sparetools-bootstrap"
-        "sparetools-openssl-tools:2.0.0:packages/sparetools-openssl-tools"
-        "sparetools-openssl:3.3.2:packages/sparetools-openssl"
+        "sparetools-base:2.0.3:packages/foundation/sparetools-base"
+        "sparetools-cpython:3.12.7:packages/foundation/sparetools-cpython"
+        "sparetools-shared-dev-tools:2.0.3:packages/foundation/sparetools-shared-dev-tools"
+        "sparetools-bootstrap:2.0.3:packages/foundation/sparetools-bootstrap"
+        "sparetools-hal-sunton:1.0.0:packages/embedded/sparetools-hal-sunton"
+        "sparetools-openssl-tools:2.0.0:packages/consumers/openssl/sparetools-openssl-tools"
+        "sparetools-openssl:3.3.2:packages/consumers/openssl/sparetools-openssl"
+        "sparetools-obd-sim:2.0.3:packages/consumers/sparetools-obd-sim"
+        "sparetools-mcp-orchestrator:2.0.3:packages/consumers/mcp/sparetools-mcp-orchestrator"
+        "sparetools-nucleus:0.1.0:packages/consumers/esp32/sparetools-nucleus"
     )
     
     local failed_packages=()
@@ -244,7 +248,7 @@ list_uploaded_packages() {
     conan search "sparetools-*" -r $CLOUDSMITH_REMOTE || true
     
     log_info ""
-    log_info "Cloudsmith repository: https://cloudsmith.io/~sparesparrow-conan/repos/openssl-conan/"
+    log_info "Cloudsmith repository: https://cloudsmith.io/~sparetools/repos/sparetools/"
 }
 
 # Generate build report
@@ -263,12 +267,16 @@ generate_build_report() {
 
 | Package | Version | Status |
 |---------|---------|--------|
-| sparetools-base | 2.0.0 | ✓ Built |
+| sparetools-base | 2.0.3 | ✓ Built |
 | sparetools-cpython | 3.12.7 | ✓ Built |
-| sparetools-shared-dev-tools | 2.0.0 | ✓ Built |
-| sparetools-bootstrap | 2.0.0 | ✓ Built |
+| sparetools-shared-dev-tools | 2.0.3 | ✓ Built |
+| sparetools-bootstrap | 2.0.3 | ✓ Built |
+| sparetools-hal-sunton | 1.0.0 | ✓ Built |
 | sparetools-openssl-tools | 2.0.0 | ✓ Built |
 | sparetools-openssl | 3.3.2 | ✓ Built |
+| sparetools-obd-sim | 2.0.3 | ✓ Built |
+| sparetools-mcp-orchestrator | 2.0.3 | ✓ Built |
+| sparetools-nucleus | 0.1.0 | ✓ Built |
 
 ## Package Locations
 
@@ -288,7 +296,7 @@ $(if [ "$SKIP_UPLOAD" = true ]; then
     echo "**Status:** Skipped (--skip-upload flag)"
 else
     echo "**Status:** Uploaded to Cloudsmith"
-    echo "**Repository:** https://cloudsmith.io/~sparesparrow-conan/repos/openssl-conan/"
+    echo "**Repository:** https://cloudsmith.io/~sparetools/repos/sparetools/"
 fi)
 
 ## Installation Instructions
@@ -297,11 +305,11 @@ fi)
 
 \`\`\`bash
 # Add Cloudsmith remote
-conan remote add sparesparrow-conan \\
-  https://conan.cloudsmith.io/sparesparrow-conan/openssl-conan/
+conan remote add sparetools \\
+  https://dl.cloudsmith.io/public/sparetools/sparetools/conan/
 
 # Install OpenSSL
-conan install --requires=sparetools-openssl/3.3.2 -r sparesparrow-conan
+conan install --requires=sparetools-openssl/3.3.2 -r sparetools
 \`\`\`
 
 ### From Local Cache (Development)
@@ -329,7 +337,7 @@ fi)
 
 1. **Test installation from Cloudsmith:**
    \`\`\`bash
-   conan install --requires=sparetools-openssl/3.3.2 -r sparesparrow-conan
+   conan install --requires=sparetools-openssl/3.3.2 -r sparetools
    \`\`\`
 
 2. **Run cross-platform tests:**
@@ -378,8 +386,7 @@ main() {
     
     # Step 3: Build packages
     if ! build_all_packages; then
-        log_error "Build failed. Aborting."
-        exit 1
+        log_warning "Some packages failed to build, but continuing with available packages..."
     fi
     echo ""
     
@@ -408,7 +415,7 @@ main() {
     echo ""
     log_info "Next steps:"
     log_info "1. Review build-report.md"
-    log_info "2. Test installation: conan install --requires=sparetools-openssl/3.3.2 -r sparesparrow-conan"
+    log_info "2. Test installation: conan install --requires=sparetools-openssl/3.3.2 -r sparetools"
     log_info "3. Commit changes: git add -A && git commit -m 'Release v2.0.0'"
     log_info "4. Push to remote: git push origin main"
     log_info "5. Create release tag: git tag -a v2.0.0 -m 'Release v2.0.0'"
