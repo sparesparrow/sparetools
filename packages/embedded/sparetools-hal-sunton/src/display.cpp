@@ -5,6 +5,64 @@
 
 #include "hal/sunton/display.h"
 #include "pin_mapping.h"
+#include <stdio.h>
+#include <stdlib.h>
+
+// Compatibility defines for non-ESP platforms
+#ifndef ESP_PLATFORM
+#define ESP_LOGI(TAG, format, ...) printf("[INFO] " format "\n", ##__VA_ARGS__)
+#define ESP_LOGE(TAG, format, ...) printf("[ERROR] " format "\n", ##__VA_ARGS__)
+#define ESP_ERROR_CHECK(x) do { if (x != 0) printf("ESP error: %d\n", x); } while(0)
+typedef int esp_err_t;
+#define ESP_OK 0
+const char* esp_err_to_name(int err) { return "UNKNOWN"; }
+
+// Stub implementations for ESP32 LCD functions
+typedef void* esp_lcd_panel_handle_t;
+typedef void* esp_lcd_panel_io_handle_t;
+typedef void* esp_lcd_spi_bus_handle_t;
+typedef int spi_host_device_t;
+#define SPI2_HOST ((spi_host_device_t)1)
+
+typedef struct {
+    int dummy;
+} esp_lcd_panel_io_spi_config_t;
+
+typedef struct {
+    int dummy;
+} esp_lcd_panel_dev_config_t;
+
+static esp_err_t esp_lcd_new_panel_io_spi(esp_lcd_spi_bus_handle_t bus, const esp_lcd_panel_io_spi_config_t* config, esp_lcd_panel_io_handle_t* handle) {
+    *handle = (esp_lcd_panel_io_handle_t)malloc(1);
+    return ESP_OK;
+}
+
+static esp_err_t esp_lcd_new_panel_ili9341(esp_lcd_panel_io_handle_t io, const esp_lcd_panel_dev_config_t* config, esp_lcd_panel_handle_t* handle) {
+    *handle = (esp_lcd_panel_handle_t)malloc(1);
+    return ESP_OK;
+}
+
+static esp_err_t esp_lcd_panel_reset(esp_lcd_panel_handle_t handle) {
+    return ESP_OK;
+}
+
+static esp_err_t esp_lcd_panel_init(esp_lcd_panel_handle_t handle) {
+    return ESP_OK;
+}
+
+static esp_err_t esp_lcd_panel_set_rotation(esp_lcd_panel_handle_t handle, int rotation) {
+    return ESP_OK;
+}
+
+static esp_err_t esp_lcd_panel_draw_bitmap(esp_lcd_panel_handle_t handle, int x1, int y1, int x2, int y2, const void* color_data) {
+    return ESP_OK;
+}
+
+static esp_err_t esp_lcd_panel_del(esp_lcd_panel_handle_t handle) {
+    free(handle);
+    return ESP_OK;
+}
+#endif
 
 #ifdef ESP_PLATFORM
 #include "esp_system.h"
@@ -101,11 +159,11 @@ static esp_lcd_panel_dev_config_t panel_config = {
 #endif
 
 sunton_display_handle_t* sunton_display_init(const sunton_display_config_t* config) {
-    ESP_LOGI(TAG, "Initializing Sunton display");
+    printf("Initializing Sunton display\n");
 
     sunton_display_handle_t* handle = (sunton_display_handle_t*)calloc(1, sizeof(sunton_display_handle_t));
     if (!handle) {
-        ESP_LOGE(TAG, "Failed to allocate display handle");
+        printf("Failed to allocate display handle\n");
         return NULL;
     }
 

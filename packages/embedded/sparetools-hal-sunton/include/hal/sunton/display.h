@@ -16,11 +16,13 @@
 extern "C" {
 #endif
 
+#ifdef WITH_LVGL
 // Forward declarations for LVGL integration
 struct _lv_disp_drv_t;
 struct _lv_indev_drv_t;
 typedef struct _lv_disp_drv_t lv_disp_drv_t;
 typedef struct _lv_indev_drv_t lv_indev_drv_t;
+#endif
 
 /**
  * @brief Display configuration structure
@@ -81,6 +83,7 @@ void sunton_display_set_brightness(sunton_display_handle_t* handle, uint8_t brig
  */
 void sunton_display_enable_backlight(sunton_display_handle_t* handle, bool enabled);
 
+#ifdef WITH_LVGL
 /**
  * @brief Get LVGL display driver for integration
  *
@@ -88,6 +91,7 @@ void sunton_display_enable_backlight(sunton_display_handle_t* handle, bool enabl
  * @return Pointer to LVGL display driver structure
  */
 lv_disp_drv_t* sunton_display_get_lvgl_driver(sunton_display_handle_t* handle);
+#endif
 
 /**
  * @brief Initialize touch controller
@@ -102,12 +106,14 @@ bool sunton_touch_init(const sunton_touch_config_t* config);
  */
 void sunton_touch_deinit(void);
 
+#ifdef WITH_LVGL
 /**
  * @brief Get LVGL touch input driver for integration
  *
  * @return Pointer to LVGL input driver structure
  */
 lv_indev_drv_t* sunton_touch_get_lvgl_driver(void);
+#endif
 
 /**
  * @brief Read touch coordinates
@@ -145,6 +151,7 @@ bool sunton_display_is_ready(sunton_display_handle_t* handle);
  */
 void sunton_display_get_info(sunton_display_handle_t* handle, uint16_t* width, uint16_t* height);
 
+#ifdef WITH_LVGL
 /**
  * @brief Flush display buffer (LVGL callback)
  *
@@ -161,6 +168,7 @@ void sunton_display_flush_cb(lv_disp_drv_t* drv, const lv_area_t* area, lv_color
  * @param data Input data structure
  */
 void sunton_touch_read_cb(lv_indev_drv_t* drv, lv_indev_data_t* data);
+#endif
 
 #ifdef __cplusplus
 }
