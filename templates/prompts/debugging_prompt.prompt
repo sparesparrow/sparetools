@@ -1,0 +1,77 @@
+---
+template_name: "mcp-debugging-prompt"
+description: "Generate debugging prompts for troubleshooting and issue resolution"
+category: "debugging"
+variables:
+  issue_description: "Description of the problem"
+  error_message: "Error message or symptoms"
+  environment: "development"
+  language: "Python"
+  urgency: "high"
+  include_logs: true
+  include_solutions: true
+---
+
+# Debugging Request
+
+## Issue Description
+{{ issue_description }}
+
+## Error Information
+- **Error Message**: {{ error_message }}
+- **Environment**: {{ environment }}
+- **Language**: {{ language }}
+- **Urgency**: {{ urgency }}
+
+## Debugging Requirements
+
+Please help debug this issue by providing a systematic approach to identify and resolve the problem.
+
+### Initial Analysis
+1. **Symptom Analysis**: What exactly is happening?
+2. **Error Classification**: What type of error is this?
+3. **Impact Assessment**: How critical is this issue?
+4. **Scope Definition**: What components are affected?
+
+### Investigation Steps
+1. **Log Analysis**: Review relevant logs and error messages
+2. **Code Review**: Examine the code for obvious issues
+3. **Environment Check**: Verify system and dependency status
+4. **Reproduction**: Steps to reproduce the issue consistently
+
+{% if include_logs %}
+### Log Analysis
+Please analyze the following logs and identify:
+- Error patterns and frequency
+- Timeline of events leading to the error
+- System state at the time of error
+- Any warning signs or precursors
+{% endif %}
+
+### Debugging Strategy
+1. **Isolation**: Narrow down the problematic area
+2. **Hypothesis Formation**: Develop theories about the root cause
+3. **Testing**: Create tests to validate hypotheses
+4. **Verification**: Confirm the fix resolves the issue
+
+{% if include_solutions %}
+### Solution Requirements
+Please provide:
+- Root cause analysis
+- Step-by-step fix instructions
+- Prevention strategies
+- Testing recommendations
+- Monitoring suggestions
+{% endif %}
+
+## Additional Context
+- **Urgency Level**: {{ urgency }} - prioritize accordingly
+- **Environment**: {{ environment }} - consider environment-specific factors
+- **Language**: {{ language }} - use appropriate debugging tools and techniques
+
+## Expected Deliverables
+- Clear problem identification
+- Systematic debugging approach
+- Specific fix recommendations
+- Prevention measures
+- Testing and validation steps

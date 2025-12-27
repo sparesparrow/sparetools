@@ -1,0 +1,67 @@
+{
+  "description": "Gamepad mappings optimized for video editing software (DaVinci Resolve, Kdenlive, HitFilm)",
+  "mappings": {
+    "A": "KEY_SPACE",
+    "B": "KEY_LEFTCTRL+KEY_Z",
+    "X": "KEY_LEFTCTRL+KEY_X",
+    "Y": "KEY_LEFTCTRL+KEY_C",
+    "LB": "KEY_LEFT",
+    "RB": "KEY_RIGHT",
+    "LT": "KEY_COMMA",
+    "RT": "KEY_DOT",
+    "SELECT": "KEY_LEFTCTRL+KEY_S",
+    "START": "KEY_LEFTCTRL+KEY_R",
+    "LS": "KEY_LEFTCTRL+KEY_V",
+    "RS": "KEY_LEFTCTRL+KEY_A",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_HOME",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_END",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_Y",
+    "LB+A": "KEY_LEFTCTRL+KEY_LEFT",
+    "RB+A": "KEY_LEFTCTRL+KEY_RIGHT",
+    "X+Y": "KEY_LEFTCTRL+KEY_D",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 3.0,
+    "scroll_speed": 0.8,
+    "analog_threshold": 0.05
+  },
+  "video_editing_specific": {
+    "play_pause": "KEY_SPACE",
+    "stop": "KEY_K",
+    "forward_frame": "KEY_RIGHT",
+    "backward_frame": "KEY_LEFT",
+    "forward_second": "KEY_DOT",
+    "backward_second": "KEY_COMMA",
+    "mark_in": "KEY_I",
+    "mark_out": "KEY_O",
+    "cut": "KEY_LEFTCTRL+KEY_X",
+    "copy": "KEY_LEFTCTRL+KEY_C",
+    "paste": "KEY_LEFTCTRL+KEY_V",
+    "undo": "KEY_LEFTCTRL+KEY_Z",
+    "redo": "KEY_LEFTCTRL+KEY_Y",
+    "delete": "KEY_DELETE",
+    "select_all": "KEY_LEFTCTRL+KEY_A",
+    "zoom_in": "KEY_EQUAL",
+    "zoom_out": "KEY_MINUS",
+    "fit_to_screen": "KEY_F",
+    "fullscreen": "KEY_LEFTCTRL+KEY_F",
+    "render": "KEY_LEFTCTRL+KEY_R",
+    "save": "KEY_LEFTCTRL+KEY_S",
+    "export": "KEY_LEFTCTRL+KEY_E"
+  }
+}

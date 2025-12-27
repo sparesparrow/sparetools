@@ -1,0 +1,28 @@
+[Unit]
+Description=Gamepad Mapper - Multi-backend gamepad to keyboard/mouse input mapper
+After=network.target bluetooth.service
+Wants=bluetooth.service
+
+[Service]
+Type=simple
+User=gamepad-mapper
+Group=gamepad-mapper
+ExecStart=/usr/local/bin/gamepad_mapper_app --config /etc/gamepad-mapper/default_mappings.json
+Restart=always
+RestartSec=5
+Environment=DISPLAY=:0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/etc/gamepad-mapper /var/log/gamepad-mapper
+ProtectHome=yes
+PrivateDevices=no
+
+# Allow access to input devices and Bluetooth
+SupplementaryGroups=input bluetooth
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+{
+  "description": "Gamepad mappings optimized for remote desktop and VNC connections",
+  "mappings": {
+    "A": "MOUSE_LEFT_CLICK",
+    "B": "MOUSE_RIGHT_CLICK",
+    "X": "KEY_LEFTCTRL+KEY_C",
+    "Y": "KEY_LEFTCTRL+KEY_V",
+    "LB": "KEY_LEFT",
+    "RB": "KEY_RIGHT",
+    "LT": "KEY_DOWN",
+    "RT": "KEY_UP",
+    "SELECT": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_DEL",
+    "START": "KEY_F11",
+    "LS": "KEY_LEFTCTRL+KEY_T",
+    "RS": "KEY_LEFTCTRL+KEY_W",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_F",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_N",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "MOUSE_MIDDLE_CLICK",
+    "LB+A": "KEY_LEFTCTRL+KEY_LEFT",
+    "RB+A": "KEY_LEFTCTRL+KEY_RIGHT",
+    "X+Y": "KEY_LEFTCTRL+KEY_A",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 2.5,
+    "scroll_speed": 1.0,
+    "analog_threshold": 0.1
+  },
+  "remote_desktop_specific": {
+    "left_click": "MOUSE_LEFT_CLICK",
+    "right_click": "MOUSE_RIGHT_CLICK",
+    "middle_click": "MOUSE_MIDDLE_CLICK",
+    "double_click": "MOUSE_DOUBLE_CLICK",
+    "scroll_up": "MOUSE_SCROLL_UP",
+    "scroll_down": "MOUSE_SCROLL_DOWN",
+    "fullscreen": "KEY_F11",
+    "minimize": "KEY_LEFTALT+KEY_TAB",
+    "close_window": "KEY_LEFTALT+KEY_F4",
+    "new_tab": "KEY_LEFTCTRL+KEY_T",
+    "close_tab": "KEY_LEFTCTRL+KEY_W",
+    "refresh": "KEY_F5",
+    "zoom_in": "KEY_LEFTCTRL+KEY_EQUAL",
+    "zoom_out": "KEY_LEFTCTRL+KEY_MINUS",
+    "actual_size": "KEY_LEFTCTRL+KEY_0",
+    "copy": "KEY_LEFTCTRL+KEY_C",
+    "paste": "KEY_LEFTCTRL+KEY_V",
+    "select_all": "KEY_LEFTCTRL+KEY_A",
+    "find": "KEY_LEFTCTRL+KEY_F",
+    "send_ctrl_alt_del": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_DEL",
+    "toggle_keyboard": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_K",
+    "toggle_touch": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_T",
+    "disconnect": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_Q"
+  }
+}

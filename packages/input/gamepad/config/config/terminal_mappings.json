@@ -1,0 +1,65 @@
+{
+  "description": "Gamepad mappings optimized for terminal/shell navigation and command line work",
+  "mappings": {
+    "A": "KEY_ENTER",
+    "B": "KEY_LEFTCTRL+KEY_C",
+    "X": "KEY_TAB",
+    "Y": "KEY_LEFTCTRL+KEY_L",
+    "LB": "KEY_LEFT",
+    "RB": "KEY_RIGHT",
+    "LT": "KEY_LEFTCTRL+KEY_R",
+    "RT": "KEY_LEFTCTRL+KEY_Z",
+    "SELECT": "KEY_LEFTCTRL+KEY_D",
+    "START": "KEY_LEFTCTRL+KEY_T",
+    "LS": "KEY_LEFTCTRL+KEY_W",
+    "RS": "KEY_LEFTCTRL+KEY_N",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_A",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_E",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_U",
+    "LB+A": "KEY_LEFTCTRL+KEY_LEFT",
+    "RB+A": "KEY_LEFTCTRL+KEY_RIGHT",
+    "X+Y": "KEY_LEFTCTRL+KEY_K",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 1.5,
+    "scroll_speed": 0.5,
+    "analog_threshold": 0.1
+  },
+  "terminal_specific": {
+    "execute_command": "KEY_ENTER",
+    "interrupt": "KEY_LEFTCTRL+KEY_C",
+    "clear_screen": "KEY_LEFTCTRL+KEY_L",
+    "new_tab": "KEY_LEFTCTRL+KEY_T",
+    "close_tab": "KEY_LEFTCTRL+KEY_W",
+    "new_window": "KEY_LEFTCTRL+KEY_N",
+    "exit_shell": "KEY_LEFTCTRL+KEY_D",
+    "line_begin": "KEY_LEFTCTRL+KEY_A",
+    "line_end": "KEY_LEFTCTRL+KEY_E",
+    "undo": "KEY_LEFTCTRL+KEY_Z",
+    "redo": "KEY_LEFTCTRL+KEY_R",
+    "kill_line": "KEY_LEFTCTRL+KEY_K",
+    "kill_word": "KEY_LEFTCTRL+KEY_W",
+    "yank": "KEY_LEFTCTRL+KEY_Y",
+    "search_history": "KEY_LEFTCTRL+KEY_R",
+    "previous_command": "KEY_UP",
+    "next_command": "KEY_DOWN",
+    "autocomplete": "KEY_TAB",
+    "scroll_up": "KEY_LEFTSHIFT+KEY_PAGEUP",
+    "scroll_down": "KEY_LEFTSHIFT+KEY_PAGEDOWN"
+  }
+}

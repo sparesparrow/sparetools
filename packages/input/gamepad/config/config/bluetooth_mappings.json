@@ -1,0 +1,104 @@
+{
+  "description": "Bluetooth gamepad device mappings and configuration",
+  "scan_timeout": 10,
+  "auto_connect": true,
+  "devices": {
+    "Xbox Wireless Controller": {
+      "vendor_id": "045e",
+      "product_id": "02fd",
+      "description": "Microsoft Xbox Wireless Controller",
+      "mappings": {
+        "A": "KEY_ENTER",
+        "B": "KEY_ESC",
+        "X": "KEY_SPACE",
+        "Y": "KEY_LEFTCTRL",
+        "LB": "KEY_Q",
+        "RB": "KEY_E",
+        "LT": "MOUSE_LEFT_CLICK",
+        "RT": "MOUSE_RIGHT_CLICK",
+        "SELECT": "KEY_TAB",
+        "START": "KEY_BACKSPACE",
+        "LS": "KEY_LEFTSHIFT",
+        "RS": "KEY_LEFTALT",
+        "DPAD_UP": "KEY_UP",
+        "DPAD_DOWN": "KEY_DOWN",
+        "DPAD_LEFT": "KEY_LEFT",
+        "DPAD_RIGHT": "KEY_RIGHT"
+      },
+      "analog_mappings": {
+        "LEFT_X": "MOUSE_MOVE_X",
+        "LEFT_Y": "MOUSE_MOVE_Y",
+        "RIGHT_X": "KEY_D",
+        "RIGHT_Y": "KEY_S",
+        "LEFT_TRIGGER": "KEY_Z",
+        "RIGHT_TRIGGER": "KEY_X"
+      }
+    },
+    "DualSense Wireless Controller": {
+      "vendor_id": "054c",
+      "product_id": "0ce6",
+      "description": "Sony DualSense Wireless Controller",
+      "mappings": {
+        "CROSS": "KEY_ENTER",
+        "CIRCLE": "KEY_ESC",
+        "SQUARE": "KEY_SPACE",
+        "TRIANGLE": "KEY_LEFTCTRL",
+        "L1": "KEY_Q",
+        "R1": "KEY_E",
+        "L2": "MOUSE_LEFT_CLICK",
+        "R2": "MOUSE_RIGHT_CLICK",
+        "SHARE": "KEY_TAB",
+        "OPTIONS": "KEY_BACKSPACE",
+        "L3": "KEY_LEFTSHIFT",
+        "R3": "KEY_LEFTALT",
+        "DPAD_UP": "KEY_UP",
+        "DPAD_DOWN": "KEY_DOWN",
+        "DPAD_LEFT": "KEY_LEFT",
+        "DPAD_RIGHT": "KEY_RIGHT"
+      },
+      "analog_mappings": {
+        "LEFT_X": "MOUSE_MOVE_X",
+        "LEFT_Y": "MOUSE_MOVE_Y",
+        "RIGHT_X": "KEY_D",
+        "RIGHT_Y": "KEY_S",
+        "L2_TRIGGER": "KEY_Z",
+        "R2_TRIGGER": "KEY_X"
+      }
+    },
+    "Generic Bluetooth Gamepad": {
+      "vendor_id": "0000",
+      "product_id": "0000",
+      "description": "Generic Bluetooth HID gamepad",
+      "mappings": {
+        "BUTTON_A": "KEY_ENTER",
+        "BUTTON_B": "KEY_ESC",
+        "BUTTON_X": "KEY_SPACE",
+        "BUTTON_Y": "KEY_LEFTCTRL",
+        "LEFT_BUMPER": "KEY_Q",
+        "RIGHT_BUMPER": "KEY_E",
+        "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+        "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK",
+        "SELECT": "KEY_TAB",
+        "START": "KEY_BACKSPACE",
+        "LEFT_STICK": "KEY_LEFTSHIFT",
+        "RIGHT_STICK": "KEY_LEFTALT",
+        "DPAD_UP": "KEY_UP",
+        "DPAD_DOWN": "KEY_DOWN",
+        "DPAD_LEFT": "KEY_LEFT",
+        "DPAD_RIGHT": "KEY_RIGHT"
+      },
+      "analog_mappings": {
+        "LEFT_STICK_X": "MOUSE_MOVE_X",
+        "LEFT_STICK_Y": "MOUSE_MOVE_Y",
+        "RIGHT_STICK_X": "KEY_D",
+        "RIGHT_STICK_Y": "KEY_S"
+      }
+    }
+  },
+  "connection_settings": {
+    "reconnect_attempts": 3,
+    "reconnect_delay_ms": 2000,
+    "connection_timeout_ms": 5000,
+    "hid_report_timeout_ms": 100
+  }
+}

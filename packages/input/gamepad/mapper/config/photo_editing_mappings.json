@@ -1,0 +1,72 @@
+{
+  "description": "Gamepad mappings optimized for photo editing software (GIMP, Krita, Photoshop)",
+  "mappings": {
+    "A": "KEY_LEFTCTRL+KEY_LEFTMOUSE",
+    "B": "KEY_ESC",
+    "X": "KEY_LEFTCTRL+KEY_X",
+    "Y": "KEY_LEFTCTRL+KEY_C",
+    "LB": "KEY_LEFTBRACKET",
+    "RB": "KEY_RIGHTBRACKET",
+    "LT": "KEY_DOWN",
+    "RT": "KEY_UP",
+    "SELECT": "KEY_LEFTCTRL+KEY_S",
+    "START": "KEY_LEFTCTRL+KEY_P",
+    "LS": "KEY_LEFTCTRL+KEY_V",
+    "RS": "KEY_LEFTCTRL+KEY_Z",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_SPACE",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_0",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_Y",
+    "LB+A": "KEY_LEFTCTRL+KEY_LEFT",
+    "RB+A": "KEY_LEFTCTRL+KEY_RIGHT",
+    "X+Y": "KEY_LEFTCTRL+KEY_N",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 3.5,
+    "scroll_speed": 1.0,
+    "analog_threshold": 0.03
+  },
+  "photo_editing_specific": {
+    "brush_tool": "KEY_B",
+    "eraser_tool": "KEY_E",
+    "select_tool": "KEY_S",
+    "move_tool": "KEY_V",
+    "zoom_tool": "KEY_Z",
+    "hand_tool": "KEY_H",
+    "text_tool": "KEY_T",
+    "crop_tool": "KEY_C",
+    "clone_tool": "KEY_O",
+    "paint_bucket": "KEY_G",
+    "eyedropper": "KEY_I",
+    "lasso_select": "KEY_L",
+    "rectangular_select": "KEY_R",
+    "elliptical_select": "KEY_U",
+    "magic_wand": "KEY_W",
+    "cut": "KEY_LEFTCTRL+KEY_X",
+    "copy": "KEY_LEFTCTRL+KEY_C",
+    "paste": "KEY_LEFTCTRL+KEY_V",
+    "undo": "KEY_LEFTCTRL+KEY_Z",
+    "redo": "KEY_LEFTCTRL+KEY_Y",
+    "zoom_in": "KEY_LEFTCTRL+KEY_EQUAL",
+    "zoom_out": "KEY_LEFTCTRL+KEY_MINUS",
+    "fit_to_screen": "KEY_LEFTCTRL+KEY_0",
+    "actual_size": "KEY_LEFTCTRL+KEY_1",
+    "print": "KEY_LEFTCTRL+KEY_P",
+    "save": "KEY_LEFTCTRL+KEY_S",
+    "save_as": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_S"
+  }
+}

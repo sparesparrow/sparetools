@@ -1,0 +1,72 @@
+{
+  "description": "Gamepad mappings optimized for file manager navigation (Dolphin, Nautilus, Thunar)",
+  "mappings": {
+    "A": "KEY_ENTER",
+    "B": "KEY_BACKSPACE",
+    "X": "KEY_LEFTCTRL+KEY_C",
+    "Y": "KEY_LEFTCTRL+KEY_X",
+    "LB": "KEY_LEFT",
+    "RB": "KEY_RIGHT",
+    "LT": "KEY_DOWN",
+    "RT": "KEY_UP",
+    "SELECT": "KEY_LEFTCTRL+KEY_A",
+    "START": "KEY_F2",
+    "LS": "KEY_LEFTCTRL+KEY_V",
+    "RS": "KEY_LEFTCTRL+KEY_N",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_H",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_L",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_Z",
+    "LB+A": "KEY_LEFTCTRL+KEY_LEFT",
+    "RB+A": "KEY_LEFTCTRL+KEY_RIGHT",
+    "X+Y": "KEY_DELETE",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 2.0,
+    "scroll_speed": 0.8,
+    "analog_threshold": 0.1
+  },
+  "file_manager_specific": {
+    "open_file": "KEY_ENTER",
+    "go_back": "KEY_BACKSPACE",
+    "go_forward": "KEY_LEFTALT+KEY_RIGHT",
+    "go_up": "KEY_BACKSPACE",
+    "go_home": "KEY_LEFTALT+KEY_HOME",
+    "refresh": "KEY_F5",
+    "new_folder": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_N",
+    "new_file": "KEY_LEFTCTRL+KEY_N",
+    "rename": "KEY_F2",
+    "delete": "KEY_DELETE",
+    "cut": "KEY_LEFTCTRL+KEY_X",
+    "copy": "KEY_LEFTCTRL+KEY_C",
+    "paste": "KEY_LEFTCTRL+KEY_V",
+    "select_all": "KEY_LEFTCTRL+KEY_A",
+    "invert_selection": "KEY_LEFTCTRL+KEY_I",
+    "properties": "KEY_LEFTALT+KEY_ENTER",
+    "search": "KEY_LEFTCTRL+KEY_F",
+    "show_hidden": "KEY_LEFTCTRL+KEY_H",
+    "sort_name": "KEY_LEFTCTRL+KEY_1",
+    "sort_date": "KEY_LEFTCTRL+KEY_2",
+    "sort_size": "KEY_LEFTCTRL+KEY_3",
+    "sort_type": "KEY_LEFTCTRL+KEY_4",
+    "icon_view": "KEY_LEFTCTRL+KEY_1",
+    "list_view": "KEY_LEFTCTRL+KEY_2",
+    "compact_view": "KEY_LEFTCTRL+KEY_3",
+    "zoom_in": "KEY_LEFTCTRL+KEY_EQUAL",
+    "zoom_out": "KEY_LEFTCTRL+KEY_MINUS"
+  }
+}

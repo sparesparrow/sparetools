@@ -1,0 +1,25 @@
+# UDEV rules for Gamepad Mapper
+# This allows the gamepad mapper to access gamepad devices without root privileges
+
+# Generic gamepad devices
+SUBSYSTEM=="input", KERNEL=="event*", ATTR{id/vendor}=="*", ATTR{id/product}=="*", MODE="0666"
+
+# Microsoft Xbox controllers
+SUBSYSTEM=="input", KERNEL=="event*", ATTR{id/vendor}=="045e", MODE="0666"
+
+# Sony PlayStation controllers
+SUBSYSTEM=="input", KERNEL=="event*", ATTR{id/vendor}=="054c", MODE="0666"
+
+# Nintendo Switch Pro Controller
+SUBSYSTEM=="input", KERNEL=="event*", ATTR{id/vendor}=="057e", MODE="0666"
+
+# Generic joysticks and gamepads
+SUBSYSTEM=="input", KERNEL=="js*", MODE="0666"
+
+# UInput device for virtual input injection
+KERNEL=="uinput", MODE="0666"
+
+# Install instructions:
+# sudo cp 99-gamepad-mapper.rules /etc/udev/rules.d/
+# sudo udevadm control --reload-rules
+# sudo udevadm trigger

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "gamepad-mapper": {
+      "command": "python3",
+      "args": ["tools/gamepad_mcp_server.py"],
+      "env": {
+        "PYTHONPATH": "."
+      }
+    }
+  }
+}

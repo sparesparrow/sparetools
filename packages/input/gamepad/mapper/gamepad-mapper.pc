@@ -1,0 +1,11 @@
+prefix=/home/sparrow/openssl/.cursor/gamepad-mapper
+exec_prefix=/home/sparrow/openssl/.cursor/gamepad-mapper
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: gamepad-mapper
+Description: Multi-backend gamepad to keyboard/mouse input mapper
+Version: 1.0.0
+Libs: -L${libdir} -lgamepad_mapper
+Cflags: -I${includedir}
+Requires: nlohmann_json

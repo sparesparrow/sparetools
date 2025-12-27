@@ -1,0 +1,150 @@
+{
+  "profile_name": "Gaming Multi-Controller Setup",
+  "description": "Gaming-focused mapping with multiple controllers for local multiplayer and streaming",
+  "version": "2.0",
+  "controllers": {
+    "player1_controller": {
+      "device_id": "auto_detect",
+      "name": "Player 1 Controller",
+      "connection_type": "USB",
+      "mappings": {
+        "buttons": {
+          "A": "KEY_SPACE",
+          "B": "KEY_ESC",
+          "X": "KEY_E",
+          "Y": "KEY_Q",
+          "LB": "KEY_1",
+          "RB": "KEY_2",
+          "LT": "KEY_LEFTSHIFT",
+          "RT": "KEY_LEFTCTRL",
+          "SELECT": "KEY_TAB",
+          "START": "KEY_ENTER",
+          "LS": "KEY_R",
+          "RS": "KEY_F",
+          "DPAD_UP": "KEY_W",
+          "DPAD_DOWN": "KEY_S",
+          "DPAD_LEFT": "KEY_A",
+          "DPAD_RIGHT": "KEY_D"
+        },
+        "axes": {
+          "LEFT_X": "MOUSE_X",
+          "LEFT_Y": "MOUSE_Y",
+          "RIGHT_X": "MOUSE_WHEEL_H",
+          "RIGHT_Y": "MOUSE_WHEEL_V",
+          "LEFT_TRIGGER": "MOUSE_LEFT_BUTTON",
+          "RIGHT_TRIGGER": "MOUSE_RIGHT_BUTTON"
+        },
+        "combinations": {
+          "LB+A": "KEY_1+KEY_SPACE",
+          "RB+B": "KEY_2+KEY_ESC",
+          "LT+X": "KEY_LEFTSHIFT+KEY_E",
+          "RT+Y": "KEY_LEFTCTRL+KEY_Q"
+        }
+      },
+      "gaming_features": {
+        "aim_assist": true,
+        "deadzone": 0.15,
+        "sensitivity": 1.0,
+        "invert_y": false
+      }
+    },
+    "player2_controller": {
+      "device_id": "auto_detect",
+      "name": "Player 2 Controller",
+      "connection_type": "BLUETOOTH",
+      "mappings": {
+        "buttons": {
+          "A": "KEY_NUMPAD0",
+          "B": "KEY_NUMPAD1",
+          "X": "KEY_NUMPAD2",
+          "Y": "KEY_NUMPAD3",
+          "LB": "KEY_NUMPAD4",
+          "RB": "KEY_NUMPAD5",
+          "LT": "KEY_NUMPAD6",
+          "RT": "KEY_NUMPAD7",
+          "SELECT": "KEY_NUMPAD8",
+          "START": "KEY_NUMPAD9",
+          "LS": "KEY_NUMPAD_DOT",
+          "RS": "KEY_NUMPAD_ENTER",
+          "DPAD_UP": "KEY_UP",
+          "DPAD_DOWN": "KEY_DOWN",
+          "DPAD_LEFT": "KEY_LEFT",
+          "DPAD_RIGHT": "KEY_RIGHT"
+        },
+        "axes": {
+          "LEFT_X": "MOUSE_X",
+          "LEFT_Y": "MOUSE_Y",
+          "RIGHT_X": "MOUSE_WHEEL_H",
+          "RIGHT_Y": "MOUSE_WHEEL_V",
+          "LEFT_TRIGGER": "MOUSE_LEFT_BUTTON",
+          "RIGHT_TRIGGER": "MOUSE_RIGHT_BUTTON"
+        }
+      },
+      "gaming_features": {
+        "aim_assist": true,
+        "deadzone": 0.15,
+        "sensitivity": 1.0,
+        "invert_y": false
+      }
+    },
+    "streaming_controller": {
+      "device_id": "auto_detect",
+      "name": "Streaming Controller",
+      "connection_type": "USB",
+      "mappings": {
+        "buttons": {
+          "A": "KEY_F1",
+          "B": "KEY_F2",
+          "X": "KEY_F3",
+          "Y": "KEY_F4",
+          "LB": "KEY_F5",
+          "RB": "KEY_F6",
+          "LT": "KEY_F7",
+          "RT": "KEY_F8",
+          "SELECT": "KEY_F9",
+          "START": "KEY_F10",
+          "LS": "KEY_F11",
+          "RS": "KEY_F12",
+          "DPAD_UP": "KEY_PAGEUP",
+          "DPAD_DOWN": "KEY_PAGEDOWN",
+          "DPAD_LEFT": "KEY_HOME",
+          "DPAD_RIGHT": "KEY_END"
+        },
+        "axes": {
+          "LEFT_X": "MOUSE_X",
+          "LEFT_Y": "MOUSE_Y",
+          "RIGHT_X": "MOUSE_WHEEL_H",
+          "RIGHT_Y": "MOUSE_WHEEL_V",
+          "LEFT_TRIGGER": "MOUSE_LEFT_BUTTON",
+          "RIGHT_TRIGGER": "MOUSE_RIGHT_BUTTON"
+        }
+      },
+      "streaming_features": {
+        "scene_switching": true,
+        "audio_control": true,
+        "chat_moderation": true,
+        "overlay_control": true
+      }
+    }
+  },
+  "voice_alerts": {
+    "enabled": true,
+    "voice": "default",
+    "speed": 1.2,
+    "volume": 0.9,
+    "alerts": {
+      "controller_connected": "Player {name} controller connected!",
+      "controller_disconnected": "Player {name} controller disconnected!",
+      "game_started": "Game started! All players ready!",
+      "streaming_started": "Streaming started! Controller ready!",
+      "error": "Gaming error: {error}"
+    }
+  },
+  "gaming_features": {
+    "local_multiplayer": true,
+    "streaming_support": true,
+    "hotseat_mode": true,
+    "tournament_mode": true,
+    "anti_cheat": true
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "description": "Default gamepad mappings for general use",
+  "mappings": {
+    "A": "KEY_ENTER",
+    "B": "KEY_ESC",
+    "X": "KEY_SPACE",
+    "Y": "KEY_TAB",
+    "LB": "KEY_LEFTCTRL",
+    "RB": "KEY_LEFTALT",
+    "SELECT": "KEY_BACKSPACE",
+    "START": "KEY_F1",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "sensitivity": {
+    "mouse_speed": 5.0,
+    "analog_threshold": 0.1
+  }
+}

@@ -1,0 +1,9 @@
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/gamepad_mapper.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/gamepad_mapper_app.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/advanced_gamepad_mapper.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/edit_cache.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/rebuild_cache.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/list_install_components.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/install.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/install/local.dir
+/home/sparrow/openssl/.cursor/gamepad-mapper/build-x11/CMakeFiles/install/strip.dir

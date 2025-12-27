@@ -1,0 +1,58 @@
+{
+  "description": "Gamepad mappings optimized for media players (VLC, YouTube, Netflix, etc.)",
+  "mappings": {
+    "A": "KEY_SPACE",
+    "B": "KEY_ESC",
+    "X": "KEY_F",
+    "Y": "KEY_M",
+    "LB": "KEY_LEFT",
+    "RB": "KEY_RIGHT",
+    "LT": "KEY_DOWN",
+    "RT": "KEY_UP",
+    "SELECT": "KEY_LEFTCTRL+KEY_S",
+    "START": "KEY_F11",
+    "LS": "KEY_R",
+    "RS": "KEY_C",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_F",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_L",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_R",
+    "LB+A": "KEY_PAGEUP",
+    "RB+A": "KEY_PAGEDOWN",
+    "X+Y": "KEY_LEFTCTRL+KEY_M",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 2.0,
+    "scroll_speed": 1.0,
+    "analog_threshold": 0.1
+  },
+  "media_specific": {
+    "play_pause": "KEY_SPACE",
+    "stop": "KEY_S",
+    "fullscreen": "KEY_F",
+    "mute": "KEY_M",
+    "volume_up": "KEY_UP",
+    "volume_down": "KEY_DOWN",
+    "seek_forward": "KEY_RIGHT",
+    "seek_backward": "KEY_LEFT",
+    "next_track": "KEY_N",
+    "previous_track": "KEY_P",
+    "subtitles": "KEY_V",
+    "audio_track": "KEY_B",
+    "playlist": "KEY_O"
+  }
+}

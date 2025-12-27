@@ -1,0 +1,66 @@
+---
+template_name: "mcp-documentation-prompt"
+description: "Generate documentation prompts for technical writing and documentation"
+category: "documentation"
+variables:
+  doc_type: "API documentation"
+  project_name: "My Project"
+  target_audience: "developers"
+  scope: "complete system"
+  format: "markdown"
+  include_examples: true
+  include_diagrams: false
+---
+
+# {{ doc_type | title }} Generation Request
+
+## Project Information
+- **Project Name**: {{ project_name }}
+- **Documentation Type**: {{ doc_type }}
+- **Target Audience**: {{ target_audience }}
+- **Scope**: {{ scope }}
+- **Format**: {{ format }}
+
+## Documentation Requirements
+
+Please generate comprehensive {{ doc_type }} for {{ project_name }} that is suitable for {{ target_audience }}.
+
+### Content Structure
+1. **Overview**: High-level description and purpose
+2. **Getting Started**: Setup and installation instructions
+3. **Core Concepts**: Key concepts and terminology
+4. **Detailed Documentation**: Comprehensive coverage of all features
+5. **API Reference**: Complete API documentation (if applicable)
+6. **Examples**: Practical usage examples
+7. **Troubleshooting**: Common issues and solutions
+
+### Writing Guidelines
+- Use clear, concise language appropriate for {{ target_audience }}
+- Include practical examples and use cases
+- Structure content logically with proper headings
+- Use consistent formatting and terminology
+- Include cross-references where helpful
+
+{% if include_examples %}
+### Example Requirements
+Please include:
+- Basic usage examples
+- Advanced use cases
+- Code snippets with explanations
+- Real-world scenarios
+{% endif %}
+
+{% if include_diagrams %}
+### Visual Elements
+Please suggest:
+- Architecture diagrams
+- Flow charts
+- Sequence diagrams
+- Screenshots or mockups (where applicable)
+{% endif %}
+
+## Additional Considerations
+- Ensure the documentation is maintainable and easy to update
+- Include version information and change logs
+- Consider different skill levels within the {{ target_audience }} audience
+- Make the documentation searchable and navigable

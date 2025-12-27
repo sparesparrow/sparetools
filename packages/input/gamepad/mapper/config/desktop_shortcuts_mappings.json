@@ -1,0 +1,280 @@
+{
+  "profile_name": "Desktop Shortcuts & Keyboard Simulation",
+  "description": "Comprehensive gamepad mappings for desktop shortcuts, window management, and productivity",
+  "version": "3.0",
+  "mappings": {
+    "A": "KEY_ENTER",
+    "B": "KEY_ESC",
+    "X": "KEY_SPACE",
+    "Y": "KEY_TAB",
+    "LB": "KEY_LEFTSHIFT",
+    "RB": "KEY_LEFTCTRL",
+    "LT": "KEY_LEFTALT",
+    "RT": "KEY_LEFTMETA",
+    "SELECT": "KEY_F1",
+    "START": "KEY_F2",
+    "LS": "KEY_F3",
+    "RS": "KEY_F4",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "MOUSE_WHEEL_H",
+    "RIGHT_Y": "MOUSE_WHEEL_V"
+  },
+  "keyboard_shortcuts": {
+    "window_management": {
+      "LB+A": "KEY_LEFTALT+KEY_TAB",
+      "LB+B": "KEY_LEFTALT+KEY_F4",
+      "LB+X": "KEY_LEFTALT+KEY_SPACE",
+      "LB+Y": "KEY_LEFTALT+KEY_ENTER",
+      "LB+UP": "KEY_LEFTALT+KEY_UP",
+      "LB+DOWN": "KEY_LEFTALT+KEY_DOWN",
+      "LB+LEFT": "KEY_LEFTALT+KEY_LEFT",
+      "LB+RIGHT": "KEY_LEFTALT+KEY_RIGHT"
+    },
+    "desktop_navigation": {
+      "RB+A": "KEY_LEFTCTRL+KEY_ALT+KEY_TAB",
+      "RB+B": "KEY_LEFTCTRL+KEY_ALT+KEY_DELETE",
+      "RB+X": "KEY_LEFTCTRL+KEY_ALT+KEY_ESC",
+      "RB+Y": "KEY_LEFTCTRL+KEY_ALT+KEY_RETURN",
+      "RB+UP": "KEY_LEFTCTRL+KEY_ALT+KEY_UP",
+      "RB+DOWN": "KEY_LEFTCTRL+KEY_ALT+KEY_DOWN",
+      "RB+LEFT": "KEY_LEFTCTRL+KEY_ALT+KEY_LEFT",
+      "RB+RIGHT": "KEY_LEFTCTRL+KEY_ALT+KEY_RIGHT"
+    },
+    "application_control": {
+      "LT+A": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_TAB",
+      "LT+B": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_F4",
+      "LT+X": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_SPACE",
+      "LT+Y": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_ENTER",
+      "LT+UP": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_UP",
+      "LT+DOWN": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_DOWN",
+      "LT+LEFT": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_LEFT",
+      "LT+RIGHT": "KEY_LEFTALT+KEY_LEFTSHIFT+KEY_RIGHT"
+    },
+    "system_shortcuts": {
+      "RT+A": "KEY_LEFTMETA+KEY_ENTER",
+      "RT+B": "KEY_LEFTMETA+KEY_ESC",
+      "RT+X": "KEY_LEFTMETA+KEY_SPACE",
+      "RT+Y": "KEY_LEFTMETA+KEY_TAB",
+      "RT+UP": "KEY_LEFTMETA+KEY_UP",
+      "RT+DOWN": "KEY_LEFTMETA+KEY_DOWN",
+      "RT+LEFT": "KEY_LEFTMETA+KEY_LEFT",
+      "RT+RIGHT": "KEY_LEFTMETA+KEY_RIGHT"
+    },
+    "text_editing": {
+      "SELECT+A": "KEY_LEFTCTRL+KEY_A",
+      "SELECT+B": "KEY_LEFTCTRL+KEY_B",
+      "SELECT+X": "KEY_LEFTCTRL+KEY_X",
+      "SELECT+Y": "KEY_LEFTCTRL+KEY_Y",
+      "SELECT+Z": "KEY_LEFTCTRL+KEY_Z",
+      "SELECT+C": "KEY_LEFTCTRL+KEY_C",
+      "SELECT+V": "KEY_LEFTCTRL+KEY_V",
+      "SELECT+S": "KEY_LEFTCTRL+KEY_S",
+      "SELECT+O": "KEY_LEFTCTRL+KEY_O",
+      "SELECT+N": "KEY_LEFTCTRL+KEY_N",
+      "SELECT+F": "KEY_LEFTCTRL+KEY_F",
+      "SELECT+H": "KEY_LEFTCTRL+KEY_H",
+      "SELECT+G": "KEY_LEFTCTRL+KEY_G",
+      "SELECT+R": "KEY_LEFTCTRL+KEY_R",
+      "SELECT+U": "KEY_LEFTCTRL+KEY_U",
+      "SELECT+I": "KEY_LEFTCTRL+KEY_I",
+      "SELECT+P": "KEY_LEFTCTRL+KEY_P",
+      "SELECT+W": "KEY_LEFTCTRL+KEY_W",
+      "SELECT+T": "KEY_LEFTCTRL+KEY_T",
+      "SELECT+Q": "KEY_LEFTCTRL+KEY_Q"
+    },
+    "browser_shortcuts": {
+      "START+A": "KEY_LEFTCTRL+KEY_T",
+      "START+B": "KEY_LEFTCTRL+KEY_W",
+      "START+X": "KEY_LEFTCTRL+KEY_TAB",
+      "START+Y": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_TAB",
+      "START+UP": "KEY_LEFTCTRL+KEY_UP",
+      "START+DOWN": "KEY_LEFTCTRL+KEY_DOWN",
+      "START+LEFT": "KEY_LEFTALT+KEY_LEFT",
+      "START+RIGHT": "KEY_LEFTALT+KEY_RIGHT"
+    },
+    "media_control": {
+      "LS+A": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_ENTER",
+      "LS+B": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_ESC",
+      "LS+X": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_SPACE",
+      "LS+Y": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_TAB",
+      "LS+UP": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_UP",
+      "LS+DOWN": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_DOWN",
+      "LS+LEFT": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_LEFT",
+      "LS+RIGHT": "KEY_LEFTCTRL+KEY_LEFTSHIFT+KEY_RIGHT"
+    },
+    "function_keys": {
+      "RS+A": "KEY_F1",
+      "RS+B": "KEY_F2",
+      "RS+X": "KEY_F3",
+      "RS+Y": "KEY_F4",
+      "RS+UP": "KEY_F5",
+      "RS+DOWN": "KEY_F6",
+      "RS+LEFT": "KEY_F7",
+      "RS+RIGHT": "KEY_F8"
+    }
+  },
+  "advanced_combinations": {
+    "triple_combinations": {
+      "LB+RB+A": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTSHIFT+KEY_A",
+      "LB+RB+B": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTSHIFT+KEY_B",
+      "LB+RB+X": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTSHIFT+KEY_X",
+      "LB+RB+Y": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTSHIFT+KEY_Y",
+      "LT+RT+A": "KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_A",
+      "LT+RT+B": "KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_B",
+      "LT+RT+X": "KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_X",
+      "LT+RT+Y": "KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_Y"
+    },
+    "quad_combinations": {
+      "LB+RB+LT+RT+A": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_A",
+      "LB+RB+LT+RT+B": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_B",
+      "LB+RB+LT+RT+X": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_X",
+      "LB+RB+LT+RT+Y": "KEY_LEFTCTRL+KEY_LEFTALT+KEY_LEFTMETA+KEY_LEFTSHIFT+KEY_Y"
+    }
+  },
+  "desktop_environments": {
+    "kde_plasma": {
+      "window_management": {
+        "LB+A": "KEY_LEFTALT+KEY_TAB",
+        "LB+B": "KEY_LEFTALT+KEY_F4",
+        "LB+X": "KEY_LEFTALT+KEY_SPACE",
+        "LB+Y": "KEY_LEFTALT+KEY_ENTER"
+      },
+      "desktop_effects": {
+        "RB+A": "KEY_LEFTCTRL+KEY_F1",
+        "RB+B": "KEY_LEFTCTRL+KEY_F2",
+        "RB+X": "KEY_LEFTCTRL+KEY_F3",
+        "RB+Y": "KEY_LEFTCTRL+KEY_F4"
+      },
+      "krunner": {
+        "RT+A": "KEY_LEFTMETA+KEY_SPACE",
+        "RT+B": "KEY_LEFTMETA+KEY_ESC",
+        "RT+X": "KEY_LEFTMETA+KEY_TAB",
+        "RT+Y": "KEY_LEFTMETA+KEY_ENTER"
+      }
+    },
+    "gnome": {
+      "activities": {
+        "RT+A": "KEY_LEFTMETA",
+        "RT+B": "KEY_LEFTMETA+KEY_ESC",
+        "RT+X": "KEY_LEFTMETA+KEY_TAB",
+        "RT+Y": "KEY_LEFTMETA+KEY_ENTER"
+      },
+      "workspace_switching": {
+        "LB+UP": "KEY_LEFTCTRL+KEY_ALT+KEY_UP",
+        "LB+DOWN": "KEY_LEFTCTRL+KEY_ALT+KEY_DOWN",
+        "LB+LEFT": "KEY_LEFTCTRL+KEY_ALT+KEY_LEFT",
+        "LB+RIGHT": "KEY_LEFTCTRL+KEY_ALT+KEY_RIGHT"
+      }
+    },
+    "xfce": {
+      "window_manager": {
+        "LB+A": "KEY_LEFTALT+KEY_TAB",
+        "LB+B": "KEY_LEFTALT+KEY_F4",
+        "LB+X": "KEY_LEFTALT+KEY_SPACE",
+        "LB+Y": "KEY_LEFTALT+KEY_ENTER"
+      },
+      "panel_control": {
+        "RB+A": "KEY_LEFTCTRL+KEY_ALT+KEY_T",
+        "RB+B": "KEY_LEFTCTRL+KEY_ALT+KEY_DELETE",
+        "RB+X": "KEY_LEFTCTRL+KEY_ALT+KEY_ESC",
+        "RB+Y": "KEY_LEFTCTRL+KEY_ALT+KEY_RETURN"
+      }
+    }
+  },
+  "application_specific": {
+    "cursor_ide": {
+      "LB+A": "KEY_LEFTCTRL+KEY_A",
+      "LB+B": "KEY_LEFTCTRL+KEY_B",
+      "LB+X": "KEY_LEFTCTRL+KEY_X",
+      "LB+Y": "KEY_LEFTCTRL+KEY_Y",
+      "LB+Z": "KEY_LEFTCTRL+KEY_Z",
+      "LB+C": "KEY_LEFTCTRL+KEY_C",
+      "LB+V": "KEY_LEFTCTRL+KEY_V",
+      "LB+S": "KEY_LEFTCTRL+KEY_S",
+      "LB+O": "KEY_LEFTCTRL+KEY_O",
+      "LB+N": "KEY_LEFTCTRL+KEY_N",
+      "LB+F": "KEY_LEFTCTRL+KEY_F",
+      "LB+H": "KEY_LEFTCTRL+KEY_H",
+      "LB+G": "KEY_LEFTCTRL+KEY_G",
+      "LB+R": "KEY_LEFTCTRL+KEY_R",
+      "LB+U": "KEY_LEFTCTRL+KEY_U",
+      "LB+I": "KEY_LEFTCTRL+KEY_I",
+      "LB+P": "KEY_LEFTCTRL+KEY_P",
+      "LB+W": "KEY_LEFTCTRL+KEY_W",
+      "LB+T": "KEY_LEFTCTRL+KEY_T",
+      "LB+Q": "KEY_LEFTCTRL+KEY_Q"
+    },
+    "firefox": {
+      "LB+A": "KEY_LEFTCTRL+KEY_A",
+      "LB+B": "KEY_LEFTCTRL+KEY_B",
+      "LB+X": "KEY_LEFTCTRL+KEY_X",
+      "LB+Y": "KEY_LEFTCTRL+KEY_Y",
+      "LB+Z": "KEY_LEFTCTRL+KEY_Z",
+      "LB+C": "KEY_LEFTCTRL+KEY_C",
+      "LB+V": "KEY_LEFTCTRL+KEY_V",
+      "LB+S": "KEY_LEFTCTRL+KEY_S",
+      "LB+O": "KEY_LEFTCTRL+KEY_O",
+      "LB+N": "KEY_LEFTCTRL+KEY_N",
+      "LB+F": "KEY_LEFTCTRL+KEY_F",
+      "LB+H": "KEY_LEFTCTRL+KEY_H",
+      "LB+G": "KEY_LEFTCTRL+KEY_G",
+      "LB+R": "KEY_LEFTCTRL+KEY_R",
+      "LB+U": "KEY_LEFTCTRL+KEY_U",
+      "LB+I": "KEY_LEFTCTRL+KEY_I",
+      "LB+P": "KEY_LEFTCTRL+KEY_P",
+      "LB+W": "KEY_LEFTCTRL+KEY_W",
+      "LB+T": "KEY_LEFTCTRL+KEY_T",
+      "LB+Q": "KEY_LEFTCTRL+KEY_Q"
+    },
+    "terminal": {
+      "LB+A": "KEY_LEFTCTRL+KEY_A",
+      "LB+B": "KEY_LEFTCTRL+KEY_B",
+      "LB+X": "KEY_LEFTCTRL+KEY_X",
+      "LB+Y": "KEY_LEFTCTRL+KEY_Y",
+      "LB+Z": "KEY_LEFTCTRL+KEY_Z",
+      "LB+C": "KEY_LEFTCTRL+KEY_C",
+      "LB+V": "KEY_LEFTCTRL+KEY_V",
+      "LB+S": "KEY_LEFTCTRL+KEY_S",
+      "LB+O": "KEY_LEFTCTRL+KEY_O",
+      "LB+N": "KEY_LEFTCTRL+KEY_N",
+      "LB+F": "KEY_LEFTCTRL+KEY_F",
+      "LB+H": "KEY_LEFTCTRL+KEY_H",
+      "LB+G": "KEY_LEFTCTRL+KEY_G",
+      "LB+R": "KEY_LEFTCTRL+KEY_R",
+      "LB+U": "KEY_LEFTCTRL+KEY_U",
+      "LB+I": "KEY_LEFTCTRL+KEY_I",
+      "LB+P": "KEY_LEFTCTRL+KEY_P",
+      "LB+W": "KEY_LEFTCTRL+KEY_W",
+      "LB+T": "KEY_LEFTCTRL+KEY_T",
+      "LB+Q": "KEY_LEFTCTRL+KEY_Q"
+    }
+  },
+  "sensitivity": {
+    "mouse_speed": 3.0,
+    "scroll_speed": 1.0,
+    "analog_threshold": 0.15,
+    "key_repeat_delay": 50,
+    "key_repeat_rate": 30
+  },
+  "modifier_behavior": {
+    "hold_modifiers": true,
+    "release_on_button_up": true,
+    "modifier_timeout": 1000,
+    "combination_timeout": 500
+  },
+  "voice_feedback": {
+    "enabled": true,
+    "announce_shortcuts": false,
+    "announce_mode_changes": true,
+    "announce_errors": true
+  }
+}

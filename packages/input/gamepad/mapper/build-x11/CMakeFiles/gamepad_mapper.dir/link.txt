@@ -1,0 +1,2 @@
+/usr/bin/ar qc libgamepad_mapper.a CMakeFiles/gamepad_mapper.dir/src/gamepad_mapper.cpp.o CMakeFiles/gamepad_mapper.dir/src/controller_manager.cpp.o CMakeFiles/gamepad_mapper.dir/src/bluetooth_stubs.cpp.o CMakeFiles/gamepad_mapper.dir/src/input_backends/x11_simulator.cpp.o CMakeFiles/gamepad_mapper.dir/src/input_backends/sdl2_simulator.cpp.o CMakeFiles/gamepad_mapper.dir/src/input_backends/uinput_simulator.cpp.o
+/usr/bin/ranlib libgamepad_mapper.a

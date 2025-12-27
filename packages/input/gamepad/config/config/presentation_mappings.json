@@ -1,0 +1,60 @@
+{
+  "description": "Gamepad mappings optimized for presentation software (LibreOffice Impress, PowerPoint, Google Slides)",
+  "mappings": {
+    "A": "KEY_RIGHT",
+    "B": "KEY_LEFT",
+    "X": "KEY_F5",
+    "Y": "KEY_ESC",
+    "LB": "KEY_PAGEUP",
+    "RB": "KEY_PAGEDOWN",
+    "LT": "KEY_DOWN",
+    "RT": "KEY_UP",
+    "SELECT": "KEY_LEFTCTRL+KEY_S",
+    "START": "KEY_F11",
+    "LS": "KEY_LEFTCTRL+KEY_H",
+    "RS": "KEY_LEFTCTRL+KEY_N",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_HOME",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_END",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_F",
+    "LB+A": "KEY_LEFTCTRL+KEY_P",
+    "RB+A": "KEY_LEFTCTRL+KEY_E",
+    "X+Y": "KEY_LEFTCTRL+KEY_M",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 2.5,
+    "scroll_speed": 0.8,
+    "analog_threshold": 0.1
+  },
+  "presentation_specific": {
+    "next_slide": "KEY_RIGHT",
+    "previous_slide": "KEY_LEFT",
+    "start_presentation": "KEY_F5",
+    "end_presentation": "KEY_ESC",
+    "first_slide": "KEY_HOME",
+    "last_slide": "KEY_END",
+    "fullscreen": "KEY_F11",
+    "overview": "KEY_LEFTCTRL+KEY_H",
+    "notes": "KEY_LEFTCTRL+KEY_N",
+    "laser_pointer": "MOUSE_MOVE_X+MOUSE_MOVE_Y",
+    "zoom_in": "KEY_LEFTCTRL+KEY_EQUAL",
+    "zoom_out": "KEY_LEFTCTRL+KEY_MINUS",
+    "fit_to_window": "KEY_LEFTCTRL+KEY_0",
+    "print": "KEY_LEFTCTRL+KEY_P",
+    "export": "KEY_LEFTCTRL+KEY_E"
+  }
+}

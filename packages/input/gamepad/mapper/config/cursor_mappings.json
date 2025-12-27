@@ -1,0 +1,45 @@
+{
+  "description": "Gamepad mappings optimized for Cursor IDE",
+  "mappings": {
+    "A": "KEY_ENTER",
+    "B": "KEY_ESC",
+    "X": "KEY_LEFTCTRL+KEY_SPACE",
+    "Y": "KEY_LEFTCTRL+KEY_P",
+    "LB": "KEY_LEFTALT+KEY_LEFT",
+    "RB": "KEY_LEFTALT+KEY_RIGHT",
+    "SELECT": "KEY_LEFTCTRL+KEY_W",
+    "START": "KEY_LEFTCTRL+KEY_B",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_L",
+    "RIGHT_STICK_CLICK": "KEY_LEFTALT+KEY_F12",
+    "LEFT_TRIGGER+A": "KEY_LEFTCTRL+KEY_S",
+    "RIGHT_TRIGGER+A": "KEY_LEFTCTRL+KEY_O",
+    "X+Y": "KEY_LEFTCTRL+KEY_SHIFT+KEY_P"
+  },
+  "sensitivity": {
+    "mouse_speed": 2.5,
+    "scroll_speed": 0.8,
+    "analog_threshold": 0.1
+  },
+  "cursor_specific": {
+    "command_palette": "KEY_LEFTCTRL+KEY_P",
+    "file_picker": "KEY_LEFTCTRL+KEY_O",
+    "save": "KEY_LEFTCTRL+KEY_S",
+    "close_tab": "KEY_LEFTCTRL+KEY_W",
+    "split_editor": "KEY_LEFTCTRL+KEY_B",
+    "terminal": "KEY_LEFTCTRL+KEY_BACKQUOTE"
+  }
+}

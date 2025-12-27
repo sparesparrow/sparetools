@@ -1,0 +1,51 @@
+---
+template_name: "mcp-analysis-prompt"
+description: "Generate analysis prompts for code review, debugging, or system analysis"
+category: "analysis"
+variables:
+  analysis_type: "code_review"
+  target_code: "Code to analyze"
+  focus_areas: ["performance", "security", "maintainability"]
+  context: "Production system"
+  urgency: "medium"
+  include_recommendations: true
+---
+
+# {{ analysis_type | title }} Analysis Request
+
+## Analysis Target
+{{ target_code }}
+
+## Context
+- **System Context**: {{ context }}
+- **Urgency Level**: {{ urgency }}
+- **Focus Areas**: {{ focus_areas | join(", ") }}
+
+## Analysis Requirements
+
+Please perform a comprehensive {{ analysis_type }} analysis focusing on the following areas:
+
+{% for area in focus_areas %}
+### {{ area | title }}
+- Identify potential issues
+- Assess current implementation
+- Provide specific recommendations
+{% endfor %}
+
+## Specific Questions
+1. What are the main strengths of this code?
+2. What are the critical issues that need immediate attention?
+3. How can the code be improved for better {{ focus_areas[0] }}?
+4. What are the potential risks and how can they be mitigated?
+
+{% if include_recommendations %}
+## Expected Deliverables
+- Detailed analysis report
+- Prioritized list of issues
+- Specific improvement recommendations
+- Code examples for fixes
+- Implementation timeline suggestions
+{% endif %}
+
+## Additional Context
+Please consider the {{ urgency }} urgency level when prioritizing recommendations and provide actionable insights that can be implemented effectively.

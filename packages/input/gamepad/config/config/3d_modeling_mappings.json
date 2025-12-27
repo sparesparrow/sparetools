@@ -1,0 +1,70 @@
+{
+  "description": "Gamepad mappings optimized for 3D modeling and CAD software (Blender, FreeCAD, Fusion 360)",
+  "mappings": {
+    "A": "KEY_LEFTCTRL+KEY_LEFTMOUSE",
+    "B": "KEY_ESC",
+    "X": "KEY_G",
+    "Y": "KEY_R",
+    "LB": "KEY_LEFT",
+    "RB": "KEY_RIGHT",
+    "LT": "KEY_DOWN",
+    "RT": "KEY_UP",
+    "SELECT": "KEY_LEFTCTRL+KEY_S",
+    "START": "KEY_LEFTCTRL+KEY_P",
+    "LS": "KEY_LEFTCTRL+KEY_C",
+    "RS": "KEY_LEFTCTRL+KEY_V",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "LEFT_TRIGGER": "MOUSE_LEFT_CLICK",
+    "RIGHT_TRIGGER": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "LEFT_STICK_CLICK": "KEY_LEFTCTRL+KEY_MIDDLEMOUSE",
+    "RIGHT_STICK_CLICK": "KEY_LEFTCTRL+KEY_Z",
+    "LEFT_TRIGGER+RIGHT_TRIGGER": "KEY_LEFTCTRL+KEY_Y",
+    "LB+A": "KEY_LEFTCTRL+KEY_LEFT",
+    "RB+A": "KEY_LEFTCTRL+KEY_RIGHT",
+    "X+Y": "KEY_S",
+    "SELECT+START": "KEY_LEFTCTRL+KEY_Q"
+  },
+  "sensitivity": {
+    "mouse_speed": 4.0,
+    "scroll_speed": 1.0,
+    "analog_threshold": 0.02
+  },
+  "modeling_specific": {
+    "select_object": "MOUSE_LEFT_CLICK",
+    "grab_move": "KEY_G",
+    "rotate": "KEY_R",
+    "scale": "KEY_S",
+    "extrude": "KEY_E",
+    "delete": "KEY_X",
+    "duplicate": "KEY_LEFTSHIFT+KEY_D",
+    "undo": "KEY_LEFTCTRL+KEY_Z",
+    "redo": "KEY_LEFTCTRL+KEY_Y",
+    "copy": "KEY_LEFTCTRL+KEY_C",
+    "paste": "KEY_LEFTCTRL+KEY_V",
+    "hide": "KEY_H",
+    "unhide": "KEY_LEFTALT+KEY_H",
+    "wireframe": "KEY_Z",
+    "solid": "KEY_LEFTALT+KEY_Z",
+    "orthographic": "KEY_NUMPAD5",
+    "perspective": "KEY_NUMPAD5",
+    "front_view": "KEY_NUMPAD1",
+    "side_view": "KEY_NUMPAD3",
+    "top_view": "KEY_NUMPAD7",
+    "camera_view": "KEY_NUMPAD0",
+    "zoom_to_fit": "KEY_HOME",
+    "local_view": "KEY_NUMPAD_SLASH",
+    "render": "KEY_F12",
+    "save": "KEY_LEFTCTRL+KEY_S"
+  }
+}

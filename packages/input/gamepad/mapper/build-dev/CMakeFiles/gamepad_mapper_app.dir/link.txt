@@ -1,0 +1,1 @@
+/usr/bin/c++ -m64 -g -m64 -Wl,--dependency-file=CMakeFiles/gamepad_mapper_app.dir/link.d CMakeFiles/gamepad_mapper_app.dir/src/main.cpp.o -o gamepad_mapper_app  libgamepad_mapper.a -lX11 -lXtst -lwayland-client -lm -lSDL2 -ludev -lpthread

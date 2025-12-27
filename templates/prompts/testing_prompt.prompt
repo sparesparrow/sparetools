@@ -1,0 +1,71 @@
+---
+template_name: "mcp-testing-prompt"
+description: "Generate testing prompts for test case generation and quality assurance"
+category: "testing"
+variables:
+  test_type: "unit tests"
+  code_to_test: "Function or component to test"
+  testing_framework: "pytest"
+  language: "Python"
+  coverage_target: 90
+  include_edge_cases: true
+  include_performance_tests: false
+---
+
+# {{ test_type | title }} Generation Request
+
+## Testing Target
+{{ code_to_test }}
+
+## Test Specifications
+- **Test Type**: {{ test_type }}
+- **Language**: {{ language }}
+- **Testing Framework**: {{ testing_framework }}
+- **Coverage Target**: {{ coverage_target }}%
+- **Include Edge Cases**: {{ include_edge_cases }}
+- **Include Performance Tests**: {{ include_performance_tests }}
+
+## Test Generation Requirements
+
+Please generate comprehensive {{ test_type }} for the specified code using {{ testing_framework }}.
+
+### Test Structure
+1. **Setup**: Test environment and data preparation
+2. **Test Cases**: Individual test scenarios
+3. **Assertions**: Expected outcomes and validations
+4. **Cleanup**: Test cleanup and teardown
+5. **Documentation**: Test descriptions and comments
+
+### Test Categories
+- **Happy Path Tests**: Normal operation scenarios
+- **Edge Cases**: Boundary conditions and limits
+- **Error Handling**: Invalid inputs and error conditions
+- **Integration Tests**: Component interactions
+{% if include_performance_tests %}
+- **Performance Tests**: Load and stress testing
+{% endif %}
+
+### Quality Requirements
+- Achieve {{ coverage_target }}% code coverage
+- Use descriptive test names and documentation
+- Follow {{ testing_framework }} best practices
+- Include proper setup and teardown
+- Use appropriate assertions and matchers
+
+{% if include_edge_cases %}
+### Edge Case Considerations
+Please include tests for:
+- Null/undefined inputs
+- Empty collections
+- Boundary values
+- Invalid data types
+- Network failures (if applicable)
+- Resource constraints
+{% endif %}
+
+## Expected Deliverables
+- Complete test suite implementation
+- Test configuration files
+- Coverage report setup
+- Test documentation
+- CI/CD integration suggestions

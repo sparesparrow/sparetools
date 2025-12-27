@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=@CMAKE_INSTALL_PREFIX@
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: gamepad-mapper
+Description: Multi-backend gamepad to keyboard/mouse input mapper
+Version: @PROJECT_VERSION@
+Libs: -L${libdir} -lgamepad_mapper
+Cflags: -I${includedir}
+Requires: nlohmann_json

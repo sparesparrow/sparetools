@@ -1,0 +1,22 @@
+---
+template_name: "pie-template"
+description: "Pie chart template for data distribution visualization"
+variables:
+  title: "Data Distribution"
+  data:
+    - label: "Category A"
+      value: 30
+    - label: "Category B"
+      value: 25
+    - label: "Category C"
+      value: 20
+    - label: "Category D"
+      value: 15
+    - label: "Category E"
+      value: 10
+---
+
+pie title {{title}}
+    {% for item in data %}
+    "{{item.label}}" : {{item.value}}
+    {% endfor %}

@@ -1,0 +1,133 @@
+{
+  "profile_name": "Professional Multi-Controller Setup",
+  "description": "Advanced mapping for professional use with multiple controllers and remote control capabilities",
+  "version": "2.0",
+  "controllers": {
+    "primary_controller": {
+      "device_id": "auto_detect",
+      "name": "Primary Controller",
+      "connection_type": "USB",
+      "mappings": {
+        "buttons": {
+          "A": "KEY_ENTER",
+          "B": "KEY_ESC",
+          "X": "KEY_SPACE",
+          "Y": "KEY_TAB",
+          "LB": "KEY_LEFTSHIFT",
+          "RB": "KEY_RIGHTCTRL",
+          "LT": "KEY_LEFTCTRL",
+          "RT": "KEY_LEFTALT",
+          "SELECT": "KEY_F1",
+          "START": "KEY_F2",
+          "LS": "KEY_F3",
+          "RS": "KEY_F4",
+          "DPAD_UP": "KEY_UP",
+          "DPAD_DOWN": "KEY_DOWN",
+          "DPAD_LEFT": "KEY_LEFT",
+          "DPAD_RIGHT": "KEY_RIGHT"
+        },
+        "axes": {
+          "LEFT_X": "MOUSE_X",
+          "LEFT_Y": "MOUSE_Y",
+          "RIGHT_X": "MOUSE_WHEEL_H",
+          "RIGHT_Y": "MOUSE_WHEEL_V",
+          "LEFT_TRIGGER": "MOUSE_LEFT_BUTTON",
+          "RIGHT_TRIGGER": "MOUSE_RIGHT_BUTTON"
+        },
+        "combinations": {
+          "LB+A": "KEY_LEFTSHIFT+KEY_ENTER",
+          "RB+B": "KEY_RIGHTCTRL+KEY_ESC",
+          "LT+X": "KEY_LEFTCTRL+KEY_SPACE",
+          "RT+Y": "KEY_LEFTALT+KEY_TAB"
+        }
+      },
+      "remote_control": {
+        "enabled": true,
+        "target_hosts": ["studio.local", "192.168.200.23"],
+        "protocol": "network",
+        "port": 8080
+      }
+    },
+    "secondary_controller": {
+      "device_id": "auto_detect",
+      "name": "Secondary Controller",
+      "connection_type": "BLUETOOTH",
+      "mappings": {
+        "buttons": {
+          "A": "KEY_F5",
+          "B": "KEY_F6",
+          "X": "KEY_F7",
+          "Y": "KEY_F8",
+          "LB": "KEY_F9",
+          "RB": "KEY_F10",
+          "LT": "KEY_F11",
+          "RT": "KEY_F12",
+          "SELECT": "KEY_PRINT",
+          "START": "KEY_SCROLLLOCK",
+          "LS": "KEY_PAUSE",
+          "RS": "KEY_INSERT",
+          "DPAD_UP": "KEY_PAGEUP",
+          "DPAD_DOWN": "KEY_PAGEDOWN",
+          "DPAD_LEFT": "KEY_HOME",
+          "DPAD_RIGHT": "KEY_END"
+        },
+        "axes": {
+          "LEFT_X": "MOUSE_X",
+          "LEFT_Y": "MOUSE_Y",
+          "RIGHT_X": "MOUSE_WHEEL_H",
+          "RIGHT_Y": "MOUSE_WHEEL_V",
+          "LEFT_TRIGGER": "MOUSE_LEFT_BUTTON",
+          "RIGHT_TRIGGER": "MOUSE_RIGHT_BUTTON"
+        }
+      },
+      "remote_control": {
+        "enabled": true,
+        "target_hosts": ["studio.local"],
+        "protocol": "kde_connect",
+        "device_id": "auto_detect"
+      }
+    }
+  },
+  "voice_alerts": {
+    "enabled": true,
+    "voice": "default",
+    "speed": 1.0,
+    "volume": 0.8,
+    "alerts": {
+      "controller_connected": "Controller {name} connected successfully!",
+      "controller_disconnected": "Controller {name} disconnected!",
+      "mapping_loaded": "Mapping {name} loaded successfully!",
+      "remote_connected": "Remote connection to {host} established!",
+      "error": "Error: {error}"
+    }
+  },
+  "network_control": {
+    "enabled": true,
+    "default_protocol": "network",
+    "fallback_protocols": ["kde_connect", "ssh"],
+    "targets": {
+      "studio.local": {
+        "ip": "192.168.200.23",
+        "port": 8080,
+        "protocol": "network",
+        "description": "Studio computer without Bluetooth"
+      },
+      "mobile_device": {
+        "device_id": "auto_detect",
+        "protocol": "kde_connect",
+        "description": "Mobile device via KDE Connect"
+      }
+    }
+  },
+  "advanced_features": {
+    "auto_detection": true,
+    "hotplug_support": true,
+    "connection_monitoring": true,
+    "fallback_handling": true,
+    "multi_os_support": {
+      "linux": true,
+      "windows": true,
+      "macos": true
+    }
+  }
+}

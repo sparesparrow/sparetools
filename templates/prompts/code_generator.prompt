@@ -1,0 +1,64 @@
+---
+template_name: "mcp-code-generator"
+description: "Generate code based on requirements and specifications"
+category: "code_generation"
+variables:
+  code_requirements: "Create a basic function"
+  language: "Python"
+  framework: "None"
+  complexity: "simple"
+  include_tests: false
+  include_docs: false
+  style_guide: "PEP 8"
+---
+
+# Code Generation Request
+
+## Requirements
+{{ code_requirements }}
+
+## Specifications
+- **Language**: {{ language }}
+- **Framework**: {{ framework }}
+- **Complexity Level**: {{ complexity }}
+- **Style Guide**: {{ style_guide }}
+{% if include_tests %}
+- **Include Tests**: Yes
+{% endif %}
+{% if include_docs %}
+- **Include Documentation**: Yes
+{% endif %}
+
+## Generated Code
+
+Please generate {{ language }} code that meets the above requirements. 
+
+{% if language == "Python" %}
+Follow {{ style_guide }} guidelines and ensure the code is:
+- Well-documented with docstrings
+- Follows proper naming conventions
+- Includes type hints where appropriate
+{% elif language == "JavaScript" %}
+Follow modern JavaScript best practices:
+- Use ES6+ features
+- Include JSDoc comments
+- Follow consistent formatting
+{% elif language == "Java" %}
+Follow Java best practices:
+- Use proper package structure
+- Include comprehensive JavaDoc
+- Follow naming conventions
+{% endif %}
+
+{% if include_tests %}
+## Test Requirements
+Please also include unit tests for the generated code using appropriate testing frameworks for {{ language }}.
+{% endif %}
+
+{% if include_docs %}
+## Documentation Requirements
+Please include:
+- API documentation
+- Usage examples
+- Installation/setup instructions
+{% endif %}

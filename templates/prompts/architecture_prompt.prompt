@@ -1,0 +1,75 @@
+---
+template_name: "mcp-architecture-prompt"
+description: "Generate architecture design prompts for system design and planning"
+category: "architecture"
+variables:
+  system_type: "web application"
+  requirements: "Basic CRUD operations"
+  scale: "medium"
+  technology_stack: "Python, React, PostgreSQL"
+  constraints: "Budget and time limitations"
+  include_diagrams: true
+  include_security: true
+---
+
+# {{ system_type | title }} Architecture Design Request
+
+## System Overview
+- **System Type**: {{ system_type }}
+- **Scale**: {{ scale }}
+- **Technology Stack**: {{ technology_stack }}
+- **Constraints**: {{ constraints }}
+
+## Requirements
+{{ requirements }}
+
+## Architecture Design Requirements
+
+Please design a comprehensive architecture for this {{ system_type }} that addresses the specified requirements and constraints.
+
+### Design Considerations
+1. **Scalability**: How will the system handle growth?
+2. **Performance**: What are the performance requirements?
+3. **Reliability**: How will the system ensure uptime and data integrity?
+4. **Security**: What security measures are needed?
+5. **Maintainability**: How will the system be maintained and updated?
+
+### Architecture Components
+- **Frontend**: User interface and client-side logic
+- **Backend**: Server-side logic and API design
+- **Database**: Data storage and management
+- **Infrastructure**: Deployment and hosting considerations
+- **Integration**: External services and APIs
+
+{% if include_diagrams %}
+### Visual Documentation
+Please include:
+- High-level system architecture diagram
+- Component interaction diagrams
+- Data flow diagrams
+- Deployment architecture
+- Security architecture overview
+{% endif %}
+
+{% if include_security %}
+### Security Considerations
+- Authentication and authorization
+- Data encryption and protection
+- Network security
+- Input validation and sanitization
+- Security monitoring and logging
+{% endif %}
+
+### Technology Recommendations
+Based on the specified stack ({{ technology_stack }}), please provide:
+- Specific technology choices and rationale
+- Integration patterns and best practices
+- Performance optimization strategies
+- Monitoring and observability tools
+
+## Deliverables
+- Complete architecture design document
+- Technology stack justification
+- Implementation roadmap
+- Risk assessment and mitigation strategies
+- Scalability and performance considerations
