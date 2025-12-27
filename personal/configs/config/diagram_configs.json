@@ -1,0 +1,167 @@
+{
+  "flowchart_examples": {
+    "simple_process": {
+      "template_name": "flowchart-template",
+      "variables": {
+        "title": "Simple Process Flow",
+        "steps": ["Start", "Input Data", "Process", "Validate", "End"],
+        "connections": [
+          {"from": "Start", "to": "Input Data", "label": ""},
+          {"from": "Input Data", "to": "Process", "label": ""},
+          {"from": "Process", "to": "Validate", "label": ""},
+          {"from": "Validate", "to": "End", "label": "Valid"},
+          {"from": "Validate", "to": "Process", "label": "Invalid"}
+        ]
+      }
+    },
+    "complex_workflow": {
+      "template_name": "flowchart-template",
+      "variables": {
+        "title": "Complex Workflow",
+        "steps": ["Start", "Initialize", "Load Data", "Process", "Decision", "Save", "Cleanup", "End"],
+        "connections": [
+          {"from": "Start", "to": "Initialize", "label": ""},
+          {"from": "Initialize", "to": "Load Data", "label": ""},
+          {"from": "Load Data", "to": "Process", "label": ""},
+          {"from": "Process", "to": "Decision", "label": ""},
+          {"from": "Decision", "to": "Save", "label": "Success"},
+          {"from": "Decision", "to": "Cleanup", "label": "Error"},
+          {"from": "Save", "to": "Cleanup", "label": ""},
+          {"from": "Cleanup", "to": "End", "label": ""}
+        ]
+      }
+    }
+  },
+  "sequence_examples": {
+    "api_interaction": {
+      "template_name": "sequence-template",
+      "variables": {
+        "title": "API Interaction Flow",
+        "actors": ["Client", "API Gateway", "Auth Service", "Database", "Cache"],
+        "interactions": [
+          {"from": "Client", "to": "API Gateway", "message": "Request", "type": "solid"},
+          {"from": "API Gateway", "to": "Auth Service", "message": "Validate Token", "type": "solid"},
+          {"from": "Auth Service", "to": "API Gateway", "message": "Token Valid", "type": "dashed"},
+          {"from": "API Gateway", "to": "Cache", "message": "Check Cache", "type": "solid"},
+          {"from": "Cache", "to": "API Gateway", "message": "Cache Miss", "type": "dashed"},
+          {"from": "API Gateway", "to": "Database", "message": "Query Data", "type": "solid"},
+          {"from": "Database", "to": "API Gateway", "message": "Data", "type": "dashed"},
+          {"from": "API Gateway", "to": "Client", "message": "Response", "type": "solid"}
+        ]
+      }
+    }
+  },
+  "class_examples": {
+    "user_management": {
+      "template_name": "class-template",
+      "variables": {
+        "title": "User Management System",
+        "classes": [
+          {
+            "name": "User",
+            "methods": ["+login()", "+logout()", "+getProfile()", "+updateProfile()"],
+            "attributes": ["-username: String", "-email: String", "-password: String", "-lastLogin: Date"]
+          },
+          {
+            "name": "UserService",
+            "methods": ["+authenticate()", "+createUser()", "+deleteUser()", "+updateUser()"],
+            "attributes": ["-userRepository: UserRepository", "-authService: AuthService"]
+          },
+          {
+            "name": "UserRepository",
+            "methods": ["+findById()", "+save()", "+delete()", "+findByEmail()"],
+            "attributes": ["-database: Database", "-cache: Cache"]
+          },
+          {
+            "name": "AuthService",
+            "methods": ["+hashPassword()", "+verifyPassword()", "+generateToken()"],
+            "attributes": ["-secretKey: String", "-tokenExpiry: int"]
+          }
+        ],
+        "relationships": [
+          {"from": "UserService", "to": "User", "type": "uses", "label": "manages"},
+          {"from": "UserService", "to": "UserRepository", "type": "uses", "label": "1..1"},
+          {"from": "UserService", "to": "AuthService", "type": "uses", "label": "1..1"},
+          {"from": "UserRepository", "to": "User", "type": "uses", "label": "persists"}
+        ]
+      }
+    }
+  },
+  "state_examples": {
+    "order_processing": {
+      "template_name": "state-template",
+      "variables": {
+        "title": "Order Processing States",
+        "states": ["Pending", "Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"],
+        "transitions": [
+          {"from": "Pending", "to": "Confirmed", "trigger": "payment_received", "condition": "valid_payment"},
+          {"from": "Confirmed", "to": "Processing", "trigger": "start_processing", "condition": "inventory_available"},
+          {"from": "Processing", "to": "Shipped", "trigger": "ship_order", "condition": "order_ready"},
+          {"from": "Shipped", "to": "Delivered", "trigger": "delivery_confirmed", "condition": "delivery_successful"},
+          {"from": "Pending", "to": "Cancelled", "trigger": "cancel_order", "condition": "cancellation_requested"},
+          {"from": "Confirmed", "to": "Cancelled", "trigger": "cancel_order", "condition": "before_processing"},
+          {"from": "Processing", "to": "Cancelled", "trigger": "cancel_order", "condition": "before_shipping"}
+        ]
+      }
+    }
+  },
+  "gantt_examples": {
+    "project_timeline": {
+      "template_name": "gantt-template",
+      "variables": {
+        "title": "Software Development Project",
+        "tasks": [
+          {"name": "Requirements Analysis", "start": "2024-01-01", "end": "2024-01-14", "status": "done"},
+          {"name": "System Design", "start": "2024-01-15", "end": "2024-01-28", "status": "done"},
+          {"name": "Backend Development", "start": "2024-01-29", "end": "2024-02-25", "status": "active"},
+          {"name": "Frontend Development", "start": "2024-02-01", "end": "2024-02-25", "status": "active"},
+          {"name": "Integration Testing", "start": "2024-02-26", "end": "2024-03-10", "status": "pending"},
+          {"name": "User Acceptance Testing", "start": "2024-03-11", "end": "2024-03-24", "status": "pending"},
+          {"name": "Deployment", "start": "2024-03-25", "end": "2024-03-31", "status": "pending"}
+        ]
+      }
+    }
+  },
+  "pie_examples": {
+    "technology_usage": {
+      "template_name": "pie-template",
+      "variables": {
+        "title": "Technology Stack Usage",
+        "data": [
+          {"label": "Python", "value": 35},
+          {"label": "JavaScript", "value": 25},
+          {"label": "Java", "value": 20},
+          {"label": "Go", "value": 10},
+          {"label": "Rust", "value": 5},
+          {"label": "Other", "value": 5}
+        ]
+      }
+    }
+  },
+  "mindmap_examples": {
+    "project_planning": {
+      "template_name": "mindmap-template",
+      "variables": {
+        "title": "Project Planning",
+        "branches": [
+          {
+            "name": "Frontend",
+            "subbranches": ["React Components", "State Management", "UI/UX Design", "Testing"]
+          },
+          {
+            "name": "Backend",
+            "subbranches": ["API Development", "Database Design", "Authentication", "Security"]
+          },
+          {
+            "name": "DevOps",
+            "subbranches": ["CI/CD Pipeline", "Containerization", "Monitoring", "Deployment"]
+          },
+          {
+            "name": "Documentation",
+            "subbranches": ["API Docs", "User Guide", "Technical Specs", "Architecture"]
+          }
+        ]
+      }
+    }
+  }
+}
