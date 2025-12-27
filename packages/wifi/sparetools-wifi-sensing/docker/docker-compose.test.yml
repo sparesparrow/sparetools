@@ -1,0 +1,230 @@
+version: '3.8'
+
+services:
+  wifi-sensing-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    container_name: wifi-sensing-test
+    profiles: ["test"]
+    volumes:
+      - ..:/workspace
+      - ./test-results:/workspace/test-results
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace/src:/workspace/tests
+      - PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+      - MOCK_HARDWARE=1
+    command: pytest tests/ -v --tb=short --cov=src --cov-report=html:test-results/coverage --cov-report=xml:test-results/coverage.xml
+
+  wifi-sensing-conan-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.conan
+    container_name: wifi-sensing-conan-test
+    profiles: ["conan-test"]
+    volumes:
+      - ..:/workspace
+      - ./test-results:/workspace/test-results
+      - ~/.conan:/root/.conan
+    working_dir: /workspace
+    environment:
+      - CONAN_USER_HOME=/root/.conan
+    command: |
+      bash -c "
+        conan profile detect --force
+        conan install . --build=missing --profile=conan/profiles/linux-debug
+        conan build .
+        ctest --output-on-failure
+      "
+
+  wifi-sensing-integration-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.integration
+    container_name: wifi-sensing-integration-test
+    profiles: ["integration-test"]
+    volumes:
+      - ..:/workspace
+      - ./test-results:/workspace/test-results
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace/src
+      - MOCK_ALL_HARDWARE=1
+      - DISABLE_REAL_NETWORK=1
+    command: |
+      bash -c "
+        # Run unit tests
+        python3 -m pytest tests/unit/ -v
+
+        # Run integration tests
+        python3 -m pytest tests/integration/ -v --tb=short
+
+        # Test Flipper Zero integration (mocked)
+        python3 research/repositories/flipper_zero/wifi_sensing_integration/scripts/unified_build.py --skip-flipper
+
+        # Generate test report
+        python3 -c \"
+        import json
+        import os
+        from datetime import datetime
+
+        results = {
+            'timestamp': datetime.now().isoformat(),
+            'tests_run': True,
+            'mock_hardware': True,
+            'integration_components': [
+                'core_libraries',
+                'csi_processing',
+                'signal_analysis',
+                'flipper_integration'
+            ]
+        }
+
+        os.makedirs('test-results', exist_ok=True)
+        with open('test-results/integration_results.json', 'w') as f:
+            json.dump(results, f, indent=2)
+        \"
+      "
+
+  wifi-sensing-performance-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.performance
+    container_name: wifi-sensing-performance-test
+    profiles: ["performance-test"]
+    volumes:
+      - ..:/workspace
+      - ./test-results:/workspace/test-results
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace/src
+      - MOCK_HARDWARE=1
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    command: |
+      bash -c "
+        echo 'Running performance benchmarks...'
+
+        # CSI processing benchmark
+        python3 -c \"
+        import time
+        import numpy as np
+        from src.core.csi_processor import CSIProcessor
+
+        # Mock CSI data
+        csi_data = np.random.randn(1000, 30, 3) + 1j * np.random.randn(1000, 30, 3)
+
+        processor = CSIProcessor()
+        start_time = time.time()
+
+        for i in range(100):
+            result = processor.process_csi_batch(csi_data[i*10:(i+1)*10])
+
+        end_time = time.time()
+        processing_time = end_time - start_time
+
+        print(f'CSI Processing: {processing_time:.2f}s for 1000 frames')
+        print(f'FPS: {1000/processing_time:.1f}')
+        \"
+
+        # Signal analysis benchmark
+        python3 -c \"
+        import time
+        import numpy as np
+        from src.analysis.signal_processor import SignalProcessor
+
+        # Generate test signal
+        t = np.linspace(0, 1, 10000)
+        signal = np.sin(2*np.pi*100*t) + 0.5*np.sin(2*np.pi*200*t) + 0.1*np.random.randn(10000)
+
+        processor = SignalProcessor()
+        start_time = time.time()
+
+        for i in range(10):
+            spectrum = processor.compute_fft(signal)
+            peaks = processor.find_peaks(spectrum)
+
+        end_time = time.time()
+        processing_time = end_time - start_time
+
+        print(f'Signal Analysis: {processing_time:.2f}s for 10 analyses')
+        \"
+
+        # Save results
+        echo \"Performance test completed\" > test-results/performance_complete.txt
+      "
+
+  wifi-sensing-security-test:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.security
+    container_name: wifi-sensing-security-test
+    profiles: ["security-test"]
+    volumes:
+      - ..:/workspace
+      - ./test-results:/workspace/test-results
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace/src
+    command: |
+      bash -c "
+        echo 'Running security analysis...'
+
+        # Check for sensitive data in code
+        find . -name '*.py' -exec grep -l 'password\|secret\|key' {} \; | head -5 > test-results/sensitive_files.txt || true
+
+        # Check for proper input validation
+        python3 -c \"
+        import ast
+        import os
+
+        def check_input_validation(file_path):
+            try:
+                with open(file_path, 'r') as f:
+                    tree = ast.parse(f.read())
+
+                has_validation = False
+                for node in ast.walk(tree):
+                    if isinstance(node, ast.FunctionDef):
+                        # Check if function has input validation
+                        if any('validate' in str(stmt) or 'check' in str(stmt) for stmt in node.body):
+                            has_validation = True
+                            break
+
+                return has_validation
+            except:
+                return False
+
+        validated_files = []
+        for root, dirs, files in os.walk('src'):
+            for file in files:
+                if file.endswith('.py'):
+                    path = os.path.join(root, file)
+                    if check_input_validation(path):
+                        validated_files.append(path)
+
+        print(f'Files with input validation: {len(validated_files)}')
+
+        with open('test-results/security_check.txt', 'w') as f:
+            f.write(f'Files with input validation: {len(validated_files)}\\n')
+            for vf in validated_files[:10]:  # Show first 10
+                f.write(f'{vf}\\n')
+        \"
+
+        # Check dependencies for vulnerabilities (mock)
+        echo 'Dependency security check would run here in production' > test-results/dependency_audit.txt
+
+        echo 'Security analysis completed'
+      "
+
+networks:
+  default:
+    name: wifi-sensing-test-network
+
+volumes:
+  test-results:
+    driver: local

@@ -1,0 +1,321 @@
+{
+  "cloned": [
+    "nexmon_csi",
+    "Wifi_Activity_Recognition"
+  ],
+  "failed": [
+    {
+      "name": "linux-80211n-csitool",
+      "url": "https://github.com/dhalperi/linux-80211n-csitool.git",
+      "error": "Cloning into 'research/repositories/linux-80211n-csitool'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416009.6977324
+    },
+    {
+      "name": "Atheros-CSI-Tool",
+      "url": "https://github.com/xieyaxiongfly/Atheros-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/Atheros-CSI-Tool'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416010.2322247
+    },
+    {
+      "name": "nexmon_csi",
+      "url": "https://github.com/seemoo-lab/nexmon_csi.git",
+      "error": "Cloning into 'research/repositories/nexmon_csi'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416010.7543821
+    },
+    {
+      "name": "WiFi-CSI-Sensing",
+      "url": "https://github.com/ucsdwcsng/WiFi-CSI-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Sensing'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416011.273751
+    },
+    {
+      "name": "Wifi_Activity_Recognition",
+      "url": "https://github.com/ermongroup/Wifi_Activity_Recognition.git",
+      "error": "Cloning into 'research/repositories/Wifi_Activity_Recognition'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416011.8149352
+    },
+    {
+      "name": "WiFi_Sensing",
+      "url": "https://github.com/koutilya-pnvr/WiFi_Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi_Sensing'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416012.349612
+    },
+    {
+      "name": "WiFi-Sensing-geekfeiw",
+      "url": "https://github.com/geekfeiw/WiFi-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-Sensing-geekfeiw'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416012.8873343
+    },
+    {
+      "name": "WiFi-CSI-Sensing-leewi9",
+      "url": "https://github.com/leewi9/WiFi-CSI-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Sensing-leewi9'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416013.4324975
+    },
+    {
+      "name": "WiAR",
+      "url": "https://github.com/ermongroup/WiAR.git",
+      "error": "Cloning into 'research/repositories/WiAR'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416014.1470375
+    },
+    {
+      "name": "WiSign",
+      "url": "https://github.com/geekfeiw/WiSign.git",
+      "error": "Cloning into 'research/repositories/WiSign'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416014.677237
+    },
+    {
+      "name": "WiKey",
+      "url": "https://github.com/mengxiuyu/WiKey.git",
+      "error": "Cloning into 'research/repositories/WiKey'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416015.210339
+    },
+    {
+      "name": "SignFi",
+      "url": "https://github.com/mengxiuyu/SignFi.git",
+      "error": "Cloning into 'research/repositories/SignFi'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416015.7305837
+    },
+    {
+      "name": "WiHear",
+      "url": "https://github.com/mengxiuyu/WiHear.git",
+      "error": "Cloning into 'research/repositories/WiHear'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416016.2567334
+    },
+    {
+      "name": "WiFi-CSI-Tool",
+      "url": "https://github.com/StevenHsuYL/WiFi-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Tool'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416016.7830746
+    },
+    {
+      "name": "WiFi-CSI-Tool-jonathanmuller",
+      "url": "https://github.com/jonathanmuller/WiFi-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Tool-jonathanmuller'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416017.307736
+    },
+    {
+      "name": "CsiGAN",
+      "url": "https://github.com/jianlincheng/CsiGAN.git",
+      "error": "Cloning into 'research/repositories/CsiGAN'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416017.844401
+    },
+    {
+      "name": "CsiNet",
+      "url": "https://github.com/geekfeiw/CsiNet.git",
+      "error": "Cloning into 'research/repositories/CsiNet'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416018.3711228
+    },
+    {
+      "name": "wifi-sensing-simulation",
+      "url": "https://github.com/lizonghang/wifi-sensing-simulation.git",
+      "error": "Cloning into 'research/repositories/wifi-sensing-simulation'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761416018.9051383
+    },
+    {
+      "name": "linux-80211n-csitool",
+      "url": "https://github.com/dhalperi/linux-80211n-csitool.git",
+      "error": "Cloning into 'research/repositories/linux-80211n-csitool'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417031.617787
+    },
+    {
+      "name": "Atheros-CSI-Tool",
+      "url": "https://github.com/xieyaxiongfly/Atheros-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/Atheros-CSI-Tool'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417036.1037548
+    },
+    {
+      "name": "nexmon_csi",
+      "url": "https://github.com/seemoo-lab/nexmon_csi.git",
+      "error": "Cloning into 'research/repositories/nexmon_csi'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417040.5880182
+    },
+    {
+      "name": "WiFi-CSI-Sensing",
+      "url": "https://github.com/ucsdwcsng/WiFi-CSI-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Sensing'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417043.442557
+    },
+    {
+      "name": "Wifi_Activity_Recognition",
+      "url": "https://github.com/ermongroup/Wifi_Activity_Recognition.git",
+      "error": "Cloning into 'research/repositories/Wifi_Activity_Recognition'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417047.812642
+    },
+    {
+      "name": "WiFi_Sensing",
+      "url": "https://github.com/koutilya-pnvr/WiFi_Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi_Sensing'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417050.2726052
+    },
+    {
+      "name": "WiFi-Sensing-geekfeiw",
+      "url": "https://github.com/geekfeiw/WiFi-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-Sensing-geekfeiw'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417052.7609484
+    },
+    {
+      "name": "WiFi-CSI-Sensing-leewi9",
+      "url": "https://github.com/leewi9/WiFi-CSI-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Sensing-leewi9'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417055.2284424
+    },
+    {
+      "name": "WiAR",
+      "url": "https://github.com/ermongroup/WiAR.git",
+      "error": "Cloning into 'research/repositories/WiAR'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417058.0899074
+    },
+    {
+      "name": "WiSign",
+      "url": "https://github.com/geekfeiw/WiSign.git",
+      "error": "Cloning into 'research/repositories/WiSign'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417060.8978243
+    },
+    {
+      "name": "WiKey",
+      "url": "https://github.com/mengxiuyu/WiKey.git",
+      "error": "Cloning into 'research/repositories/WiKey'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417063.477766
+    },
+    {
+      "name": "SignFi",
+      "url": "https://github.com/mengxiuyu/SignFi.git",
+      "error": "Cloning into 'research/repositories/SignFi'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417066.1323578
+    },
+    {
+      "name": "WiHear",
+      "url": "https://github.com/mengxiuyu/WiHear.git",
+      "error": "Cloning into 'research/repositories/WiHear'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417068.9597201
+    },
+    {
+      "name": "WiFi-CSI-Tool",
+      "url": "https://github.com/StevenHsuYL/WiFi-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Tool'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417071.6794143
+    },
+    {
+      "name": "WiFi-CSI-Tool-jonathanmuller",
+      "url": "https://github.com/jonathanmuller/WiFi-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Tool-jonathanmuller'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417073.88781
+    },
+    {
+      "name": "CsiGAN",
+      "url": "https://github.com/jianlincheng/CsiGAN.git",
+      "error": "Cloning into 'research/repositories/CsiGAN'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417075.8098822
+    },
+    {
+      "name": "CsiNet",
+      "url": "https://github.com/geekfeiw/CsiNet.git",
+      "error": "Cloning into 'research/repositories/CsiNet'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417077.9257686
+    },
+    {
+      "name": "wifi-sensing-simulation",
+      "url": "https://github.com/lizonghang/wifi-sensing-simulation.git",
+      "error": "Cloning into 'research/repositories/wifi-sensing-simulation'...\nBad owner or permissions on /home/sparrow/.ssh/config\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417079.213955
+    },
+    {
+      "name": "linux-80211n-csitool",
+      "url": "https://github.com/dhalperi/linux-80211n-csitool.git",
+      "error": "timeout",
+      "timestamp": 1761417592.038565
+    },
+    {
+      "name": "Atheros-CSI-Tool",
+      "url": "https://github.com/xieyaxiongfly/Atheros-CSI-Tool.git",
+      "error": "timeout",
+      "timestamp": 1761417653.1018329
+    },
+    {
+      "name": "WiFi-CSI-Sensing",
+      "url": "https://github.com/ucsdwcsng/WiFi-CSI-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Sensing'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417659.4916973
+    },
+    {
+      "name": "WiFi_Sensing",
+      "url": "https://github.com/koutilya-pnvr/WiFi_Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi_Sensing'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417671.2124345
+    },
+    {
+      "name": "WiFi-Sensing-geekfeiw",
+      "url": "https://github.com/geekfeiw/WiFi-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-Sensing-geekfeiw'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417673.776587
+    },
+    {
+      "name": "WiFi-CSI-Sensing-leewi9",
+      "url": "https://github.com/leewi9/WiFi-CSI-Sensing.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Sensing-leewi9'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417676.2607715
+    },
+    {
+      "name": "WiAR",
+      "url": "https://github.com/ermongroup/WiAR.git",
+      "error": "Cloning into 'research/repositories/WiAR'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417679.4207857
+    },
+    {
+      "name": "WiSign",
+      "url": "https://github.com/geekfeiw/WiSign.git",
+      "error": "Cloning into 'research/repositories/WiSign'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417681.975286
+    },
+    {
+      "name": "WiKey",
+      "url": "https://github.com/mengxiuyu/WiKey.git",
+      "error": "Cloning into 'research/repositories/WiKey'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417684.6177394
+    },
+    {
+      "name": "SignFi",
+      "url": "https://github.com/mengxiuyu/SignFi.git",
+      "error": "Cloning into 'research/repositories/SignFi'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417687.0636744
+    },
+    {
+      "name": "WiHear",
+      "url": "https://github.com/mengxiuyu/WiHear.git",
+      "error": "Cloning into 'research/repositories/WiHear'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417690.2365708
+    },
+    {
+      "name": "WiFi-CSI-Tool",
+      "url": "https://github.com/StevenHsuYL/WiFi-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Tool'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417692.8736076
+    },
+    {
+      "name": "WiFi-CSI-Tool-jonathanmuller",
+      "url": "https://github.com/jonathanmuller/WiFi-CSI-Tool.git",
+      "error": "Cloning into 'research/repositories/WiFi-CSI-Tool-jonathanmuller'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417695.8619406
+    },
+    {
+      "name": "CsiGAN",
+      "url": "https://github.com/jianlincheng/CsiGAN.git",
+      "error": "Cloning into 'research/repositories/CsiGAN'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417698.7025423
+    },
+    {
+      "name": "CsiNet",
+      "url": "https://github.com/geekfeiw/CsiNet.git",
+      "error": "Cloning into 'research/repositories/CsiNet'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417706.3069875
+    },
+    {
+      "name": "wifi-sensing-simulation",
+      "url": "https://github.com/lizonghang/wifi-sensing-simulation.git",
+      "error": "Cloning into 'research/repositories/wifi-sensing-simulation'...\nERROR: Repository not found.\nfatal: Could not read from remote repository.\n\nPlease make sure you have the correct access rights\nand the repository exists.\n",
+      "timestamp": 1761417708.9347172
+    }
+  ],
+  "last_updated": 1761417709.9348252
+}

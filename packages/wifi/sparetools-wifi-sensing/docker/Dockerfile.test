@@ -1,0 +1,74 @@
+# WiFi Sensing Test Environment
+# Hardware-mocking test environment for CI/CD
+
+FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV MOCK_HARDWARE=1
+
+# Install system dependencies for testing
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    python3 \
+    python3-pip \
+    python3-dev \
+    libgtest-dev \
+    googletest \
+    lcov \
+    gcovr \
+    valgrind \
+    clang-tidy \
+    cppcheck \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python test packages
+RUN pip3 install --no-cache-dir \
+    pytest \
+    pytest-cov \
+    pytest-xdist \
+    pytest-mock \
+    pytest-asyncio \
+    coverage \
+    mock \
+    hypothesis \
+    faker \
+    freezegun \
+    responses \
+    requests-mock \
+    unittest2 \
+    nose2
+
+# Install additional testing tools
+RUN pip3 install --no-cache-dir \
+    black \
+    flake8 \
+    mypy \
+    pylint \
+    bandit \
+    safety \
+    darglint \
+    radon
+
+# Create workspace
+RUN mkdir -p /workspace
+WORKDIR /workspace
+
+# Copy test utilities
+COPY docker/test_utils.py /workspace/tests/test_utils.py
+COPY docker/mock_hardware.py /workspace/tests/mock_hardware.py
+
+# Set up test environment
+ENV PYTHONPATH=/workspace/src:/workspace/tests
+
+# Create non-root user for testing
+RUN useradd -m -s /bin/bash testuser && \
+    chown -R testuser:testuser /workspace
+
+USER testuser
+
+# Default command
+CMD ["pytest", "--version"]

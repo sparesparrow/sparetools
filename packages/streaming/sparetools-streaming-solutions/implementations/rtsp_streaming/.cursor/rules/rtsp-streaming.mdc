@@ -1,0 +1,73 @@
+---
+globs: ["rtsp_streaming/**/*"]
+description: "RTSP Streaming Solution Rules and Context"
+alwaysApply: true
+---
+
+# RTSP Streaming Solution Context
+
+## Project Overview
+This directory contains the RTSP (Real-Time Streaming Protocol) solution for real-time screen casting to the Hisense TV. RTSP provides true real-time streaming with minimal latency.
+
+## Key Files and Purpose
+- `gstreamer_rtsp_server.py` - Main GStreamer-based RTSP server
+- `ffmpeg_rtsp_server.sh` - Alternative FFmpeg-based RTSP server
+- `rtsp_client_test.py` - Client connectivity testing
+- `rtsp_server_setup.sh` - Environment setup and dependencies
+- `upnp_discovery.py` - Network device discovery (shared utility)
+- `upnp_control.py` - UPnP/DLNA control (shared utility)
+- `tts_enhanced.py` - Text-to-speech system (shared utility)
+- `network_monitor.py` - Network monitoring (shared utility)
+
+## Technical Context
+- **Protocol**: RTSP (Real-Time Streaming Protocol)
+- **Transport**: RTP over RTSP
+- **Video Codec**: H.264 Baseline profile
+- **Resolution**: 1280x720 (configurable)
+- **Frame Rate**: 30 fps
+- **Latency Target**: < 2 seconds
+- **Port**: 8554 (default)
+
+## Development Guidelines
+1. **Real-time Focus**: All implementations should prioritize minimal latency
+2. **TV Compatibility**: Use H.264 baseline profile for maximum TV compatibility
+3. **Error Handling**: Implement robust error handling for network issues
+4. **Voice Feedback**: Use TTS system for status updates and alerts
+5. **Network Discovery**: Use UPnP discovery to find target devices
+
+## Common Commands
+```bash
+# Setup environment
+bash rtsp_server_setup.sh
+
+# Start GStreamer server
+python3 gstreamer_rtsp_server.py
+
+# Start FFmpeg server
+bash ffmpeg_rtsp_server.sh
+
+# Test connection
+python3 rtsp_client_test.py rtsp://192.168.200.44:8554/screen
+
+# Discover devices
+python3 upnp_discovery.py
+```
+
+## Network Configuration
+- **Target TV**: 192.168.200.44 (Hisense TV)
+- **Server IP**: Auto-detected or configurable
+- **RTSP URL**: `rtsp://[server-ip]:8554/screen`
+- **Firewall**: Ensure port 8554 is open
+
+## Troubleshooting
+- Check X11 display availability
+- Verify network connectivity
+- Test with VLC media player
+- Monitor network traffic with tcpdump
+- Check system resources (CPU, memory)
+
+## Integration Points
+- Uses shared utilities from parent directory
+- Integrates with existing CTF challenge setup
+- Compatible with voice alerting system
+- Supports network monitoring and discovery

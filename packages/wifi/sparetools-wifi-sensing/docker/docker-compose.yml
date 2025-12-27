@@ -1,0 +1,98 @@
+version: '3.8'
+
+services:
+  wifi-sensing-research:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: wifi-sensing-research
+    volumes:
+      # Mount the entire workspace
+      - ..:/workspace
+      # Mount host WiFi devices for CSI access
+      - /dev:/dev:ro
+      # Mount system WiFi configuration
+      - /sys/class/net:/sys/class/net:ro
+      - /proc/net/wireless:/proc/net/wireless:ro
+    devices:
+      # WiFi adapters for CSI extraction
+      - /dev/bus/usb:/dev/bus/usb
+      # SDR devices
+      - /dev/bus/usb
+    network_mode: host
+    privileged: true
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /tmp/.docker.xauth:/tmp/.docker.xauth:rw
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - apparmor:unconfined
+    command: jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --notebook-dir=/workspace
+
+  wifi-sensing-dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: wifi-sensing-dev
+    profiles: ["dev"]
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    command: sleep infinity
+    environment:
+      - PYTHONPATH=/workspace/src
+
+  wifi-sensing-analysis:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: wifi-sensing-analysis
+    profiles: ["analysis"]
+    volumes:
+      - ..:/workspace
+      - ./data:/workspace/data
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace/src
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    command: python3 scripts/train_model.py
+
+  wifi-sensing-demo:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: wifi-sensing-demo
+    profiles: ["demo"]
+    ports:
+      - "8501:8501"  # Streamlit
+      - "8050:8050"  # Dash
+      - "5000:5000"  # Flask
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    environment:
+      - PYTHONPATH=/workspace/src
+    command: streamlit run src/demo/app.py --server.port 8501 --server.address 0.0.0.0
+
+networks:
+  default:
+    name: wifi-sensing-network
+
+volumes:
+  workspace-data:
+    driver: local
+  models:
+    driver: local

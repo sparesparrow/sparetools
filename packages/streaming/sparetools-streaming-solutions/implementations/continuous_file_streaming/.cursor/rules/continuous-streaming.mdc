@@ -1,0 +1,72 @@
+---
+globs: ["continuous_file_streaming/**/*"]
+description: "Continuous File Streaming Solution Rules and Context"
+alwaysApply: true
+---
+
+# Continuous File Streaming Solution Context
+
+## Project Overview
+This directory contains the continuous file streaming solution for pseudo-real-time screen casting to the Hisense TV. This approach uses DLNA/UPnP with continuous file overwriting to simulate real-time streaming.
+
+## Key Files and Purpose
+- `optimized_continuous_cast.sh` - Main continuous casting script
+- `dlna_refresh_monitor.py` - DLNA refresh monitoring and management
+- `file_watcher.py` - File change monitoring
+- `continuous_stream_setup.sh` - Environment setup and dependencies
+- `stream_optimizer.py` - Video encoding optimization
+- `tv_connection_manager.py` - TV connection and playback management
+- `upnp_discovery.py` - Network device discovery (shared utility)
+- `upnp_control.py` - UPnP/DLNA control (shared utility)
+- `tts_enhanced.py` - Text-to-speech system (shared utility)
+- `network_monitor.py` - Network monitoring (shared utility)
+
+## Technical Context
+- **Protocol**: DLNA/UPnP with continuous file updates
+- **Transport**: HTTP over TCP (DLNA)
+- **Video Codec**: H.264 Baseline profile
+- **Resolution**: 1280x720 (configurable)
+- **Frame Rate**: 30 fps
+- **Latency Target**: 5-15 seconds (due to file processing)
+- **Port**: 8200 (MiniDLNA)
+
+## Development Guidelines
+1. **File-based Focus**: All implementations should work with file-based DLNA
+2. **Continuous Updates**: Handle continuous file overwriting and DLNA rescan
+3. **TV Compatibility**: Use H.264 baseline profile for maximum TV compatibility
+4. **Voice Feedback**: Use TTS system for status updates and alerts
+5. **Network Discovery**: Use UPnP discovery to find target devices
+
+## Common Commands
+```bash
+# Setup environment
+bash continuous_stream_setup.sh
+
+# Start continuous stream
+bash optimized_continuous_cast.sh
+
+# Test connection
+bash test_continuous_stream.sh
+
+# Discover devices
+python3 upnp_discovery.py
+```
+
+## Network Configuration
+- **Target TV**: 192.168.200.44 (Hisense TV)
+- **Server IP**: Auto-detected or configurable
+- **DLNA URL**: `http://[server-ip]:8200/`
+- **Stream File**: `live_screen.mp4`
+
+## Troubleshooting
+- Check MiniDLNA service status
+- Verify file permissions and updates
+- Test DLNA accessibility
+- Monitor file change events
+- Check system resources (CPU, memory, disk)
+
+## Integration Points
+- Uses shared utilities from parent directory
+- Integrates with existing CTF challenge setup
+- Compatible with voice alerting system
+- Supports network monitoring and discovery

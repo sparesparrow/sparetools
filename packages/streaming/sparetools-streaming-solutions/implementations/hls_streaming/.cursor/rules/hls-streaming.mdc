@@ -1,0 +1,71 @@
+---
+globs: ["hls_streaming/**/*"]
+description: "HLS Streaming Solution Rules and Context"
+alwaysApply: true
+---
+
+# HLS Streaming Solution Context
+
+## Project Overview
+This directory contains the HLS (HTTP Live Streaming) solution for real-time screen casting to the Hisense TV. HLS provides HTTP-based streaming with moderate latency.
+
+## Key Files and Purpose
+- `hls_http_server.py` - Main HLS HTTP server with Flask
+- `ffmpeg_hls_server.sh` - FFmpeg-based HLS segment generation
+- `hls_client_test.py` - Client connectivity testing
+- `hls_server_setup.sh` - Environment setup and dependencies
+- `hls_playlist_generator.py` - Dynamic playlist management
+- `upnp_discovery.py` - Network device discovery (shared utility)
+- `upnp_control.py` - UPnP/DLNA control (shared utility)
+- `tts_enhanced.py` - Text-to-speech system (shared utility)
+- `network_monitor.py` - Network monitoring (shared utility)
+
+## Technical Context
+- **Protocol**: HLS (HTTP Live Streaming)
+- **Transport**: HTTP over TCP
+- **Video Codec**: H.264 Baseline profile
+- **Resolution**: 1280x720 (configurable)
+- **Frame Rate**: 30 fps
+- **Latency Target**: 3-10 seconds (due to segmenting)
+- **Port**: 8080 (HTTP server)
+
+## Development Guidelines
+1. **HTTP Focus**: All implementations should work over standard HTTP
+2. **Segment Management**: Handle HLS segments and playlist updates
+3. **TV Compatibility**: Use H.264 baseline profile for maximum TV compatibility
+4. **Voice Feedback**: Use TTS system for status updates and alerts
+5. **Network Discovery**: Use UPnP discovery to find target devices
+
+## Common Commands
+```bash
+# Setup environment
+bash hls_server_setup.sh
+
+# Start HLS server
+python3 hls_http_server.py
+
+# Test connection
+python3 hls_client_test.py http://192.168.200.44:8080/hls/screen.m3u8
+
+# Discover devices
+python3 upnp_discovery.py
+```
+
+## Network Configuration
+- **Target TV**: 192.168.200.44 (Hisense TV)
+- **Server IP**: Auto-detected or configurable
+- **HLS URL**: `http://[server-ip]:8080/hls/screen.m3u8`
+- **Firewall**: Ensure port 8080 is open
+
+## Troubleshooting
+- Check HTTP server accessibility
+- Verify HLS segment generation
+- Test with VLC media player
+- Monitor playlist updates
+- Check system resources (CPU, memory)
+
+## Integration Points
+- Uses shared utilities from parent directory
+- Integrates with existing CTF challenge setup
+- Compatible with voice alerting system
+- Supports network monitoring and discovery

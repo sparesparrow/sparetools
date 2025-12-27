@@ -1,0 +1,145 @@
+# WiFi Sensing Research Requirements
+# Core dependencies for WiFi sensing, CSI processing, and machine learning research
+
+# Core Scientific Computing
+numpy>=1.21.0
+scipy>=1.7.0
+pandas>=1.3.0
+matplotlib>=3.4.0
+seaborn>=0.11.0
+plotly>=5.0.0
+bokeh>=2.4.0
+
+# Signal Processing
+scikit-signal>=0.2.0
+pyfftw>=0.12.0
+spectrum>=0.8.0
+nolds>=0.5.0
+
+# Machine Learning & Deep Learning
+scikit-learn>=1.0.0
+xgboost>=1.5.0
+lightgbm>=3.3.0
+catboost>=1.0.0
+
+# PyTorch Ecosystem
+torch>=1.11.0
+torchvision>=0.12.0
+torchaudio>=0.11.0
+pytorch-lightning>=1.6.0
+
+# TensorFlow/Keras
+tensorflow>=2.8.0
+keras>=2.8.0
+
+# Computer Vision
+opencv-python>=4.5.0
+scikit-image>=0.19.0
+albumentations>=1.1.0
+
+# Audio Processing
+librosa>=0.9.0
+soundfile>=0.10.0
+pyaudio>=0.2.11
+pygame>=2.1.0
+
+# Networking & Wireless
+scapy>=2.4.0
+pyshark>=0.5.0
+netifaces>=0.11.0
+wifi>=0.3.0
+
+# SDR & RF Processing
+pyrtlsdr>=0.3.0
+soapysdr>=0.8.0
+SoapyRTLSDR>=0.3.0
+
+# Data Processing & Storage
+h5py>=3.6.0
+tables>=3.7.0
+pyarrow>=8.0.0
+fastparquet>=0.8.0
+dask>=2022.5.0
+vaex>=4.9.0
+polars>=0.14.0
+
+# Time Series Analysis
+tslearn>=0.5.0
+sktime>=0.13.0
+prophet>=1.1.0
+
+# Development Tools
+jupyter>=1.0.0
+jupyterlab>=3.4.0
+notebook>=6.4.0
+ipykernel>=6.9.0
+
+# Testing & Quality
+pytest>=7.1.0
+pytest-cov>=3.0.0
+pytest-xdist>=2.5.0
+hypothesis>=6.40.0
+coverage>=6.3.0
+
+# Code Quality
+black>=22.3.0
+flake8>=4.0.0
+mypy>=0.950
+pre-commit>=2.19.0
+isort>=5.10.0
+
+# Web Frameworks
+flask>=2.1.0
+fastapi>=0.78.0
+uvicorn>=0.17.0
+streamlit>=1.10.0
+dash>=2.3.0
+gradio>=3.0.0
+
+# API & Communication
+requests>=2.27.0
+httpx>=0.23.0
+websockets>=10.3.0
+
+# Configuration & Logging
+pyyaml>=6.0
+python-dotenv>=0.19.0
+loguru>=0.6.0
+
+# Utilities
+tqdm>=4.63.0
+psutil>=5.9.0
+pathlib2>=2.3.0
+python-dateutil>=2.8.0
+
+# CSI-specific Libraries
+# Note: Some CSI tools require compilation from source
+# - linux-80211n-csitool: https://github.com/dhalperi/linux-80211n-csitool
+# - nexmon_csi: https://github.com/seemoo-lab/nexmon_csi
+# - Atheros CSI Tool: https://github.com/xieyaxiongfly/Atheros-CSI-Tool
+
+# Research-specific packages (may need source installation)
+# git+https://github.com/dhalperi/linux-80211n-csitool.git#egg=csitool
+# git+https://github.com/ucsdwcsng/WiFi-CSI-Sensing.git#egg=wifi-csi-sensing
+
+# Optional: GPU Acceleration
+# cupy>=10.0.0  # For CUDA acceleration (if GPU available)
+# jax>=0.3.0    # Alternative ML framework
+# flax>=0.5.0   # JAX neural networks
+
+# Optional: Advanced Visualization
+# holoviews>=1.14.0
+# hvplot>=0.8.0
+# datashader>=0.14.0
+# panel>=0.13.0
+
+# Development Dependencies
+pip-tools>=6.6.0
+setuptools>=60.0.0
+wheel>=0.37.0
+
+# Platform-specific (Linux)
+# python-dev (system package)
+# libfftw3-dev (system package)
+# libgsl-dev (system package)
+# wireless-tools (system package)
