@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "mcp-prompts-memory": {
+      "command": "sudo",
+      "args": [
+        "docker",
+        "run",
+        "--rm",
+        "-i",
+        "mcp-prompts-mcp-prompts-memory"
+      ],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
