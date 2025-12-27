@@ -1,0 +1,21 @@
+{
+  "cloned": [
+    "wigle-wifi",
+    "geoprobe",
+    "wardriver-pwnagotchi-plugin",
+    "wigle-tools-takano32",
+    "ssidCliTool",
+    "wigle-bt",
+    "ESP8266-Wardriving",
+    "wigle-tools-deathsec",
+    "wifimap",
+    "WigleToTAK",
+    "wardriver_rev3",
+    "wigleQuery",
+    "wigle-wifi-wardriving",
+    "wifi-map-viewer",
+    "kml-bluetooth-parser-wigle"
+  ],
+  "failed": [],
+  "last_updated": 1761418232.668913
+}

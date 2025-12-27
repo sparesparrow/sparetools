@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=A0Ra9gElOR">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=A0Ra9gElOR">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=A0Ra9gElOR">
+<link rel="manifest" href="/manifest.json?v=A0Ra9gElOR">
+<link rel="mask-icon" href="/safari-pinned-tab.svg?v=A0Ra9gElOR" color="#5bbad5">
+<link rel="shortcut icon" href="/favicon.ico?v=A0Ra9gElOR">
+<meta name="description" content="Maps and database of 802.11 wireless networks, with statistics, submitted by wardrivers, netstumblers, and net huggers.">
+<meta name="keywords" content="wifi,wireless,802.11,802.11b,wireless networks,wireless maps,maps,mapping,wireless mapping,wardriving,war driving,netstumbler,dstumbler,kismet,net hugger,net hugging">
+<meta name="author" content="WiGLE.net">
+<meta name="google-site-verification" content="fFWa-EFp_gpCQFwZf7B_4qEjxOVcqQ4MtJ-l-aALf2E" />    <title>Frequently Asked Questions</title>
+<LINK REL="alternate" TITLE="WiGLE RSS" HREF="//wigle.net/gps/gps/RSS/wiglenews.xml" TYPE="application/rss+xml">
+<LINK REL="alternate" TITLE="WiGLE Statistics RSS" HREF="//wigle.net/gps/gps/StatRSS/wiglestats.xml" TYPE="application/rss+xml"><link rel="stylesheet" href="//wigle.net/css/sl.css" type="text/css">
+<link href="//wigle.net/css/bootstrap.min.css" rel="stylesheet">
+<link href="//wigle.net/css/bss.css" rel="stylesheet">
+  </head>
+  <body>
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="//wigle.net/index" id="homeplanet"><img src="/images/planet-bubble.png" height=60 width=60 alt="home"></a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul id="topnav" class="nav navbar-nav">
+            <li><a href="#" class="dropdown-toggle view" data-toggle="dropdown">View</a>
+              <ul class="dropdown-menu">
+                <li><a href="//wigle.net/mapsearch">Basic Search</a></li>
+                <li><a href="//wigle.net/search">Advanced Search</a></li>
+                <li><a href="//wigle.net/map">Map</a></li>
+              </ul>
+            </li>
+            <li><a href="//wigle.net/uploads" class="uploads">Uploads</a></li>
+            <li class="naactive"><a href="#" class="dropdown-toggle info" data-toggle="dropdown">Info</a>
+              <ul class="dropdown-menu">
+                <li><a href="https://play.google.com/store/apps/details?id=net.wigle.wigleandroid">Android App</a></li>
+                <li><a href="//wigle.net/faq">FAQ</a></li>
+                <li><a href="//wigle.net/wiwiwa-faq">App FAQ</a></li>
+                <li><a href="//wigle.net/phpbb/">Forums</a></li>
+                <li><a href="https://defcon.social/@WiGLEnet">Mastodon</a></li>
+                <li><a href="https://bsky.app/profile/wiglenet.bsky.social">Bsky</a></li>
+                <li><a href="https://twitter.com/wiglenet">Twitter</a></li>
+              </ul>
+            </li>
+            <li><a href="//wigle.net/stats" class="stats">Stats</a></li>
+            <li class="naactive"><a href="#" class="dropdown-toggle tools" data-toggle="dropdown">Tools</a>
+              <ul class="dropdown-menu">
+                <li><a href="https://wigle.net/tools">Downloads</a></li>
+                <li><a href="https://api.wigle.net/">API</a></li>
+                <li><a href="https://wigle.net/account">Account</a></li>
+                <li><a href="https://api.wigle.net/csvFormat.html">CSV Upload</a></li>
+              </ul>
+            </li>
+                      </ul>
+          <ul class="nav navbar-nav navbar-right" id="currentUser">
+            <li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown">Login<b class="caret"></b></a>
+              <ul id="login-dp" class="dropdown-menu">
+                <li>
+                  <div class="row">
+                    <div class="col-md-12">
+                      <form class="form" role="form" method="post" action="https://api.wigle.net/api/v2/login" id="loginForm" accept-charset="UTF-8">
+                        <div class="form-group">
+                          <label class="sr-only" for="username">User Name</label>
+                          <input class="form-control" id="username" name="credential_0" maxlength=32 placeholder="wigleuser" autocomplete="username" required>
+                        </div>
+                        <div class="form-group">
+                          <label class="sr-only" for="exampleInputPassword2">Password</label>
+                          <input type="password" class="form-control" id="exampleInputPassword2" name="credential_1"  placeholder="Password" autocomplete="current-password" required>
+                          <input type="hidden" name="destination" VALUE="/">
+
+                          <div class="help-block text-right"><a href="javascript:void(0);" class="resetPassword">Forgot your password?</a></div>
+                        </div>
+                        <div class="form-group">
+                          <div id="wig-login-recaptcha-checkbox"></div>
+                        </div>
+                        <div class="form-group">
+                          <input type="submit" name="login" value="Sign in" id="loginButton"  class="btn btn-default btn-block" disabled="disabled">
+                        </div>
+                        <div class="checkbox">
+                          <label>
+                          <input type="checkbox" name="noexpire" id="noexp"> keep me logged-in
+                          </label>
+                        </div>
+                      </form>
+                    </div>
+                    <div class="bottom text-center">
+                      New? <a href="javascript:void(0);" class="registrationLink"><b>Register</b></a>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+<div class="container" id="wigleMain">
+  <div class="page-header">
+    <h1>Frequently Asked Questions</h1>
+  </div>
+    <div class="faqbody">
+    <a id="what-is-this-for"></a><p class="lead">What is This Thing For?</p>
+    <p>We consolidate location and information of wireless networks world-wide to a central database, and have user-friendly web and Android applications that can map, query and update the database via the web.</p>
+    <p>We currently accept files in any of:
+<ul style="font-size: .9em;">
+  <li><a href="http://www.bawug.org/howto/reviews/dstumbler.html" target="blank">DStumbler</a>: text output<br></li>
+  <li><a href="http://www.androlib.com/android.application.carknue-gmon-zjm.aspx" target="blank">G-Mon</a>: .kml, .txt output</li>
+  <li><a href="http://www.metageek.net/products/inssider" target="blank">inSSIDer</a>: kml output</li>
+  <li><a href="http://trac.kismac-ng.org/" target="blank">Kismac</a>: native (.kismac), text, kml output</li>
+  <li><a href="http://www.kismetwireless.net/" target="blank">Kismet</a>: .csv, .xml, .netxml, .gps, .gpsxml, .nettxt, CWGD output<br></li>
+  <li><a href="http://www.macstumbler.com/" target="blank">MacStumbler</a>: plist xml, wiscan format<br></li>
+  <li><a href="http://www.netstumbler.com" target="blank">NetStumbler</a>: native (.ns1), text, wiscan, summary<br></li>
+  <li><a href="http://www.pocketwarrior.org/" target="blank">Pocket Warrior</a>: Text output</li>
+  <li><a href="http://code.google.com/p/wardrive-android/" target="blank">Wardrive-Android</a>: kml output</li>
+  <li><a href="http://www.aspecto-software.com/rw/" target="blank">WiFiFoFum</a>: kml, kmz output</li>
+  <li><a href="http://www.threejacks.com/?q=node/13" target="blank">WiFi-Where</a>: ns1, kml, csv output. <em>Now available on Cydia (iphone/ipad jailbreak)</em></li>
+  <li><a href="https://market.android.com/details?id=net.wigle.wigleandroid" target="blank">Wigle Wifi Wardriving</a>: csv output</li>
+  <li><a href="https://wigle.net/phpbb/viewtopic.php?t=1564" target="blank">Consolidated.db</a>: This is an sqlite file that is synced from an iphone/ipad to a host computer (prior to iOS 4.3.3 in the year 2011). <a href="https://wigle.net/phpbb/viewtopic.php?t=1564" target="blank">OSX details</a>. <a href="http://andykn.blogspot.com/2011/04/iphone-tracker.html" target="blank">Windows details</a>.</li>
+</ul>
+    <p class="answer">To have your record removed from our database, or if you have any questions or suggestions, send an email to: WiGLE-admin[at]WiGLE.net or IRC chat (with TLS) on #wigle at wigle.net:6668.
+    <em>If you want a record removed from the database, please include the BSSID (MAC Address) of the network in question!</em></p>
+          
+    <a id="who-are-you"></a><p class="lead">Who are you people?</p>
+    <p>
+      <ul>
+          <li><b>arkasha</b> writes things as well as serving as cruise activities director</li>
+          <li><b>bobzilla</b> is the guy who designed the DB, makes everything work, wrote the Android client, and continues to keep this project going</li>
+          <li><b>uhtu</b> fixes all the things that arkasha and bobzilla do wrong</li>
+          <li><b>thuddwhir</b> wrote the vector-based map generation (SquiGLE)</li>
+          <li><b>wos</b> wrote the Mac OSX native client (TinGLE)</li>
+      </ul>
+    </p>
+    <p class="answer">
+      All are members of <a href="http://www.mimezine.com">Mimezine</a>.
+    </p>
+
+    <a id="how-triangle"></a><p class="lead">How does triangulation work?</p>
+    <p class="answer">The "triangulation" is actually just an average of the latitudes and longitudes gathered using the signal strength (squared) as a weight.
+        This is probably more correctly called "weighted-centroid trilateration." This assumes that signal strength will change at the inverse square of the distance.
+        This is reasonable as long is you don't get a one-sided view of the network (i.e. only sample it from one side) since it will be skewed in that direction.
+        It's worth noting that WiGLE first clusters data before trilaterating, resulting in the possibility of multiple clusters.
+        The dot/pin on the map will go to the "best" cluster.
+        When using the basic search, requesting detail for a specific network will show you all recent clusters up to a practical limit.</p>
+    <a id="howto-get-started"></a><p class="lead">How do I Get Started?</p>
+    <p>WiGLE.net is a catalog of wireless networks based on user-submitted observations. Submissions are not paired with
+        actual people; rather name/password identities which people use to associate their data. The project is basically
+        a "gee isn't this neat" engine for learning about the spread of wireless computer usage.
+    </p>  
+    <p>WiGLE concerns itself with 802.11, Bluetooth, and cellular networks right now,
+          which can be collected via the WiGLE WiFi Wardriving tool on Android, <a href="https://www.kismetwireless.net/">Kismet Wireless</a>, and numerous other packages.
+    </p>
+    <p>
+      The first step in using WiGLE is to create a username for yourself. You don't have to submit anything other
+      than a <em>real</em> email and a username and password. Validation is immediate, however new accounts are subject to a probationary period.
+      We will not contact you (unless you send us email or chat on our message boards). Your account will give you access to our
+      query engine, upload capabilities, maps, and software downloads. New accounts are limited in the number of queries they can make daily.
+    </p>
+    <p>
+      Once you've signed up, you're free to send us wireless network traces (in any of our listed formats,
+      usually pairings of wireless sample, names and network hardware addresses (for uniqueness), data/SNR triples and GPS
+      coordinates) or enter networks manually. Note, your username gets "credit" for these, but of course some people don't
+      want their networks listed (for various reasons), so we delist these immediately upon request. Once you
+      make a username, you can look at the submissions statistics page to see how users stack up.
+    </p>
+    <p>
+      The easiest way to start stumbling is to use our Android tools, available at:<br/>
+        <a href="https://play.google.com/store/apps/details?id=net.wigle.wigleandroid">
+         <img alt="Android app on Google Play" src="/images/en_app_rgb_wo_45.png" /></a> or
+       <a href="http://www.amazon.com/WiGLE-net-Wigle-Wifi-Wardriving/dp/B004L5XBXS/">
+         <img src="https://images-na.ssl-images-amazon.com/images/G/01/AmazonMobileApps/amazon-apps-store-us-black.png" height=45 width=129 /></a>
+         (or  search for "wiglewifi" on an Android device)
+    </p>
+    <p>
+      To view networks, you can
+      1.) ask the <a href="https://wigle.net/mapsearch">website</a>,
+      2.) use the <a href="https://api.wigle.net">API</a>, or
+      3. query via <a href="https://play.google.com/store/apps/details?id=net.wigle.wigleandroid">the mobile app</a>
+    </p>
+    <a name="uses"></a>
+    <p class="answer">
+      If your network has been located and is displayed in WiGLE and you don't like it, we'll remove it immediately,
+      but we suggest you look into making your network more secure, not just removing it from one listing;
+      remember that you're the one bombarding passers-by with your signal. We aren't affiliated directly with any
+      particular community or interest (other than our own), but we applaud the amazing efforts of the people who write
+      the stumbling software that makes our project a success, the people looking to use wireless in innovative ways, and
+      especially the community of people who just dig wireless network access and dig sharing it. (freenets)
+    </p>
+    <p class="lead">What is this project used for?</p>
+    <p>
+      Overall, WiGLE aims to show people about wireless in a more-technical capacity than your average static map or newspaper article.
+    </p>
+    <p>
+      <b>Educating the Public:</b> When WiGLE started in 2001 the default for WiFi was to have no encryption at all. An end user had a choice to turn on weak encryption (40-bit WEP),
+      or pay extra for slightly less weak encryption (128-bit WEP). Most users didn't realize that their private networks could be accessed by anyone in the area (at various distances
+      with antennas and amplifiers). WiGLE, and Wardriving in general, helped to educate users and put pressure on manufacturers to make network security better and easier.
+      Nowadays WPA2 or WPA3 are the standard and defaults to "on" for most manufactured devices.
+    </p>
+    <p>
+      <b>Research Projects:</b> We are often contacted by graduate students and professors to provide additional access or slices of data for genuine research projects around WiFi and security,
+      which we attempt to help if we can. We've heard of research into subjects like WEP/WPA encryption distribution, information leaks from SSID probes,
+      teaching wireless security concepts, geo-location from BSSID's and more.
+    </p>
+    <p>
+      <b>Site Surveys:</b> Security professionals use WiGLE to monitor what businesses they consult for are broadcasting over WiFi radios.
+      If you have an insecure network you are vulnerable, whether or not it appears in WiGLE.
+      WiGLE might let you know that an employee or attacker has set up a rogue WiFi router on your private network.
+    </p>
+    <p>
+      <b>Journalism:</b> WiGLE is a handy resource for journalists looking for data points on WiFi proliferation, statistics and security.
+      WiGLE <a href="/stats">keeps statistics</a> on manufacturer distribution, top SSID's, encryption modes, channel selection, geographic distribution and much more.
+      <ul>
+        <li><a href="http://voices.washingtonpost.com/securityfix/2008/09/wiglenet_the_411_on_wireless_a.html">Washington Post</a></li>
+        <li><a href="http://www.sfgate.com/news/article/A-road-map-to-wardriving-in-these-times-3272679.php">SF Gate</a></li>
+        <li><a href="http://www.cnet.com/news/the-unvarnished-truth-about-unsecured-wi-fi/">CNET</a></li>
+        <li><a href="http://www.amazon.com/exec/obidos/ASIN/1931836035">Wardriving: Drive, Detect, Defend</a> (book)</li>
+      </ul>
+    </p>
+    <p>
+      <b>Finding Usable Networks:</b> Using the "Free Net" search WiGLE users can find legal-to-use open networks near to their current location.
+      They can also find local government open wireless networks, a cable company wireless offering that they are already paying for, or a local coffee shop that has a network available for use.
+    </p>
+    <p class="answer">
+      <b>A Fun Hobby:</b> Many users enjoy trying to detect as many networks as possible, to compete on the leader board and see parts of their city/town that they've had no reason to visit before.
+      Teams <a href="https://www.defcon.org/html/defcon-10/dc-10-post/defcon-10-wardrive-post.html">can compete</a> to see which car can find the most networks in a set amount of time.
+    </p>
+    <a id="license"></a><p class="lead">What's the License for All This?</p>
+    <p class="answer">The official legal <a href="/eula.html">End User License Agreement</a>.
+        We basically just offer no warranties on our software, and don't want our software or the data to be used for unlicensed commercial gain.
+        If you're interested in using the data for commercial purposes, you can contact us.
+    </p>
+    <p class="lead">What does that mean for academic/non-profit research or artistic usage?</p>
+    <p class="answer">We believe that one of the best uses for this project is to promote education, research, and awareness!
+        Account limits start low, and increase over time with good behavior. This is sufficient for most use-cases.
+        If you have a project with extraordinary needs you can email us at WiGLE-admin[at]WiGLE.net, include an explanation of your intended usage, what you are requesting, your registered WiGLE username, and provide evidence of any claims you are making.
+    </p>
+    <a id="commercial"></a><p class="lead">Commercial Use</p>
+    <p class="answer">To help fund WiGLE operations, we offer licenses to a subset of the 
+          data derived from postings that our users have permitted us to use for commercial purposes. As a matter of policy, we will not comment
+          on future, past, or hypothetical customers. To discuss a commercial license, please email us at WiGLE-admin[at]WiGLE.net. Please send from a corporate email address, rather than a disposable one.</p>
+    <p class="answer">We additionally refuse to claim or disclaim any involvement with the
+          alleged moon landings<!-- didn't happen -->, area 51 <!-- totally did --> and 'bigfoot'.<!-- mr. s. asquatch refuses all interviews -->
+    </p>
+    <a id="changepass"></a><p class="lead">How Can I Change My Password?</p>
+    <p class="answer"><a href="javascript:void(0);" class="changePassword">To change your password, there's a Password Change Tool.</a>
+        If you've forgotten your password, non-logged in users should use the password reset tool. <a href="javascript:void(0);" class="resetPassword">Reset Password Tool.</a>
+        You can contact us via WiGLE-admin[at]WiGLE.net; include your registration information for proof of identity.
+        Manual reset will take time (ours and yours) and we may refuse if we can't verify you - so seriously, use the reset tool.</p>
+    <a id="noconfirmemail"></a><p class="lead">I didn't receive a verification email - how can I activate my account?</p>
+    <p class="answer">
+        This can happen for a number of reasons. The easiest thing to do is to use the <a href="https://wigle.net/account">automated system</a> to request a confirmation email.
+        If this isn't available or doesn't work, your account may have other problems. If you elect to email us for support on confirmation-related issues, you <em>must</em> include 
+        your WiGLE user name, and send the email from the address you used to register. If you do not include your username or send the email from a non-matching address,
+        your request will be ignored.
+    </p>
+    <a id="account-acting-strange"></a><p class="lead">I had this clever idea to circumvent your EULA or query limits and now my account is acting weird!</p>
+    <p class="answer">Yeah, that happens. WiGLE is a project created by security geeks and used by security geeks.
+        If you decide to try and get around our rules, we reserve the right to do whatever we deem necessary and/or appropriate.</br>
+        Creating multiple accounts to try and circumvent query limits is a violation of our policies, and probably won't work out the way you hope.</br>
+        If you think that this has happened in error, if you have a <em>non-commercial</em> project you'd like increased access for,
+        or if you are interested in using the data for commercial purposes, perhaps just send us email at WiGLE-admin[at]WiGLE.net instead of trying to trick the system.</p>
+
+    <a id="fakedata"></a><p class="lead">What do you do about fake data and bad actors:</p>
+    <p class="answer">WiGLE is a community. If you abuse the community, you're violating the trust of the operators and participants.
+    If you submit fake/fabricated data or engage in threatening or violent behavior toward community members, you will be banned permanently.
+    <!-- BAN, BAN, BAN, BAN \n BAN, BAN, BAN, BAN \n lovely BAN, WONDERFUL BAN (BAN, BAN, BAN) --></p>
+    <a id="wiwiwa-whu"></a><p class="lead">Actually, my question is about the WiGLE Android app?</p>
+    <p>
+      Check out <a href="/wiwiwa-faq">the WiGLE Wireless FAQ</a> and the <a href="/wiwi_settings">WiGLE Wireless settings key</a> for more info.
+    </p>
+    <p class="answer">
+      You can find more questions, answers, and corner cases in <a href="https://wigle.net/phpbb/">the WiGLE forums.</a>
+    </p>
+    <a id="notfound"></a><p class="lead">Something not mentioned here?</p>
+    <p class="answer">
+        Drop us a line at <a href="mailto:wigle-admin@wigle.net">WiGLE-admin[at]wigle.net</a> - we're ready to believe you.
+    </p>
+    </div>
+  </div>
+</div>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-1"></div>
+        <div class="col-sm-2">
+          <b>Social</b><br/>
+          <ul>
+            <li><a href="https://wigle.net/wiki/index.cgi">Wiki</a></li>
+            <li><a href="https://defcon.social/@WiGLEnet" target="_blank">Mastodon</a></li>
+            <li><a href="https://bsky.app/profile/wiglenet.bsky.social">Bsky</a></li>
+            <li><a href="http://twitter.com/wiglenet" target="_blank">Twitter</a></li>
+            <li><a href="irc://wigle.net:6668/wigle">IRC with TLS</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-2">
+          <b>Site Information</b><br/>
+          <ul>
+            <li><a href="https://wigle.net/faq" target="_blank">FAQ</a></li>
+            <li><a href="https://wigle.net/eula.html" target="_blank">End-User Agreement</a></li>
+            <li><a href="https://wigle.net/privacy" target="_blank">Privacy</a></li>
+            <li><a href="https://wigle.net/TODO" target="_blank">Our ToDo List</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-2">
+          <b>/dev/random</b>
+          <ul>
+            <li><a href="http://www.cafepress.com/shop/wiglenet" target="_blank">Cafepress Gear</a></li>
+            <li><a href="https://wigle.net/wiki/index.cgi?Links" target="_blank">Links</a></li>
+            <!-- li><a href="https://wigle.net/about" target="_blank">About Us</a></li -->
+          </ul>
+        </div>
+        <div class="col-sm-2">
+          <b>user management</b>
+          <ul>
+                        <li><a href="javascript:void(0);" class="resetPassword">Reset Password</a></li>
+            <li><a href="javascript:void(0);" class="registrationLink">Register</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-2">
+          <b>News</b><br/>
+          <ul>
+            <li><a href="https://wigle.net/phpbb/">Forums</a></li>
+            <li><a href="https://wigle.net/gps/gps/RSS/wiglenews.xml">News RSS</a></li>
+            <li><a href="https://wigle.net/gps/gps/StatRSS/wiglestats.xml">Stats RSS</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-1"></div>
+      </div>
+      <p>
+        <small><em>WiGLE respects your privacy. To have records of your access point removed from our database, or if you have any questions or suggestions, send an email to: WiGLE-admin[at]WiGLE.net
+        (please include BSSID (MAC) in removal requests).</em> We're also on IRC with TLS:  at WiGLE.net:6668</small>
+      </p>
+      <p>
+        <small>Copyright 2001-2025 bobzilla &amp;&amp; arkasha &amp;&amp; uhtu</small>
+      </p>
+    </div>
+  </footer>
+  <div id="resetPassDialog" class="modal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content wigle-modal">
+        <div class="modal-header"><span id="resetPassDialogTitle"></span><a href="#" class="close" data-dismiss="modal" aria-label="close">&times;</a></div>
+        <div class="modal-body" style="display: inline-block;">
+
+          <form id="passResetForm" action="https://api.wigle.net/api/v2/passwordReset" method="post">
+            <div id="resetPassDialogContent" class="container col-sm-12"></div>
+            <div class="row">
+              <div class="col-sm-12">
+                <input type="submit" name="resetPassword" value="Reset Password" id="resetPassword" disabled="disabled">&nbsp;
+              </div>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="passToolDialog" class="modal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content wigle-modal">
+        <div class="modal-header"><span id="passToolDialogTitle"></span><a href="#" class="close" data-dismiss="modal" aria-label="close">&times;</a></div>
+        <div class="modal-body" style="display: inline-block;">
+          <div id="passToolDialogContent" class="container col-sm-12"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="errorDialog" class="modal" role="dialog">
+    <div class="modal-dialog wigle-modal">
+      <div class="modal-header modal-header-danger">
+          <a href="#" class="close" data-dismiss="modal" aria-hidden="true">&times;</a>
+          <h3><span id="errorTitle"></span></h3>
+      </div>
+      <div class="modal-body" id="errorMessage">
+      </div>
+      <div class="modal-footer">
+          <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+  <div id="messageDialog" class="modal" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content wigle-modal">
+        <div class="modal-header"><span id="messageDialogTitle"></span><a href="#" class="close" data-dismiss="modal" aria-label="close">&times;</a></div>
+        <div class="modal-body" style="display: inline-block;">
+          <div id="messageDialogContent" class="container col-sm-12"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="regDialog" class="modal" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content wigle-modal">
+        <form id="regForm" action="https://api.wigle.net/api/v2/register" method="POST">
+          <div class="modal-header"><b>Join WiGLE</b> <a href="#" class="close" data-dismiss="modal" aria-label="close">&times;</a></div>
+          <div class="modal-body" style="display: inline-block;">
+            <div id="regDialogContent" class="container col-sm-12"></div>
+          </div>
+          <div class="modal-footer">
+            <input type="submit" name="confirm" value="Register!" id="registrationSubmit"  class="submit regButton" disabled="disabled">&nbsp;
+            <input type="reset" name="reset" value="Reset" class="reset regbutton">
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div id="updateDialog" class="modal" role="dialog">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content wigle-modal">
+        <form id="eulaForm" action="https://api.wigle.net/api/v2/eulaConfirm" method="POST">
+          <div class="modal-header"><b>A Message from WiGLE</b></div>
+          <div class="modal-body" style="display: inline-block;">
+            <div id="eulaContent" class="container col-sm-12"></div>
+          </div>
+          <div class="modal-footer">
+            <input type="submit" name="confirm" value="Agree" id="eulaUpdateSubmit" class="submit regbutton">&nbsp;
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<script type="text/javascript" src="https://www.google.com/recaptcha/enterprise.js?render=explicit" async defer></script>
+<script type="text/javascript" src="https://js.hcaptcha.com/1/api.js?recaptchacompat=off" async defer></script>
+<script src="/js/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="></script>
+<script type="text/javascript" src="/js/vendor/handlebars.min-v4.7.7.js"></script>
+<script type="text/javascript" src="/js/wigle.js"></script>
+<script type="text/javascript" src="/js/handle.js"></script>
+<script type="text/javascript" src="/js/jquery.form.min.js"></script>
+<script type="text/javascript" src="/js/initializers.js" integrity="sha256-7TTGA5UNVeR0eI2o/dduz4Zgm7Jg6wxE7mdAemAj+kM="></script>
+<script src="/js/bootstrap.min.js"></script>
+  <script type="text/template" id="userControl">
+    <span class="userText">logged in as {{userid}}</span> <a id="topBarLogout" href="javascript:void(0)">Log out</a>
+  </script>
+  <script type="text/template" id="userNav">
+    <li style="margin: 15px;">
+      <span><a href="https://wigle.net/account">{{userid}}</a></span>&nbsp;&nbsp;<span id="messagesAvail" style="display: none;"><a href="/phpbb/"><span class="glyphicon glyphicon-envelope" style="font-size: 1.2em; font-weight: bold;"></span><span id="messagesCount"></span></a></span>
+    </li>
+    <li style="margin: 10px;">
+      <button id="topBarLogout" href="javascript:void(0)" class="btn btn-sm btn-default">Log out</button>
+    </li>
+  </script>
+  <script type="text/template" id="changePassLayout">
+    <form id="passChangeForm" action="https://api.wigle.net/api/v2/passChange" method="post">
+      <div class="row">
+        <div class="col-sm-12">
+          <p>Enter your old password and new password below. If you&apos;ve forgotten your password, please contact WiGLE-admin[at]wigle.net with your account info.</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          * Current User
+        </div>
+        <div class="col-sm-6">
+          {{username}}
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          * Current Password</td>
+        </div>
+        <div class="col-sm-6">
+            <input type="password" name="T_password" maxlength="32">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          * Enter New Password</td>
+        </div>
+        <div class="col-sm-6">
+            <input type="password" name="T_new_password1" maxlength="32">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-6">
+          * Confirm New Password</font></td>
+        </div>
+        <div class="col-sm-6">
+            <input type="password" name="T_new_password2" maxlength="32">
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <hr/>
+            <input type="submit" value="change" name="changePassword"/>
+        </div>
+      </div>
+    </form>
+  </script>
+  <script type="text/template" id="eulaAndAskControl">
+    <div class="row">
+      <div class="col-sm-2">
+        <img src="/images/most_interesting-w.png">
+      </div>
+      <div class="col-sm-10">
+       <h3>We don't usually update our EULA...</h3>
+       ...but when we do, we only do it once every decade or two. We've had to revisit our original agreement, which was terribly out of date. Please pardon the bother.<br><br>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <p>
+          <font size="1" face="Verdana, Arial, Helvetica, sans-serif"> By clicking "Agree" below, you consent to become bound by <a href="/eula.html">this agreement</a>:</font><br/><br/>
+          <textarea rows="10" class="eulatext" readonly>{{eulaText}}</textarea>
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <input type="hidden" name="eulaVersion" id="eulaVersion" value="{{eulaVersion}}">
+        As always, you can support the project by electing to allow us to use your data for commercial purposes - we'd really appreciate it!<br>
+        <input type="checkbox" name="allowCommercial" id="allowCommercial" checked>&nbsp;&nbsp;<label for="donate">Allow WiGLE to use my points for commercial purposes?</label>
+      </div>
+    </div>
+  </script>
+  <script type="text/template" id="eulaControl">
+    <div class="row">
+      <div class="col-sm-2">
+        <img src="/images/most_interesting-w.png">
+      </div>
+      <div class="col-sm-10">
+       <h3>We don't usually update our EULA...</h3>
+       ...but when we do, we only do it once every decade or two. We've had to revisit our original agreement, which was terribly out of date. Please pardon the bother.<br><br>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-12">
+        <p>
+          <font size="1" face="Verdana, Arial, Helvetica, sans-serif"> By clicking "Agree" below, you consent to become bound by <a href="/eula.html">this agreement</a>:</font><br/><br/>
+          <textarea rows="10" class="eulatext" readonly>{{eulaText}}</textarea>
+        </p>
+      </div>
+    </div>
+    <input type="hidden" name="eulaVersion" id="eulaVersion" value="{{eulaVersion}}">
+  </script>
+<script type="text/template" id="resetPassLayout">
+  <div class="row">
+    <div class="col-sm-12">
+      <p>Enter your User Name or email address and you will be sent an email with instructions for reseting your password.</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <table>
+        <tr>
+          <td><label for="uname">User Name</label></td>
+          <td><input id="uname" name="userid" size="25" class="required" minlength="2" maxlength="32" /></td>
+        </tr>
+        <tr>
+          <td><label for="cemail">or E-Mail</label></td>
+          <td><input id="cemail" name="email" size="25"  maxlength="60" class="required email" /></td>
+        </tr>
+        <tr>
+          <div id="wig-pwreset-recaptcha-checkbox"></div>
+        </tr>
+        <tr>
+          <td><label for="pwexmachina">Verify2:</label></td>
+          <td class="col-sm-12 h-captcha" id="pwexmachina"></td>
+          </td>
+        </tr>
+      </table>
+    <hr/>
+    </div>
+  </div>
+</script>
+<script type="text/template" id="registrationControl">
+  <div class="row">
+    <div class="col-sm-12">
+      <p>Creating an identity helps us keep your data somewhat secure/update-able and helps you track your stats for competition.
+      We do not expect or require real information in most fields, but <b>a real, working email is required for account verification.</b> This is required to access any data and for forgotten password purposes.</p>
+    </div>
+  </div>
+  <input type="hidden" name="id" value="{{id}}" />
+  <input type="hidden" name="di" value="{{di}}" />
+  <div class="row">
+    <div class="col-sm-12">
+      <em>* indicates required fields</em>
+    </div>
+  </div>
+  <div class="row">
+    <label for="fname" class="col-sm-2 col-form-label">First Name</label>
+    <div class="col-sm-4">
+      <input type="text" name="T_firstName" id="fname" class="form-control" size="25" maxlength="60" >
+    </div>
+    <label for="lname" class="col-sm-2 col-form-label">Last Name</label>
+    <div class="col-sm-4">
+      <input type="text" name="T_lastName" id="lname" class="form-control" size="25" maxlength="60" >
+    </div>
+  </div>
+  <div class="row">
+    <label for="cemail" class="col-sm-2 col-form-label">E-Mail*</label>
+    <div class="col-sm-4">
+      <input id="cemail" type="email" name="T_email" class="form-control" size="25"  maxlength="60" minlength="6" class="required email" />
+    </div>
+    <label for="uname" class="col-sm-2 col-form-label">User Name*</label>
+    <div class="col-sm-4">
+     <input id="uname" name="T_userID" size="15" class="form-control" class="required" minlength="2" maxlength="32" />
+    </div>
+  </div>
+  <div class="row">
+    <label for="passone"  class="col-sm-2 col-form-label">Password*</label>
+    <div class="col-sm-4">
+      <input type="password" name="T_password" id="passone" size="15" minlength="8" class="form-control required password">
+    </div>
+    <label for="passtwo" class="col-sm-2 col-form-label">Confirm Password*</label>
+    <div class="col-sm-4">
+      <input type="password" name="T_password2" id="passtwo" size="15" minlength="8" class="form-control required password" equalTo="#passone">
+    </div>
+  </div>
+  <div class="row">
+    <label for="fred"  class="col-sm-2 col-form-label">*Type "fred"</label>
+    <div class="col-sm-4">
+      <input id="fred" name="fred" size="15" class="form-control" class="required" minlength="2" maxlength="32" />
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <input type="checkbox" name="T_donate" id="donate" default="false">&nbsp;&nbsp;<label for="donate">Allow WiGLE to use my points for commercial purposes? (you can always decide later if you're not sure)</label>
+    </div>
+  </div>
+  <hr/>
+  <div class="row">
+    <div id="testCont1" class="col-sm-12">
+      <p>Please prove that you are human:</p>
+      <div id="wig-reg-recaptcha-checkbox"></div>
+    </div>
+  </div>
+  <div class="row">
+    <div id="testCont2" class="col-sm-12">
+      <p>Please prove that you are human again:</p>
+      <div id="exmachina" class="h-captcha" data-callback="validateRegForm"></div>
+    </div>
+  </div>
+  <hr>
+  <div class="row">
+    <div class="col-sm-12">
+      <p>
+        <font size="1" face="Verdana, Arial, Helvetica, sans-serif"> By clicking "Register!" below, you consent to become bound by <a href="/eula.html">this agreement</a>:<br>(which basically says to not use our work for commercial gain).</font><br/><br/>
+        <textarea rows="10" class="eulatext" readonly>{{eula}}</textarea>
+      </p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12">
+      <p>
+        <input id="terms" type="checkbox" name="C_agree" class="required"><em>&nbsp;*&nbsp;</em><label for="terms">I have read and agree to the terms above</label>
+      </p>
+    </div>
+  </div>
+</script>
+<script type="text/template" id="siteStats">
+  <div class="col-sm-1"></div>
+  <div class="col-sm-10">
+    <div class="row">
+      <div class="col-sm-2 mainStats">
+        Stumblers
+        <span class="hilite-stats">{{formatNumber userstot}}</span>
+      </div>
+      <div class="col-sm-2 mainStats">
+        WiFi Networks
+        <span class="hilite-stats">{{formatNumber nettotal}}</span>
+      </div>
+      <div class="col-sm-2 mainStats">
+        WiFi Observations
+        <span class="hilite-stats">{{formatNumber loctotal}}</span>
+      </div>
+      <div class="col-sm-2 mainStats">
+        WiFi Today
+        <span class="hilite-stats">{{formatNumber nettoday}}</span>
+      </div>
+      <div class="col-sm-2 mainStats">
+        BT Devices
+        <span class="hilite-stats">{{formatNumber bttotal}}</span>
+      </div>
+      <div class="col-sm-2 mainStats">
+        Cell Towers
+        <span class="hilite-stats">{{formatNumber gentotal}}</span>
+      </div>
+    </div>
+  </div>
+  <div class="col-sm-1"></div>
+</script>
+<script type="text/template" id="news">
+  {{#results}}
+    <div class="newsItem">
+       <div class="newsHeader"><a href="{{link}}">{{subject}}</a><br/>
+        <span class="date">{{formatLongDate postDate}}</span>
+       </div>
+        {{newsDisplay story link more}}
+       <p>-{{userName}}</p>
+    </div>
+  {{/results}}
+  <a href="https://wigle.net/phpbb/viewforum.php?f=6">previously...</a>
+</script>
+<script type="text/template" id="emailVerify">
+  <div class="commercialInner">
+    <h3>Email Not Verified</h3>
+    Click on the VERIFY link in the email that was sent to the email address you signed up with. After 24 hours you can also request another email to be sent on the <a href="/account"><u>Account Page</u></a>.
+  </div>
+</script>
+<script type="text/template" id="commercialRequest">
+  <div class="commercialInner">
+    <h3>Want to help support WiGLE?</h3>
+    You can <a href="javascript:void(0);" id="donateLink"><u>allow WiGLE to use your data for commercial purposes</u></a>. You can also select &ldquo;<a href="javascript:void(0);" id="declineLink"><u>no, please don't use my data for commercial purposes</u></a>,&rdquo; and we'll stop asking!
+  </div>
+</script>
+<script type="text/template" id="commercialAnswered">
+  <div class="commercialInner">
+    <h4>{{message}}</h4>
+  </div>
+</script>
+
+  </body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "installed_tools": [
+    "python-wigleQuery",
+    "python-WigleToTAK",
+    "python-ssidCliTool",
+    "python-wigle-tools-takano32",
+    "jupyter-notebook"
+  ],
+  "failed_installs": [
+    "python-wigle-wifi",
+    "python-wigle-bt"
+  ],
+  "installation_date": "Sat Oct 25 09:04:54 PM CEST 2025",
+  "python_version": "3.13.7 (main, Aug 20 2025, 22:17:40) [GCC 14.3.0]",
+  "pip_version": "pip 25.2 from /usr/lib/python3/dist-packages/pip (python 3.13)"
+}
