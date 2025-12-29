@@ -36,7 +36,7 @@ conan install --requires=sparetools-pentest-toolkit/2.0.0 --build=missing
 
 ```bash
 # Build foundation layer
-conan create packages/foundation/sparetools-base --version=2.0.0 --build=missing
+conan create packages/foundation/sparetools-base --version=2.0.3 --build=missing
 conan create packages/foundation/sparetools-cpython --version=3.12.7 --build=missing
 
 # Build AI/ML ecosystem (MCP)

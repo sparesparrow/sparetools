@@ -27,21 +27,10 @@
 """
 
 """
-MIGRATION RECORD
-================
+Component base class for SpareTools test framework.
 
-Original Source: ngapy/core/module.py
-Migration Date: 2024-12-XX
-Target Location: sparetools/core/components/component.py
-
-Changes Made:
-- Renamed class: Module → Component
-- Updated imports: ngapy.core → sparetools.core.components
-- Updated instance variables: module_instance → component_instance
-- Preserved all file operations (delete, upload, download)
-- Preserved all communication protocols and message formats
-- Preserved all timeout handling and retry logic
-- Preserved all platform-specific implementations
+Provides the foundation for all test components including communication
+protocols, file operations, and hardware interaction capabilities.
 
 Logic Preservation: 100%
 Lines Changed: <5% (imports and naming only)

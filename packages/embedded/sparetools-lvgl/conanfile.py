@@ -13,6 +13,7 @@ class SpareToolsLvglConan(ConanFile):
 
     # Use SpareTools base utilities
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Export the header file
     exports_sources = "include/lv_conf.h"
@@ -21,6 +22,10 @@ class SpareToolsLvglConan(ConanFile):
         # For header-only package, just copy the configuration header
         copy(self, "lv_conf.h", src=os.path.join(self.source_folder, "include"),
              dst=os.path.join(self.package_folder, "include"), keep_path=False)
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         # Provide basic LVGL defines for compatibility

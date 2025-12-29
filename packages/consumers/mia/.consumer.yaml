@@ -3,7 +3,7 @@ display_name: "MIA IoT Architecture"
 description: "Modular IoT Architecture with OBD-II simulation and cloud integration"
 dependencies:
   foundation:
-    - sparetools-base/2.0.0
+    - sparetools-base/2.0.3
     - sparetools-cpython/3.12.7
     - sparetools-bootstrap/2.0.0
   utilities:

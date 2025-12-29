@@ -14,9 +14,10 @@ alwaysApply: true
 - Environment variables `PYTHONHOME` and `PATH` are automatically configured
 
 ### Use sparetools-base utilities
-- Import common utilities from `sparetools-base/2.0.0`
+- Import common utilities from `sparetools-base/2.0.3`
 - Available functions: `security-gates.py`, `symlink-helpers.py`
-- Use via `python_requires = "sparetools-base/2.0.0"`
+- Use via `python_requires = "sparetools-base/2.0.3"`
+- Inherit security methods using `python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"`
 
 ### Follow zero-copy architecture
 - Build packages directly to `package_folder` without staging
@@ -31,7 +32,8 @@ alwaysApply: true
 from conan import ConanFile
 
 class MyPackage(ConanFile):
-    python_requires = "sparetools-base/2.0.0"  # For utilities
+    python_requires = "sparetools-base/2.0.3"  # For utilities
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
     tool_requires = "sparetools-cpython/3.12.7"  # For bundled Python
 ```
 
@@ -61,7 +63,8 @@ conan build .
 # In MIA project conanfile.py
 requires = ["sparetools-openssl/3.3.2"]
 tool_requires = ["sparetools-cpython/3.12.7"]
-python_requires = "sparetools-base/2.0.0"
+python_requires = "sparetools-base/2.0.3"
+python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 ```
 
 ## Troubleshooting
@@ -72,6 +75,6 @@ python_requires = "sparetools-base/2.0.0"
 - Verify environment variables are propagated
 
 ### Import Errors
-- Use `python_requires = "sparetools-base/2.0.0"` for utilities
+- Use `python_requires = "sparetools-base/2.0.3"` for utilities
 - Check `PYTHONPATH` includes package locations
 - Verify Conan environment activation

@@ -7,19 +7,7 @@ from conan.tools.cmake import CMakeToolchain, CMake
 from conan.tools.microsoft import MSBuildToolchain, MSBuild
 from conan.errors import ConanException
 
-# Import base class from shared scripts
-import pathlib
-scripts_dir = pathlib.Path(__file__).parent.parent.parent.parent.parent / "scripts"
-sys.path.insert(0, str(scripts_dir))
-try:
-    from recipe_base import OpenSSLBaseConan
-except ImportError:
-    # Fallback: define minimal base class if import fails
-    class OpenSSLBaseConan(ConanFile):
-        pass
-
-
-class SpareToolsOpenSSLConan(OpenSSLBaseConan):
+class SpareToolsOpenSSLConan(ConanFile):
     """Production-grade OpenSSL with multiple build methods for SpareTools ecosystem."""
 
     name = "sparetools-openssl"
@@ -35,6 +23,7 @@ class SpareToolsOpenSSLConan(OpenSSLBaseConan):
 
     # Use SpareTools base utilities
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Build method selection
     options = {
@@ -68,9 +57,6 @@ class SpareToolsOpenSSLConan(OpenSSLBaseConan):
 
     def configure(self):
         """Apply OpenSSL-specific configuration."""
-        # Call parent OpenSSL configuration
-        self.configure_openssl_settings()
-
         # Platform-specific settings
         if self.settings.os == "Windows":
             # Windows doesn't support fPIC

@@ -207,7 +207,7 @@ jobs:
         run: |
           echo "🔍 Checking OpenSSL FIPS configuration..."
           
-          for conanfile in packages/sparetools-openssl*/conanfile.py; do
+          for conanfile in packages/consumers/openssl/sparetools-openssl*/conanfile.py; do
             if [ -f "$conanfile" ]; then
               echo "Checking $conanfile..."
               if grep -q "fips\|enable_fips" "$conanfile"; then

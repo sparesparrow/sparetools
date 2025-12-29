@@ -16,7 +16,8 @@ class CPythonToolConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {

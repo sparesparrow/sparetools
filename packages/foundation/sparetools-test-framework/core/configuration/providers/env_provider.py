@@ -25,26 +25,10 @@
 """
 
 """
-MIGRATION RECORD
-================
+Environment-based configuration provider for SpareTools.
 
-Original Source: ngapy/util/setup_environment.py
-Migration Date: 2024-12-XX
-Target Location: sparetools/core/configuration/providers/env_provider.py
-
-Changes Made:
-- Updated imports: ngapy.config_loader → sparetools.core.configuration
-- Renamed function: get_repository_config → get_config_from_env
-- Preserved all path resolution, validation, error handling logic
-- Preserved all environment variable processing algorithms
-
-Logic Preservation: 100%
-Lines Changed: <5% (imports and naming only)
-Test Status: ✅ All existing tests pass
-Performance Impact: <1% degradation
-
-Migration Agent: Claude Code Assistant
-Review Status: [Pending/Approved]
+Provides utilities for loading configuration from environment variables
+and repository paths.
 """
 
 import os

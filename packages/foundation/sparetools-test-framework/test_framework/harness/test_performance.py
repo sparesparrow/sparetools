@@ -134,11 +134,10 @@ class PerformanceTestHarness(NgapyTestHarnes):
             return end - start
 
         core_modules = [
-            'ngapy',
-            'ngapy.core',
-            'ngapy.bench',
-            'ngapy.conan',
-            'ngapy.config_loader'
+            'sparetools',
+            'sparetools.core',
+            'sparetools.test_environments',
+            'sparetools.core.configuration'
         ]
 
         for module in core_modules:
@@ -168,7 +167,7 @@ class PerformanceTestHarness(NgapyTestHarnes):
         return success
 
     def test_core_functionality_performance(self) -> bool:
-        """Test performance of core ngapy functionality."""
+        """Test performance of core sparetools functionality."""
         success = True
 
         # Test harness operations

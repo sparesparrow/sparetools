@@ -13,7 +13,7 @@ echo "  - sparetools-recipe-base/1.0.0"
 conan create . --name sparetools-recipe-base --version 1.0.0 --user sparetools --channel stable
 
 cd ../sparetools-base
-echo "  - sparetools-base/2.0.0"
+echo "  - sparetools-base/2.0.3"
 conan create . --name sparetools-base --version 2.0.0 --user sparetools --channel stable
 
 cd ../sparetools-cpython

@@ -41,7 +41,7 @@ build:
 dependencies:
   # Foundation layer dependencies
   foundation:
-    - "sparetools-base/2.0.0"
+    - "sparetools-base/2.0.3"
     - "sparetools-recipe-base/1.0.0"
 
   # External dependencies

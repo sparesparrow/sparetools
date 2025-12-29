@@ -1,0 +1,156 @@
+{
+  "timestamp": 1767021703.927202,
+  "total_packages": 23,
+  "successful_builds": 14,
+  "failed_builds": 9,
+  "total_build_time": 2580.0465977191925,
+  "results": [
+    {
+      "name": "sparetools-recipe-base",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 1.8385064601898193
+    },
+    {
+      "name": "sparetools-base",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 3.542372703552246
+    },
+    {
+      "name": "sparetools-cpython",
+      "version": "3.12.7",
+      "status": "success",
+      "duration": 2507.324906349182
+    },
+    {
+      "name": "sparetools-test-harness",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 1.355376958847046
+    },
+    {
+      "name": "sparetools-shared-dev-tools",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 1.2846343517303467
+    },
+    {
+      "name": "sparetools-bootstrap",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 1.366044044494629
+    },
+    {
+      "name": "sparetools-icd",
+      "version": "2.0.0",
+      "status": "success",
+      "duration": 1.211874008178711
+    },
+    {
+      "name": "sparetools-test-framework",
+      "version": "1.0.0",
+      "status": "success",
+      "duration": 1.3174705505371094
+    },
+    {
+      "name": "sparetools-voice-fsm",
+      "version": "1.0.0",
+      "status": "failed",
+      "duration": 1.3621175289154053,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-voice-fsm', '--version', '1.0.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-obd-sim",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 1.296764612197876
+    },
+    {
+      "name": "sparetools-cliphist-android",
+      "version": "1.0.0",
+      "status": "failed",
+      "duration": 1.2518045902252197,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-cliphist-android', '--version', '1.0.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-openssl",
+      "version": "3.3.2",
+      "status": "failed",
+      "duration": 4.805136442184448,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-openssl-tools",
+      "version": "2.0.0",
+      "status": "success",
+      "duration": 1.2018120288848877
+    },
+    {
+      "name": "sparetools-mia",
+      "version": "2.0.0",
+      "status": "success",
+      "duration": 1.2622263431549072
+    },
+    {
+      "name": "sparetools-mcp-orchestrator",
+      "version": "2.0.3",
+      "status": "success",
+      "duration": 1.247504711151123
+    },
+    {
+      "name": "sparetools-tinymcp",
+      "version": "2.0.0",
+      "status": "success",
+      "duration": 1.4101159572601318
+    },
+    {
+      "name": "sparetools-mcpserver-cpp",
+      "version": "2.0.0",
+      "status": "failed",
+      "duration": 1.3921465873718262,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-mcpserver-cpp', '--version', '2.0.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-nucleus",
+      "version": "0.1.0",
+      "status": "failed",
+      "duration": 5.014092445373535,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-nucleus', '--version', '0.1.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-bpm-detector",
+      "version": "0.1.0",
+      "status": "failed",
+      "duration": 11.819139003753662,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-bpm-detector', '--version', '0.1.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-openssl-hybrid",
+      "version": "3.3.2",
+      "status": "failed",
+      "duration": 2.3036248683929443,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-hybrid', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-openssl-cmake",
+      "version": "3.3.2",
+      "status": "failed",
+      "duration": 13.061394691467285,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-cmake', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-openssl-tools-mini",
+      "version": "1.0.0",
+      "status": "success",
+      "duration": 1.3182077407836914
+    },
+    {
+      "name": "sparetools-openssl-autotools",
+      "version": "3.3.2",
+      "status": "failed",
+      "duration": 12.059324741363525,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-autotools', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    }
+  ]
+}

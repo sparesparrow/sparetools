@@ -11,6 +11,7 @@ class SparetoolsEmbeddedConan(ConanFile):
 
     # Require test framework and base utilities
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
     requires = "sparetools-test-framework/1.0.0"
 
     # Additional dependencies for embedded testing
@@ -21,6 +22,10 @@ class SparetoolsEmbeddedConan(ConanFile):
     def package(self):
         copy(self, "**/*.py", src=self.source_folder,
              dst=self.package_folder, keep_path=True)
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         self.buildenv_info.append_path("PYTHONPATH", self.package_folder)

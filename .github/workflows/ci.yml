@@ -191,7 +191,7 @@ jobs:
       # Stage 2: Build CPython (tool_requires) - may take 5-15 minutes
       - name: Build sparetools-cpython
         run: |
-          conan create packages/sparetools-cpython \
+          conan create packages/foundation/sparetools-cpython \
             --version=${{ env.VERSION_CPYTHON }} \
             --build=missing
         shell: bash
@@ -200,16 +200,16 @@ jobs:
       # Stage 3: Build OpenSSL
       - name: Build sparetools-openssl (Perl Configure)
         run: |
-          cd packages/sparetools-openssl
+          cd packages/consumers/openssl/sparetools-openssl
           
           # Check if profile exists
-          PROFILE_PATH="packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile }}"
+          PROFILE_PATH="packages/consumers/openssl/sparetools-openssl-tools/profiles/base/${{ matrix.profile }}"
           if [ ! -f "$PROFILE_PATH" ]; then
             echo "⚠️ Profile not found: $PROFILE_PATH, using default"
             PROFILE_ARGS=""
           else
-            PROFILE_ARGS="-pr:b packages/sparetools-openssl-tools/profiles/base/${{ matrix.profile }}"
-            PROFILE_ARGS="$PROFILE_ARGS -pr:b packages/sparetools-openssl-tools/profiles/build-methods/perl-configure"
+            PROFILE_ARGS="-pr:b packages/consumers/openssl/sparetools-openssl-tools/profiles/base/${{ matrix.profile }}"
+            PROFILE_ARGS="$PROFILE_ARGS -pr:b packages/consumers/openssl/sparetools-openssl-tools/profiles/build-methods/perl-configure"
           fi
           
           # ✅ Conan 2.x syntax
@@ -223,7 +223,7 @@ jobs:
       # Stage 4: Test
       - name: Test sparetools-openssl
         run: |
-          cd packages/sparetools-openssl
+          cd packages/consumers/openssl/sparetools-openssl
           # ✅ Conan 2.x: conan test uses positional reference
           conan test test_package \
             sparetools-openssl/${{ env.VERSION_OPENSSL }}

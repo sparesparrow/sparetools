@@ -4,12 +4,11 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.files import copy
 
-# Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.0"
-
-
 class SpareToolsMcpServerCppConan(ConanFile):
     """MCP Server C++ - High-performance MCP server implementation in C++."""
+
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     name = "sparetools-mcpserver-cpp"
     version = "2.0.0"

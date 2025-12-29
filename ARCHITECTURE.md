@@ -11,10 +11,10 @@ SpareTools is a comprehensive, multi-domain package ecosystem spanning embedded 
 ```mermaid
 graph TD
     subgraph "Foundation Layer"
-        base[sparetools-base/2.0.0<br/>SECURITY & UTILITIES]
+        base[sparetools-base/2.0.3<br/>SECURITY & UTILITIES]
         cpython[sparetools-cpython/3.12.7<br/>PYTHON RUNTIME]
-        shared[sparetools-shared-dev-tools/2.0.0<br/>DEV TOOLS]
-        bootstrap[sparetools-bootstrap/2.0.0<br/>ORCHESTRATION]
+        shared[sparetools-shared-dev-tools/2.0.3<br/>DEV TOOLS]
+        bootstrap[sparetools-bootstrap/2.0.3<br/>ORCHESTRATION]
     end
 
     subgraph "Consumer Domains"

@@ -10,7 +10,8 @@ class SparetoolsPyConan(ConanFile):
     package_type = "application"
 
     # Python package with protocol tools and test harness
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
     tool_requires = "sparetools-cpython/3.12.7"
 
     exports_sources = "setup.py", "sparetools/*", "README.md"
@@ -39,6 +40,10 @@ class SparetoolsPyConan(ConanFile):
         # Copy any built extensions if they exist
         copy(self, "*.so", src=self.source_folder, dst=os.path.join(self.package_folder, "sparetools"))
         copy(self, "*.pyd", src=self.source_folder, dst=os.path.join(self.package_folder, "sparetools"))
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         # Set up Python environment

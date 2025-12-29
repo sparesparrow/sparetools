@@ -30,6 +30,7 @@ class SpareToolsNucleusConan(ConanFile):
 
     # This is an ESP32 consumer package in the SpareTools ecosystem
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Optional metadata
     license = "MIT"
@@ -118,6 +119,10 @@ class SpareToolsNucleusConan(ConanFile):
             copy(self, "test_harness/**/*.py",
                  src=self.source_folder,
                  dst=os.path.join(self.package_folder, "test_harness"))
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         # Define components for different modules (when built)

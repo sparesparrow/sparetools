@@ -34,7 +34,7 @@ echo "=== Uploading Foundation Packages ==="
 
 # Core foundation packages
 upload_package "sparetools-cpython/3.12.7"
-upload_package "sparetools-base/2.0.0"
+upload_package "sparetools-base/2.0.3"
 upload_package "sparetools-bootstrap/2.0.0"
 
 echo

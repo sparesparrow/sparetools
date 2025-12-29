@@ -18,7 +18,11 @@ FOR A PARTICULAR PURPOSE.
 import os
 from pathlib import Path
 
-import ngapy.bench.desk_environment
+try:
+    import ngapy.bench.desk_environment
+except ImportError:
+    # ngapy not available, continue without it
+    pass
 
 PATHSEP = os.path.pathsep
 # If running native windows, then there will be no cygwin paths,

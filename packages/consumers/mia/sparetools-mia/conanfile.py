@@ -16,6 +16,7 @@ class SpareToolsMiaConan(ConanFile):
 
     # Use SpareTools base utilities
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Runtime + testing
     tool_requires = (
@@ -58,9 +59,9 @@ class SpareToolsMiaConan(ConanFile):
         # Copy documentation
         copy(self, "*", os.path.join(self.source_folder, "docs"), os.path.join(self.package_folder, "docs"), keep_path=True)
 
-        # Apply security gates and generate SBOM (placeholder)
-        self.output.info("Applying security gates...")
-        self.output.info("Generating SBOM...")
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         """Provide MIA package information."""

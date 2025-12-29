@@ -14,6 +14,7 @@ class SpareToolsMCPEcosystemConan(ConanFile):
 
     # Use SpareTools foundation utilities
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Pure Python application; no C/C++ settings required
     settings = None
@@ -116,6 +117,10 @@ class SpareToolsMCPEcosystemConan(ConanFile):
 
         # Create unified launcher scripts
         self._create_launcher_scripts()
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def _create_launcher_scripts(self):
         """Create launcher scripts for all MCP ecosystem components."""

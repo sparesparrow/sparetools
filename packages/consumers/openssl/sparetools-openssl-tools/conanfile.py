@@ -3,34 +3,14 @@ import sys
 from conan import ConanFile
 from conan.tools.files import copy
 
-# Import base class from shared scripts
-import pathlib
-scripts_dir = pathlib.Path(__file__).parent.parent.parent.parent.parent / "scripts"
-sys.path.insert(0, str(scripts_dir))
-try:
-    from recipe_base import ConsumerPackageConan
-except ImportError:
-    # Fallback: define minimal base class if import fails
-    class ConsumerPackageConan(ConanFile):
-        pass
-
-
-class SpareToolsOpenSSLToolsConan(ConsumerPackageConan):
+class SpareToolsOpenSSLToolsConan(ConanFile):
     """OpenSSL build tools, profiles, and utilities for SpareTools ecosystem."""
-
-    name = "sparetools-openssl-tools"
-    version = "2.0.0"
-    package_type = "python-require"
-    description = "OpenSSL build tools, profiles, security gates, and utilities"
-    license = "Apache-2.0"
-    url = "https://github.com/sparesparrow/sparetools"
-    topics = ("openssl", "build-tools", "profiles", "security", "fips")
-
-    # Declare consumer context
-    consumer_domain = "openssl"
 
     # Use SpareTools base utilities
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
+
+    name = "sparetools-openssl-tools"
 
     # Source files to export
     exports_sources = (

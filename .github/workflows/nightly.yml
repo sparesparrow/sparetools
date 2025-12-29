@@ -124,13 +124,13 @@ jobs:
           PROFILE_METHOD="packages/consumers/openssl/sparetools-openssl-tools/profiles/build-methods/${{ matrix.build_method }}-configure"
           
           if [ -f "$PROFILE_BASE" ] && [ -f "$PROFILE_METHOD" ]; then
-            conan create packages/sparetools-openssl --version=3.3.2 \
+            conan create packages/consumers/openssl/sparetools-openssl --version=3.3.2 \
               -pr:b "$PROFILE_BASE" \
               -pr:b "$PROFILE_METHOD" \
               --build=missing
           else
             echo "⚠️ Profile not found, using defaults"
-            conan create packages/sparetools-openssl --version=3.3.2 --build=missing
+            conan create packages/consumers/openssl/sparetools-openssl --version=3.3.2 --build=missing
           fi
         shell: bash
           
@@ -153,7 +153,7 @@ jobs:
           echo "🧪 Running comprehensive tests..."
           
           # Test each package
-          cd packages/sparetools-openssl
+          cd packages/consumers/openssl/sparetools-openssl
           # ✅ Conan 2.x syntax
           conan test test_package \
             --requires=sparetools-openssl/${{ env.VERSION_OPENSSL }} || echo "⚠️ Tests failed"
@@ -235,7 +235,7 @@ jobs:
           
           conan export packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }}
           conan export packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
-          conan create packages/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
+          conan create packages/consumers/openssl/sparetools-openssl --version=${{ env.VERSION_OPENSSL }} --build=missing
           
           END_TIME=$(date +%s)
           DURATION=$((END_TIME - START_TIME))

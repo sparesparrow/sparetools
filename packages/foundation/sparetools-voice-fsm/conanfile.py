@@ -14,7 +14,8 @@ class SparetoolsVoiceFsmConan(ConanFile):
 
     # Dependencies
     requires = "boost/1.83.0"
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     exports_sources = "include/*", "src/*", "CMakeLists.txt"
 

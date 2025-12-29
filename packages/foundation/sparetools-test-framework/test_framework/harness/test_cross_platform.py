@@ -10,10 +10,10 @@
 #
 
 """
-Cross-Platform Compatibility Tests for Ngapy
-============================================
+Cross-Platform Compatibility Tests for SpareTools
+================================================
 
-This module tests ngapy functionality across different platforms (Windows, Linux, macOS).
+This module tests sparetools functionality across different platforms (Windows, Linux, macOS).
 """
 
 import os

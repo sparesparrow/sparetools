@@ -25,7 +25,11 @@ import atexit
 
 
 from sparetools.test_environments.bench_factory import TestBenchContainer
-from ngapy.simulations.clock import ClockSimulation
+
+try:
+    from ngapy.simulations.clock import ClockSimulation
+except ImportError:
+    ClockSimulation = None
 
 
 class TestEnvironmentState:

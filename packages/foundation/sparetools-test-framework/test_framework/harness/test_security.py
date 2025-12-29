@@ -10,10 +10,10 @@
 #
 
 """
-Security Validation Tests for Ngapy
-==================================
+Security Validation Tests for SpareTools
+====================================
 
-This module provides security validation testing for the ngapy package,
+This module provides security validation testing for the sparetools package,
 including vulnerability checks, secure coding practices, and compliance validation.
 """
 
@@ -366,7 +366,7 @@ class SecurityTestHarness(NgapyTestHarnes):
             report = {
                 'metadata': {
                     'timestamp': time.time(),
-                    'scanner': 'ngapy_security_test_harness',
+                    'scanner': 'sparetools_security_test_harness',
                     'platform': sys.platform
                 },
                 'summary': {

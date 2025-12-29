@@ -10,7 +10,8 @@ class SpareToolsProcToolsConan(ConanFile):
     license = "MIT"
     author = "SpareTools Team"
 
-    python_requires = "sparetools-recipe-base/1.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     exports_sources = "src/*", "test_package/*"
 
@@ -27,6 +28,10 @@ class SpareToolsProcToolsConan(ConanFile):
 
     def package(self):
         copy(self, "*.py", self.source_folder, self.package_folder, keep_path=False)
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_id(self):
         # Pure Python package - no compiler dependencies

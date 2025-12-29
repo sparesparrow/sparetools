@@ -3,7 +3,7 @@ display_name: "ESP32 Firmware Projects"
 description: "ESP32 microcontroller firmware with PlatformIO, testing, and CI/CD integration"
 dependencies:
   foundation:
-    - sparetools-base/2.0.0
+    - sparetools-base/2.0.3
     - sparetools-cpython/3.12.7
     - sparetools-bootstrap/2.0.0
     - sparetools-test-harness/2.0.0

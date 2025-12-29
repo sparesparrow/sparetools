@@ -12,7 +12,8 @@ class SparetoolsIcdConan(ConanFile):
     # Dependencies
     requires = "flatbuffers/23.5.26"
     tool_requires = "sparetools-cpython/3.12.7"
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     exports_sources = "*.py", "*.fbs"
 

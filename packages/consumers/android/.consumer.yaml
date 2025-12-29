@@ -3,7 +3,7 @@ display_name: "Android Mobile Applications"
 description: "Cross-platform Android apps with native JNI integration and OpenSSL"
 dependencies:
   foundation:
-    - sparetools-base/2.0.0
+    - sparetools-base/2.0.3
     - sparetools-cpython/3.12.7
   utilities:
     - sparetools-shared-dev-tools/2.0.0

@@ -13,7 +13,8 @@ class {{project_name|title}}Conan(ConanFile):
     package_type = "application"
 
     # Foundation layer - SpareTools base provides common utilities and configuration
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Optional metadata
     license = "MIT"

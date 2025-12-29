@@ -30,7 +30,8 @@ class SpareToolsBaseConan(ConanFile):
     """
 
     # All SpareTools packages should use the base utilities
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     def configure_platform_profile(self) -> None:
         """Auto-detect and apply platform profile.

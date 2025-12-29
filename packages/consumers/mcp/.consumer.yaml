@@ -3,7 +3,7 @@ display_name: "MCP (Model Context Protocol)"
 description: "AI assistant integration with MCP protocol, orchestration, and tooling"
 dependencies:
   foundation:
-    - sparetools-base/2.0.0
+    - sparetools-base/2.0.3
     - sparetools-cpython/3.12.7
     - sparetools-bootstrap/2.0.0
   utilities:

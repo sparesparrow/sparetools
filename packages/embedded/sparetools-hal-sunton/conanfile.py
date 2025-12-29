@@ -15,6 +15,7 @@ class SpareToolsHalSuntonConan(ConanFile):
 
     # Use sparetools-base utilities (Conan 2.x pattern - class attribute only)
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Export sources
     exports_sources = "CMakeLists.txt", "include/**", "src/**"
@@ -72,9 +73,9 @@ class SpareToolsHalSuntonConan(ConanFile):
         copy(self, "*.hpp", src=os.path.join(self.source_folder, "include"),
              dst=os.path.join(self.package_folder, "include"), keep_path=True)
 
-        # Apply security gates and generate SBOM (placeholder)
-        # self.apply_security_gates()
-        # self.generate_sbom()
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         self.cpp_info.libs = ["sparetools-hal-sunton"]

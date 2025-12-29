@@ -3,7 +3,7 @@ display_name: "Audio/Media Processing"
 description: "Real-time audio processing with RTP-MIDI streaming and media tools"
 dependencies:
   foundation:
-    - sparetools-base/2.0.0
+    - sparetools-base/2.0.3
     - sparetools-cpython/3.12.7
   utilities:
     - sparetools-shared-dev-tools/2.0.0

@@ -13,6 +13,7 @@ class SpareToolsBootstrapConan(ConanFile):
     
     # CRITICAL FIX: Add missing foundation dependency
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
     
     exports_sources = "bootstrap/**", "scripts/**"
     
@@ -23,16 +24,6 @@ class SpareToolsBootstrapConan(ConanFile):
         # Apply security gates and generate SBOM
         self.apply_security_gates()
         self.generate_sbom()
-
-    def apply_security_gates(self) -> None:
-        """Run security scanning (Trivy, Syft, vulnerability checks)."""
-        self.output.info("Applying security gates...")
-        self.output.info("Security gates applied (placeholder)")
-
-    def generate_sbom(self, format: str = "cyclonedx") -> None:
-        """Auto-generate SBOM (CycloneDX/SPDX)."""
-        self.output.info(f"Generating SBOM in {format} format...")
-        self.output.info("SBOM generation completed (placeholder)")
 
     def package_info(self):
         self.cpp_info.libs = []

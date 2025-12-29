@@ -1,6 +1,6 @@
 # SpareTools Test Framework
 
-Core test framework components migrated from ngapy, providing reusable test environments, components, and harness integration.
+Core test framework components providing reusable test environments, components, and harness integration.
 
 ## Overview
 
@@ -81,14 +81,14 @@ python -m sparetools.cli.main run test_procedure.py
 python -m sparetools.cli.main validate
 ```
 
-## Migration from ngapy
+## Architecture
 
-This package was created by systematically migrating ngapy components while preserving 100% of existing logic:
+This package provides a modular test framework architecture:
 
-- **TestEnvironment**: Migrated from Bench class with full interface compatibility
-- **Component**: Migrated from Module class with communication protocol preservation
-- **Configuration**: Migrated config_loader with environment provider abstraction
-- **Verification**: Extracted verification logic with wrapper classes
+- **TestEnvironment**: Abstract base class for hardware test environments
+- **Component**: Base class for communication and control components
+- **Configuration**: Centralized configuration management system
+- **Verification**: Comprehensive test verification and reporting
 
 ## Dependencies
 

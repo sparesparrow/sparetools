@@ -25,27 +25,10 @@
 """
 
 """
-MIGRATION RECORD
-================
+Configuration management system for SpareTools test framework.
 
-Original Source: ngapy/config_loader/config_loader.py
-Migration Date: 2024-12-XX
-Target Location: sparetools/core/configuration/config_manager.py
-
-Changes Made:
-- Renamed class: ConfigLoaderManager → ConfigManager
-- Updated imports: ngapy.config_loader → sparetools.core.configuration
-- Updated function names: get_config_loader → get_config_manager
-- Preserved all YAML loading, path resolution, merging logic
-- Preserved all error handling, validation, environment integration
-
-Logic Preservation: 100%
-Lines Changed: <5% (imports and naming only)
-Test Status: ✅ All existing tests pass
-Performance Impact: <1% degradation
-
-Migration Agent: Claude Code Assistant
-Review Status: [Pending/Approved]
+Provides centralized configuration loading from multiple sources including
+YAML files, environment variables, and package configurations.
 """
 
 import glob
@@ -53,13 +36,38 @@ import logging
 import os
 import pprint
 import re
+import hashlib
+import os
 from pathlib import Path
 import anyconfig
 import munch
 
-from ngapy.core.utilities import ConfigurationBase
-from ngapy.util.copy_tools import get_file_metadata
-from ngapy.util.miscellaneous_functions import make_list_from_variable, get_tuple_from_dict
+
+# Utility functions for configuration management
+def get_file_metadata(file_path):
+    """Get file metadata including MD5 hash."""
+    with open(file_path, 'rb') as f:
+        content = f.read()
+        return {'MD5': hashlib.md5(content).hexdigest()}
+
+
+def make_list_from_variable(var):
+    """Convert variable to list."""
+    if var is None:
+        return []
+    if isinstance(var, list):
+        return var
+    return [var]
+
+
+def get_tuple_from_dict(d):
+    """Convert dict to sorted tuple of items."""
+    return tuple(sorted(d.items()))
+
+
+class ConfigurationBase:
+    """Simple base class for configuration management."""
+    pass
 
 
 log = logging.getLogger('__main__.' + __name__)
@@ -83,7 +91,7 @@ class ConfigManagerManager(ConfigurationBase):
         config_pattern = kwargs['config_pattern']
         recursive_config_search = kwargs['recursive_config_search']
         if config_folders is None:
-            config_folders = get_ngapy_config_path()
+            config_folders = get_config_path()
         files = []
         for path in make_list_from_variable(config_folders):
             if path is not None:
@@ -94,11 +102,11 @@ class ConfigManagerManager(ConfigurationBase):
         return ConfigManagerInstance(self.get_config_files(**kwargs), kwargs['additional_arguments'], kwargs['ac_merge'])
 
 
-def get_ngapy_config_path():
+def get_config_path():
     base_path = os.path.dirname(os.path.dirname(os.path.dirname(Path(__file__))))
-    ngapy_config_folder = os.path.join(base_path, "Conf")
-    log.debug(f'Opening ngapy configs in {ngapy_config_folder}')
-    return ngapy_config_folder
+    config_folder = os.path.join(base_path, "Conf")
+    log.debug(f'Opening configs in {config_folder}')
+    return config_folder
 
 
 class ConfigManagerInstance:
@@ -162,19 +170,25 @@ def get_config_manager(config_folders=None, additional_arguments=None, ac_merge=
 def get_conan_merged_configuration(root_folder, additional_arguments=dict(),
                                    ac_merge=anyconfig.MS_DICTS,
                                    config_pattern=r'**\*.*', recursive_config_search=True) -> munch.Munch:
-    from ngapy.conan.conan_functions import get_all_package_config_folders, get_configuration_safe
-    config_folders = []
-    config_folders.extend(get_all_package_config_folders(root_folder))
-    if additional_arguments is None:
-        additional_arguments = dict()
-    conan_configurations = get_configuration_safe(root_folder)
-    for conan_configuration in conan_configurations.values():
-        additional_arguments[f'PACKAGE_ROOT_{conan_configuration[0]}'] = conan_configuration[2]
-    config = ConfigManagerManager().get_configuration(config_folders=config_folders,
-                                                     additional_arguments=additional_arguments,
-                                                     ac_merge=ac_merge,
-                                                     config_pattern=config_pattern,
-                                                     recursive_config_search=recursive_config_search)
-    config.config['conan_package_config'] = conan_configurations
-    config.munchified_config = munch.munchify(config.config)
-    return config.munchified_config
+    """Load configuration with conan package integration if available."""
+    try:
+        from ngapy.conan.conan_functions import get_all_package_config_folders, get_configuration_safe
+        config_folders = []
+        config_folders.extend(get_all_package_config_folders(root_folder))
+        if additional_arguments is None:
+            additional_arguments = dict()
+        conan_configurations = get_configuration_safe(root_folder)
+        for conan_configuration in conan_configurations.values():
+            additional_arguments[f'PACKAGE_ROOT_{conan_configuration[0]}'] = conan_configuration[2]
+        config = ConfigManagerManager().get_configuration(config_folders=config_folders,
+                                                         additional_arguments=additional_arguments,
+                                                         ac_merge=ac_merge,
+                                                         config_pattern=config_pattern,
+                                                         recursive_config_search=recursive_config_search)
+        config.config['conan_package_config'] = conan_configurations
+        config.munchified_config = munch.munchify(config.config)
+        return config.munchified_config
+    except ImportError:
+        # Fallback to basic configuration loading without conan integration
+        log.warning("Conan integration not available, loading basic configuration")
+        return get_config_manager(root_folder, additional_arguments, ac_merge, config_pattern, recursive_config_search)

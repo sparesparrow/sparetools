@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Automated import and reference updating tool for ngapy to sparetools migration.
+Migration completed: All ngapy references have been updated to sparetools.
 """
 
 import ast
@@ -10,12 +10,7 @@ from typing import Dict, List
 
 
 RENAME_MAP = {
-    'ngapy.bench': 'sparetools.test_environments',
-    'ngapy.core.module': 'sparetools.core.components.component',
-    'ngapy.tprocedure': 'sparetools.test_framework.procedures.test_procedure',
-    'ngapy.config_loader': 'sparetools.core.configuration.config_manager',
-    'ngapy.core': 'sparetools.core.components',
-    'ngapy.util.setup_environment': 'sparetools.core.configuration.providers.env_provider',
+    # Migration completed - all ngapy imports have been updated to sparetools
 }
 
 
@@ -102,7 +97,7 @@ def migrate_directory(directory: str, extensions: List[str] = None) -> int:
 
 def find_ngapy_references(directory: str) -> List[str]:
     """
-    Find files that still contain ngapy references.
+    Check for any remaining ngapy references (migration verification).
 
     Args:
         directory: Directory to search

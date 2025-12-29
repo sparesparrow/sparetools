@@ -3,7 +3,7 @@ display_name: "ESP32 BPM Detector"
 description: "Real-time beat detection firmware for ESP32 with audio processing, networking, and display support"
 dependencies:
   foundation:
-    - sparetools-base/2.0.0
+    - sparetools-base/2.0.3
     - cpython/3.12
     - sparetools-bootstrap/2.0.0
     - sparetools-test-harness/2.0.0

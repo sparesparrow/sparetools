@@ -10,11 +10,11 @@
 #
 
 """
-Dependency Analysis and SBOM Generation Tests for Ngapy
-======================================================
+Dependency Analysis and SBOM Generation Tests for SpareTools
+===========================================================
 
 This module provides dependency analysis and Software Bill of Materials (SBOM)
-generation capabilities for the ngapy package.
+generation capabilities for the sparetools package.
 """
 
 import os
@@ -321,8 +321,8 @@ class DependencyAnalysisHarness(NgapyTestHarnes):
                     }],
                     'component': {
                         'type': 'application',
-                        'name': 'ngapy',
-                        'version': self._get_ngapy_version(),
+                        'name': 'sparetools',
+                        'version': self._get_sparetools_version(),
                         'description': 'NGA Python testing framework'
                     }
                 },
@@ -387,11 +387,11 @@ class DependencyAnalysisHarness(NgapyTestHarnes):
         from datetime import datetime, timezone
         return datetime.now(timezone.utc).isoformat()
 
-    def _get_ngapy_version(self) -> str:
-        """Get ngapy version."""
+    def _get_sparetools_version(self) -> str:
+        """Get sparetools version."""
         try:
             # Try to get version from package
-            return pkg_resources.get_distribution('ngapy').version
+            return pkg_resources.get_distribution('sparetools').version
         except:
             return '1.0.0'  # Default version
 

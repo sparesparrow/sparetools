@@ -10,10 +10,10 @@
 #
 
 """
-Integration Tests for Ngapy Package
-===================================
+Integration Tests for SpareTools Package
+=======================================
 
-This module provides comprehensive integration testing capabilities for the ngapy package,
+This module provides comprehensive integration testing capabilities for the sparetools package,
 including cross-platform compatibility, performance benchmarking, security validation,
 dependency analysis, and SBOM generation.
 """
@@ -112,8 +112,8 @@ class IntegrationTestHarness(NgapyTestHarnes):
 
         # Benchmark import time
         import_time = self.benchmark_performance(
-            'ngapy_import',
-            lambda: importlib.import_module('ngapy')
+            'sparetools_import',
+            lambda: importlib.import_module('sparetools')
         )
 
         # Benchmark basic operations
@@ -236,7 +236,7 @@ class IntegrationTestHarness(NgapyTestHarnes):
         success = True
 
         # Check core package files
-        core_files = ['ngapy/__init__.py', 'conanfile.py']
+        core_files = ['sparetools/__init__.py', 'conanfile.py']
         for filename in core_files:
             if os.path.exists(filename):
                 try:
@@ -265,7 +265,7 @@ class IntegrationTestHarness(NgapyTestHarnes):
         try:
             sbom_data = {
                 'metadata': {
-                    'package': 'ngapy',
+                    'package': 'sparetools',
                     'version': '1.0.0',  # Should be extracted from actual version
                     'created': time.time(),
                     'platform': self.platform_info
