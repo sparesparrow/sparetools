@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "=== Publishing SpareTools Packages to Cloudsmith ==="
-echo "Repository: sparesparrow-conan/openssl-conan"
+echo "Repository: sparesparrow-conan/sparetools"
 echo ""
 
 # Check if CLOUDSMITH_API_KEY is set

@@ -1,0 +1,111 @@
+// MCP (Model Context Protocol) Interface Control Document
+// FlatBuffers schema for hardware control and system management
+
+include "common.fbs";
+
+namespace sparesparrow.mcp;
+
+// GPIO Pin Modes
+enum GPIOMode: byte {
+    INPUT = 0,
+    OUTPUT = 1,
+    INPUT_PULLUP = 2,
+    INPUT_PULLDOWN = 3
+}
+
+// GPIO Command - Control GPIO pins
+table GPIOCommand {
+    pin: int;           // GPIO pin number (0-40)
+    state: bool;        // Desired state (true = HIGH, false = LOW)
+    mode: GPIOMode;     // Pin mode
+    timestamp: uint64;  // Command timestamp in microseconds
+}
+
+table GPIOResponse {
+    pin: int;           // GPIO pin number
+    state: bool;        // Current state
+    success: bool;      // Operation success
+    error_message: string; // Error message if failed
+    timestamp: uint64;  // Response timestamp
+}
+
+// Serial Telemetry - Key-value sensor data
+table SerialTelemetry {
+    timestamp: uint64;     // Timestamp in microseconds
+    sensor_id: string;     // Sensor identifier
+    data_type: string;     // Data type (e.g., "temperature", "voltage")
+    value: float;          // Numeric value
+    unit: string;          // Unit (e.g., "celsius", "volts")
+    raw_data: [ubyte];     // Raw binary data if needed
+}
+
+table SerialCommand {
+    command: string;       // Command string
+    parameters: [string];  // Command parameters
+    timeout_ms: uint32;    // Timeout in milliseconds
+    timestamp: uint64;     // Command timestamp
+}
+
+table SerialResponse {
+    command: string;       // Original command
+    success: bool;         // Command success
+    response_data: string; // Response data
+    error_message: string; // Error message if failed
+    timestamp: uint64;     // Response timestamp
+}
+
+// System Status
+table SystemStatus {
+    uptime: uint64;        // System uptime in seconds
+    cpu_usage: float;      // CPU usage percentage
+    memory_usage: float;   // Memory usage percentage
+    temperature: float;    // System temperature in Celsius
+    timestamp: uint64;     // Status timestamp
+}
+
+// Network Status
+table NetworkStatus {
+    connected: bool;       // Network connection status
+    ip_address: string;    // IP address
+    mac_address: string;   // MAC address
+    signal_strength: int;  // Signal strength (-100 to 0 dBm for WiFi)
+    timestamp: uint64;     // Status timestamp
+}
+
+// System Command
+table SystemCommand {
+    action: string;        // Command action ("restart", "shutdown", "update")
+    parameters: [string];  // Command parameters
+    timeout_ms: uint32;    // Timeout in milliseconds
+    timestamp: uint64;     // Command timestamp
+}
+
+table SystemResponse {
+    action: string;        // Original command action
+    success: bool;         // Command success
+    result: string;        // Command result/output
+    error_message: string; // Error message if failed
+    timestamp: uint64;     // Response timestamp
+}
+
+// Union for all MCP messages
+union MCPMessage {
+    GPIOCommand,
+    GPIOResponse,
+    SerialTelemetry,
+    SerialCommand,
+    SerialResponse,
+    SystemStatus,
+    NetworkStatus,
+    SystemCommand,
+    SystemResponse
+}
+
+table MCEnvelope {
+    message_type: MCPMessage;
+    message_id: uint64;     // Unique message ID
+    device_id: sparetools.common.DeviceId; // Device identification
+}
+
+// Root table for MCP ICD
+root_type MCEnvelope;

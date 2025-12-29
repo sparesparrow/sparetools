@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "=== Publishing SpareTools Packages using Cloudsmith CLI ==="
-echo "Repository: sparesparrow-conan/openssl-conan"
+echo "Repository: sparesparrow-conan/sparetools"
 echo ""
 
 # Check if CLOUDSMITH_API_KEY is set
@@ -55,7 +55,7 @@ publish_conan_package() {
         
         if [ -n "$PACKAGE_FILE" ]; then
             echo "   📤 Uploading to Cloudsmith..."
-            if cloudsmith push conan sparesparrow-conan/openssl-conan "$PACKAGE_FILE"; then
+            if cloudsmith push conan sparesparrow-conan/sparetools "$PACKAGE_FILE"; then
                 echo "   ✅ Successfully uploaded $package_name v$version"
             else
                 echo "   ❌ Failed to upload $package_name v$version"
@@ -80,9 +80,9 @@ echo ""
 echo "🎉 Package publishing process complete!"
 echo ""
 echo "🔍 Verify uploads:"
-echo "cloudsmith list packages sparesparrow-conan/openssl-conan --query='sparetools-pentest-toolkit OR sparetools-prompt-system OR sparetools-sdr-tools OR sparetools-streaming-solutions OR sparetools-wifi-sensing'"
+echo "cloudsmith list packages sparesparrow-conan/sparetools --query='sparetools-pentest-toolkit OR sparetools-prompt-system OR sparetools-sdr-tools OR sparetools-streaming-solutions OR sparetools-wifi-sensing'"
 echo ""
-echo "🌐 View packages at: https://cloudsmith.io/~sparesparrow-conan/packages/"
+echo "🌐 View packages at: https://cloudsmith.io/~sparesparrow-conan/repos/sparetools/packages/"
 echo ""
 echo "📚 For manual upload if needed:"
 echo "cloudsmith push conan sparesparrow-conan/openssl-conan /path/to/package.tgz"

@@ -1,0 +1,91 @@
+name: Conan Package Publish (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      package_path:
+        description: 'Path to package directory'
+        required: true
+        type: string
+      package_name:
+        description: 'Package name for publishing'
+        required: true
+        type: string
+      package_version:
+        description: 'Package version'
+        required: true
+        type: string
+      remote_name:
+        description: 'Conan remote name'
+        required: false
+        default: 'sparesparrow-conan'
+        type: string
+      dry_run:
+        description: 'Perform dry run only'
+        required: false
+        default: false
+        type: boolean
+    secrets:
+      CLOUDSMITH_API_KEY:
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+
+    - name: Configure Conan remote
+      run: |
+        conan remote add conancenter https://center.conan.io
+        conan remote add ${{ inputs.remote_name }} https://conan.cloudsmith.io/sparesparrow/
+        conan remote auth ${{ inputs.remote_name }} ${{ secrets.CLOUDSMITH_API_KEY }}
+
+    - name: Cache Conan packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan2
+        key: conan-${{ runner.os }}-${{ hashFiles('**/conanfile.txt', '**/conanfile.py') }}
+        restore-keys: |
+          conan-${{ runner.os }}-
+
+    - name: Build package locally
+      run: |
+        cd ${{ inputs.package_path }}
+        conan create . --build=missing
+
+    - name: Dry run publish
+      if: inputs.dry_run
+      run: |
+        echo "Performing dry run publish..."
+        conan upload "${{ inputs.package_name }}/${{ inputs.package_version }}" \
+          -r ${{ inputs.remote_name }} \
+          --force \
+          --check
+
+    - name: Publish package
+      if: '!inputs.dry_run'
+      run: |
+        echo "Publishing package to ${{ inputs.remote_name }}..."
+        conan upload "${{ inputs.package_name }}/${{ inputs.package_version }}" \
+          -r ${{ inputs.remote_name }} \
+          --force
+
+    - name: Verify package
+      run: |
+        echo "Verifying package was published..."
+        conan search "${{ inputs.package_name }}/${{ inputs.package_version }}" \
+          -r ${{ inputs.remote_name }}
+
+
+

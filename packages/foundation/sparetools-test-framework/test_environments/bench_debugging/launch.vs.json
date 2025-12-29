@@ -1,0 +1,44 @@
+{
+  "version": "0.2.1",
+  "defaults": {},
+  "configurations": [
+    {
+      "type": "cppdbg",
+      "name": "HW Debugging",
+      "project": "SOURCE\\EXTERNAL_DEPENDENCIES\\BUILD_OA_PSSL_EXEC_DEOS_653_HW\\link_output\\PSSL_Exec_Deos653.exe",
+      "cwd": "${workspaceRoot}",
+      "program": "${workspaceRoot}\\SOURCE\\EXTERNAL_DEPENDENCIES\\BUILD_OA_PSSL_EXEC_DEOS_653_HW\\link_output\\PSSL_Exec_Deos653.exe.dbg",
+      "externalConsole": true,
+      "miDebuggerPath": "${env.DDCI_Home}\\usr\\local\\deos-debuggers\\gdb-8.0.1\\bin\\arm-eabi-gdb.exe",
+      "miDebuggerServerAddress": "${env.DESK_IP_ADDR}:${env.GDBSRV_PORT}",
+      "MIMode": "gdb",
+      "targetArchitecture": "arm",
+
+      source_file_map
+ 
+
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Additional libs for gdb",
+          "text": "${env.LD_LIBRARY_PATH}",
+          "ignoreFailures": false
+        },
+        {
+          "description": "Logging",
+          "text": "set logging on",
+          "ignoreFailures": true
+        },
+        {
+          "description": "Logging 2",
+          "text": "set verbose on",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

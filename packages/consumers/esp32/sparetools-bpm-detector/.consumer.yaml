@@ -1,0 +1,47 @@
+name: bpm-detector
+display_name: "ESP32 BPM Detector"
+description: "Real-time beat detection firmware for ESP32 with audio processing, networking, and display support"
+dependencies:
+  foundation:
+    - sparetools-base/2.0.0
+    - cpython/3.12
+    - sparetools-bootstrap/2.0.0
+    - sparetools-test-harness/2.0.0
+  schemas:
+    - sparesparrow-protocols/1.0.0
+  utilities:
+    - sparetools-shared-dev-tools/2.0.0
+  hardware:
+    - sparetools-hal-sunton/1.0.0
+
+features:
+  - "Real-time BPM detection using digital signal processing"
+  - "Audio input via I2S microphone interface"
+  - "Multiple display options (OLED SSD1306, 7-segment TM1637)"
+  - "HTTP REST API for configuration and status"
+  - "WebSocket streaming for real-time BPM data"
+  - "UDP multicast for multiple client support"
+  - "Audio calibration and signal quality monitoring"
+
+examples: []
+
+documentation:
+  main: ../../../../docs/consumers/esp32/
+  integration: ../../../../docs/consumers/esp32/ESP32-INTEGRATION.md
+
+ci_workflows:
+  - esp32-build
+  - esp32-testing
+  - esp32-quality
+  - esp32-security
+  - bpm-detector-specific-tests
+
+platforms:
+  esp32: ["esp32", "esp32-s2", "esp32-s3", "esp32-c3"]
+
+supported_versions:
+  cpython: ["3.12.7"]
+  conan: ["2.21.0+"]
+  platformio: ["6.1.0+"]
+  esp_idf: ["5.0+"]
+  flatbuffers: ["24.3.25"]

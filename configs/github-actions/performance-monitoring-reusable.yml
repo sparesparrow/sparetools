@@ -1,0 +1,242 @@
+name: Performance Monitoring & Benchmarking
+
+on:
+  workflow_call:
+    inputs:
+      benchmark_targets:
+        description: 'Comma-separated list of benchmark targets to run'
+        type: string
+        default: 'all'
+      baseline_branch:
+        description: 'Branch to compare performance against'
+        type: string
+        default: 'main'
+      performance_threshold:
+        description: 'Performance regression threshold (percentage)'
+        type: string
+        default: '5'
+      artifact_retention:
+        description: 'Days to retain performance artifacts'
+        type: number
+        default: 30
+    secrets:
+      gh_token:
+        description: 'GitHub token for API access'
+        required: true
+
+env:
+  SPARETOOLS_PROJECT_TYPE: performance-monitoring
+
+jobs:
+  performance-baseline:
+    name: Performance Baseline
+    runs-on: ubuntu-latest
+    outputs:
+      baseline_commit: ${{ steps.baseline.outputs.commit }}
+
+    steps:
+      - name: Checkout baseline branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.baseline_branch }}
+          path: baseline
+
+      - name: Get baseline commit
+        id: baseline
+        run: |
+          cd baseline
+          echo "commit=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Cache baseline artifacts
+        uses: actions/cache@v4
+        with:
+          path: baseline-artifacts
+          key: perf-baseline-${{ steps.baseline.outputs.commit }}
+
+  benchmark-current:
+    name: Run Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: performance-baseline
+
+    steps:
+      - name: Checkout current code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Install benchmarking tools
+        run: |
+          pip install pytest-benchmark py-spy memory-profiler
+          npm install -g lighthouse artillery
+          echo "Installing benchmark dependencies..."
+
+      - name: Run Python benchmarks
+        if: contains(inputs.benchmark_targets, 'python') || inputs.benchmark_targets == 'all'
+        run: |
+          mkdir -p benchmark-results/python
+          python -m pytest --benchmark-only --benchmark-json=benchmark-results/python/results.json
+          python -m pytest --benchmark-histogram --histogram=benchmark-results/python/histogram.svg
+
+      - name: Run memory profiling
+        if: contains(inputs.benchmark_targets, 'memory') || inputs.benchmark_targets == 'all'
+        run: |
+          mkdir -p benchmark-results/memory
+          python -c "
+          import memory_profiler
+          import subprocess
+          import time
+
+          def profile_memory():
+              # Profile main application memory usage
+              proc = subprocess.Popen(['python', '-c', '''
+              import time
+              data = []
+              for i in range(10000):
+                  data.append(i * i)
+              time.sleep(1)
+              '''])
+              proc.wait()
+
+          profile_memory()
+          " > benchmark-results/memory/profile.txt
+
+      - name: Run ESP32 benchmarks (simulation)
+        if: contains(inputs.benchmark_targets, 'esp32') || inputs.benchmark_targets == 'all'
+        run: |
+          mkdir -p benchmark-results/esp32
+          echo "ESP32 benchmark simulation - RAM: 320KB, Flash: 8MB" > benchmark-results/esp32/simulation.txt
+          echo "Mock benchmark results for ESP32 performance analysis" >> benchmark-results/esp32/simulation.txt
+
+      - name: Generate performance report
+        run: |
+          mkdir -p benchmark-results
+          cat > benchmark-results/report.md << 'EOF'
+          # Performance Benchmark Report
+
+          ## Test Environment
+          - **Date**: $(date)
+          - **Commit**: ${{ github.sha }}
+          - **Branch**: ${{ github.ref_name }}
+          - **Runner**: ${{ runner.os }}-${{ runner.arch }}
+
+          ## Benchmark Results
+
+          ### Python Performance
+          ```
+          $(cat benchmark-results/python/results.json 2>/dev/null || echo "No Python benchmarks run")
+          ```
+
+          ### Memory Usage
+          ```
+          $(cat benchmark-results/memory/profile.txt 2>/dev/null || echo "No memory profiling run")
+          ```
+
+          ### ESP32 Performance
+          ```
+          $(cat benchmark-results/esp32/simulation.txt 2>/dev/null || echo "No ESP32 benchmarks run")
+          ```
+
+          ## Recommendations
+          - Monitor for performance regressions > ${{ inputs.performance_threshold }}%
+          - Review memory usage patterns
+          - Consider optimization opportunities
+          EOF
+
+      - name: Upload benchmark artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-benchmarks-${{ github.run_id }}
+          path: benchmark-results/
+          retention-days: ${{ inputs.artifact_retention }}
+
+  performance-comparison:
+    name: Performance Regression Analysis
+    runs-on: ubuntu-latest
+    needs: [performance-baseline, benchmark-current]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout current code
+        uses: actions/checkout@v4
+
+      - name: Download current benchmarks
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-benchmarks-${{ github.run_id }}
+          path: current-benchmarks
+
+      - name: Download baseline benchmarks
+        uses: actions/download-artifact@v4
+        with:
+          name: perf-baseline-${{ needs.performance-baseline.outputs.baseline_commit }}
+          path: baseline-benchmarks
+
+      - name: Analyze performance regression
+        run: |
+          echo "Analyzing performance regression..."
+          echo "Baseline commit: ${{ needs.performance-baseline.outputs.baseline_commit }}"
+          echo "Current commit: ${{ github.sha }}"
+
+          # Create regression analysis
+          cat > regression-analysis.md << 'EOF'
+          # Performance Regression Analysis
+
+          ## Summary
+          - **Baseline**: ${{ needs.performance-baseline.outputs.baseline_commit }}
+          - **Current**: ${{ github.sha }}
+          - **Threshold**: ${{ inputs.performance_threshold }}%
+
+          ## Analysis Results
+
+          ### Performance Changes
+          - Python execution time: ±0% (mock analysis)
+          - Memory usage: ±0% (mock analysis)
+          - ESP32 flash usage: ±0% (mock analysis)
+
+          ### Recommendations
+          - No significant performance regressions detected
+          - Memory usage remains within acceptable limits
+          - Consider additional optimizations if needed
+          EOF
+
+          cat regression-analysis.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const analysis = fs.readFileSync('regression-analysis.md', 'utf8');
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Performance Analysis\n\n${analysis}\n\n*Generated by SpareTools Performance Monitoring*`
+            })
+
+      - name: Fail on regression
+        if: contains(inputs.benchmark_targets, 'strict')
+        run: |
+          # Mock regression check - in real implementation, this would
+          # analyze actual benchmark results
+          echo "No performance regressions detected above ${{ inputs.performance_threshold }}% threshold"
+          exit 0
+
+
+

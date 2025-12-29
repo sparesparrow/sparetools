@@ -1,0 +1,11 @@
+artifactory:
+  schema_version: '1.0'
+  root: https://artifactory-na.honeywell.com:443/artifactory
+  user: titan-oms-integ
+  password: APA8R3fSWcmZR2iPqpaNifqB6Uw
+  nga_conan_url: https://artifactory-na.honeywell.com/artifactory/api/conan/nga-conan-stable-local
+  nga_conan_name: nga-conan
+  conan_paths: [
+      c:\Program Files\Conan\conan\conan.exe
+    , c:\Program Files (x86)\Conan\conan\conan.exe
+  ]

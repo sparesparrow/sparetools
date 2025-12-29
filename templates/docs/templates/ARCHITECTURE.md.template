@@ -1,0 +1,160 @@
+# {{project_name}} Architecture
+
+## Overview
+
+{{project_description}}
+
+## Core Architecture
+
+### Package Ecosystem
+
+```mermaid
+graph TD
+    subgraph "Production Packages"
+        {% for package in packages %}
+        {{package.id}}[{{package.name}}/{{package.version}}<br/>{{package.description}}]
+        {% endfor %}
+    end
+
+    subgraph "Build Dependencies"
+        {% for dep in dependencies %}
+        {{dep.from}} -->|{{dep.type}}| {{dep.to}}
+        {% endfor %}
+    end
+
+    {% for package in packages %}
+    style {{package.id}} fill:{{package.fill_color}},stroke:{{package.stroke_color}},color:{{package.text_color}},stroke-width:{{package.stroke_width}}px
+    {% endfor %}
+```
+
+**Legend:**
+- Solid arrows (→): `python_requires` (recipe dependencies)
+- Dashed arrows (-.->): `tool_requires` (build-time tools)
+
+### Multi-Build System
+
+```mermaid
+graph LR
+    A[{{main_package}}] --> B{build_method option}
+
+    {% for method in build_methods %}
+    B -->|{{method.name}}<br/>{{method.status}}| {{method.id}}[{{method.label}}]
+    {% endfor %}
+
+    {% for method in build_methods %}
+    {{method.id}} --> G[{{output_binary}}]
+    {% endfor %}
+
+    {% for method in build_methods %}
+    style {{method.id}} fill:{{method.fill_color}},stroke:{{method.stroke_color}},color:{{method.text_color}}
+    {% endfor %}
+    style A fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style G fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
+
+### CI/CD Workflow Chain
+
+```mermaid
+graph TD
+    A[Push/PR] --> B{Change Detection}
+
+    B -->|Code Changes| C[ci.yml<br/>Multi-Platform Build]
+    B -->|Docs Only| D[Skip Build]
+
+    C --> E[Build Matrix<br/>{{platforms}}]
+    E --> F[Integration Tests]
+    F --> G{All Pass?}
+
+    G -->|Yes| H[security.yml<br/>Security Scanning]
+    G -->|No| I[Fix Issues]
+
+    H --> J[Trivy Scan<br/>Vulnerabilities]
+    J --> K[Syft SBOM<br/>Generation]
+    K --> L[CodeQL Analysis]
+    L --> M{FIPS Validation}
+    M --> N{All Clear?}
+
+    N -->|Yes| O[publish.yml<br/>Package Publishing]
+    N -->|No| P[Block Release]
+
+    O --> Q[{{registry}}<br/>Staging]
+    Q --> R[Manual Approval]
+    R --> S[Production<br/>Deploy]
+
+    style C fill:#2196F3,stroke:#1565C0,color:#fff
+    style H fill:#E91E63,stroke:#880E4F,color:#fff
+    style O fill:#4CAF50,stroke:#2E7D32,color:#fff
+    style S fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
+
+## Security Integration
+
+```mermaid
+graph TD
+    A[Build Artifacts] --> B{Security Gates}
+
+    B --> C[Trivy Scanner<br/>Vulnerability Detection]
+    B --> D[Syft<br/>SBOM Generation]
+    B --> E[FIPS Validator<br/>Compliance Check]
+
+    C -->|Scan| F{Findings?}
+    D -->|Generate| G[SBOM Report<br/>CycloneDX/SPDX]
+    E -->|Validate| H{Compliant?}
+
+    F -->|CRITICAL| I[❌ Block Promotion]
+    F -->|OK| J[✅ Continue]
+
+    H -->|No| I
+    H -->|Yes| J
+
+    G --> J
+    J --> K[Package Promotion]
+
+    style C fill:#E91E63,stroke:#880E4F,color:#fff
+    style D fill:#2196F3,stroke:#1565C0,color:#fff
+    style E fill:#FF9800,stroke:#E65100,color:#fff
+    style I fill:#F44336,stroke:#B71C1C,color:#fff,stroke-width:3px
+    style K fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+```
+
+## Directory Structure
+
+```
+{{project_name}}/
+├── packages/                    # {{package_description}}
+│   {% for package in package_dirs %}
+│   ├── {{package.name}}/         # {{package.description}}
+│   {% endfor %}
+├── _Build/                      # Zero-copy build artifacts
+│   ├── {{build_outputs}}/
+│   ├── packages/                # Symlinks to Conan cache
+│   └── conan-cache -> ~/.conan2 # Symlink to cache root
+├── build_results/               # Build reports
+├── reviews/                     # Release reviews
+├── test_results/                # Test outputs
+├── test/                        # Test suite
+├── scripts/                     # Automation scripts
+├── docs/                        # Documentation
+└── .github/workflows/           # CI/CD pipelines
+```
+
+## Key Design Principles
+
+1. **Single Source of Truth**: All artifacts stored once in Conan cache
+2. **Zero-Copy Deployment**: Symlinks eliminate binary duplication
+3. **Multi-Method Flexibility**: Support multiple build systems
+4. **Security First**: Integrated scanning and validation
+5. **CI/CD Integration**: Automated workflows with manual approvals
+6. **Modular Architecture**: Independent packages with clear dependencies
+
+## External Integrations
+
+- **Conan Center**: Base dependencies (CMake, Ninja, etc.)
+- **{{registry}}**: Package hosting and distribution
+- **GitHub Packages**: Secondary package registry
+- **Security Tools**: Trivy, Syft, CodeQL integration
+- **CI/CD**: GitHub Actions for multi-platform builds
+
+---
+
+*Last Updated: {{last_updated}}*

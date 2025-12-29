@@ -177,19 +177,19 @@ class CPythonToolConan(ConanFile):
             else:
                 raise ConanException(f"Python not found at {python_bin} or {python3_12}")
         
-        # Create convenience symlinks if needed
+        # Create convenience symlinks/wrappers if needed
         bin_dir = os.path.join(self.package_folder, "bin")
         python3_12_bin = os.path.join(bin_dir, "python3.12")
         python3_bin = os.path.join(bin_dir, "python3")
         python_bin_sym = os.path.join(bin_dir, "python")
-        
+
         # python3 → python3.12 (if python3.12 exists but python3 doesn't)
         if os.path.exists(python3_12_bin) and not os.path.exists(python3_bin):
-            os.symlink("python3.12", python3_bin)
-        
+            self._create_python_wrapper(python3_bin, python3_12_bin)
+
         # python → python3.12 (for bare 'python' command)
         if os.path.exists(python3_12_bin) and not os.path.exists(python_bin_sym):
-            os.symlink("python3.12", python_bin_sym)
+            self._create_python_wrapper(python_bin_sym, python3_12_bin)
         
         # Install cloudsmith-cli if not already present
         cloudsmith_bin = os.path.join(bin_dir, "cloudsmith")
@@ -204,6 +204,22 @@ class CPythonToolConan(ConanFile):
         # self.generate_sbom()
 
         self.output.info(f"✅ Package verified: {python_bin}")
+
+    def _create_python_wrapper(self, wrapper_path, target_path):
+        """Create a cross-platform wrapper for Python executable."""
+        if self.settings.os == "Windows":
+            # On Windows, create a .bat file that calls the target
+            bat_content = f'@echo off\n"{target_path}" %*\n'
+            with open(wrapper_path + '.bat', 'w') as f:
+                f.write(bat_content)
+        else:
+            # On Unix-like systems, use symlinks
+            try:
+                os.symlink(os.path.basename(target_path), wrapper_path)
+            except OSError as e:
+                # If symlink fails, copy the file as fallback
+                import shutil
+                shutil.copy2(target_path, wrapper_path)
 
     def _install_cloudsmith_cli(self, python_bin):
         """Install cloudsmith-cli using the bundled Python"""

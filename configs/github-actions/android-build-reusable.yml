@@ -1,0 +1,121 @@
+name: Android Build (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      conan_packages:
+        description: 'Conan packages to install (comma-separated)'
+        required: false
+        default: 'sparesparrow-protocols/1.0.0,sparetools-embedded/1.0.0'
+        type: string
+      android_api_level:
+        description: 'Android API level'
+        required: false
+        default: '28'
+        type: string
+      build_tools_version:
+        description: 'Android build tools version'
+        required: false
+        default: '30.0.3'
+        type: string
+      run_tests:
+        description: 'Run unit tests'
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      CLOUDSMITH_API_KEY:
+        required: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+      with:
+        api-level: ${{ inputs.android_api_level }}
+        build-tools: ${{ inputs.build_tools_version }}
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+
+    - name: Configure Conan remotes
+      run: |
+        conan remote add conancenter https://center.conan.io
+        conan remote add sparesparrow-conan https://conan.cloudsmith.io/sparesparrow/
+        if [ -n "${{ secrets.CLOUDSMITH_API_KEY }}" ]; then
+          conan remote auth sparesparrow-conan ${{ secrets.CLOUDSMITH_API_KEY }}
+        fi
+
+    - name: Cache Gradle dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          gradle-${{ runner.os }}-
+
+    - name: Cache Conan packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.conan2
+        key: conan-${{ runner.os }}-${{ hashFiles('**/conanfile.txt', '**/conanfile.py') }}
+        restore-keys: |
+          conan-${{ runner.os }}-
+
+    - name: Install Conan dependencies
+      run: |
+        # Convert comma-separated packages to space-separated for conan install
+        PACKAGES="${{ inputs.conan_packages }}"
+        PACKAGES="${PACKAGES//,/ }"
+        echo "Installing packages: $PACKAGES"
+        conan install $PACKAGES --build=missing --generator=CMakeDeps
+
+    - name: Make gradlew executable
+      run: chmod +x gradlew
+
+    - name: Build Android debug APK
+      run: |
+        ./gradlew assembleDebug
+
+    - name: Run unit tests
+      if: inputs.run_tests
+      run: |
+        ./gradlew testDebugUnitTest
+
+    - name: Upload APK artifacts
+      if: success()
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-apk-debug
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Upload test results
+      if: inputs.run_tests
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-test-results
+        path: |
+          app/build/reports/tests/testDebugUnitTest/
+          app/build/test-results/testDebugUnitTest/
+
+
+

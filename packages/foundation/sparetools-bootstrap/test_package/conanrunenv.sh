@@ -1,4 +1,4 @@
-script_folder="/home/sparrow/sparetools/packages/foundation/sparetools-bootstrap/test_package"
+script_folder="/home/sparrow/projects/dev-tools/sparetools/packages/foundation/sparetools-bootstrap/test_package"
 echo "echo Restoring environment" > "$script_folder/deactivate_conanrunenv.sh"
 for v in 
 do

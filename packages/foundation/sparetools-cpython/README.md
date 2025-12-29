@@ -16,7 +16,7 @@ conan install --tool-requires=sparetools-cpython/3.12.7
 
 - **Zero-Copy Build**: Builds directly to Conan cache (`package_folder`) - no `/tmp` staging
 - **Prebuilt Python 3.12.7**: Compiled from source with optimizations
-- **Cross-platform**: Linux, Windows, macOS support
+- **Cross-platform**: Linux, Windows, macOS support with platform-specific wrappers
 - **Tool Requires**: Used as build-time dependency
 - **Isolated**: No system Python conflicts
 - **Optimized**: Built with `--enable-optimizations --with-lto` by default
@@ -79,9 +79,9 @@ conan cache path sparetools-cpython/3.12.7
 | Platform | Status |
 |----------|--------|
 | Linux x86_64 | ✅ Tested |
-| Windows x86_64 | ⏳ Planned |
-| macOS x86_64 | ⏳ Planned |
-| macOS ARM64 | ⏳ Planned |
+| Windows x86_64 | ✅ Implemented |
+| macOS x86_64 | ✅ Implemented |
+| macOS ARM64 | ✅ Implemented |
 
 ## License
 

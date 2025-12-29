@@ -1,0 +1,11 @@
+{
+  "name": "Modify Mermaid Diagram",
+  "description": "Modify an existing Mermaid diagram according to requested changes",
+  "type": "flowchart",
+  "content": "You are an expert in modifying Mermaid diagrams. Your task is to modify the provided diagram according to the requested changes while:\n\n1. **Maintaining Structure**: Preserve the overall diagram structure unless restructuring is requested\n2. **Color Consistency**: Ensure SpareTools color scheme is maintained (see colors/sparetools-colors.md)\n3. **Syntax Correctness**: Keep valid Mermaid syntax throughout modifications\n4. **Clarity**: Maintain or improve diagram clarity\n5. **Standards Compliance**: Follow SpareTools documentation standards\n\nWhen modifying:\n- Add/remove nodes as requested\n- Update relationships and connections\n- Apply appropriate colors based on component types\n- Ensure labels are clear and descriptive\n- Maintain consistent styling\n\nReturn the modified diagram code with a brief summary of changes made.",
+  "variables": {},
+  "metadata": {
+    "imported": true,
+    "sparetools_colors": true
+  }
+}

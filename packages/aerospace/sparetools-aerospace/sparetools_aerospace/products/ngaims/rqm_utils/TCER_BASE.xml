@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns2:executionworkitem xmlns:ns2="http://jazz.net/xmlns/alm/qm/v0.1/" xmlns:ns1="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:ns3="http://schema.ibm.com/vega/2008/" xmlns:ns4="http://purl.org/dc/elements/1.1/" xmlns:ns5="http://jazz.net/xmlns/prod/jazz/process/0.6/" xmlns:ns6="http://jazz.net/xmlns/alm/v0.1/" xmlns:ns7="http://purl.org/dc/terms/" xmlns:ns8="http://jazz.net/xmlns/alm/qm/v0.1/testscript/v0.1/" xmlns:ns9="http://jazz.net/xmlns/alm/qm/v0.1/executionworkitem/v0.1" xmlns:ns10="http://open-services.net/ns/core#" xmlns:ns11="http://open-services.net/ns/qm#" xmlns:ns12="http://jazz.net/xmlns/prod/jazz/rqm/process/1.0/" xmlns:ns13="http://www.w3.org/2002/07/owl#" xmlns:ns14="http://jazz.net/xmlns/alm/qm/qmadapter/v0.1" xmlns:ns15="http://jazz.net/xmlns/alm/qm/qmadapter/task/v0.1" xmlns:ns16="http://jazz.net/xmlns/alm/qm/v0.1/executionresult/v0.1" xmlns:ns17="http://jazz.net/xmlns/alm/qm/v0.1/catalog/v0.1" xmlns:ns18="http://jazz.net/xmlns/alm/qm/v0.1/tsl/v0.1/" xmlns:ns20="http://jazz.net/xmlns/alm/qm/styleinfo/v0.1/" xmlns:ns21="http://www.w3.org/1999/XSL/Transform">
+<ns2:projectArea href="https://aeroclm.honeywell.com/qm/resource/itemOid/com.ibm.team.process.ProjectArea/_rslqkDCFEemayu7qV9Guwg" alias="Maintenance+Solutions+%28QM%29"/>
+<ns4:title>test_record</ns4:title>
+<ns4:description/>
+<ns4:creator ns1:resource="https://aeroclm.honeywell.com/jts/resource/itemName/com.ibm.team.repository.Contributor/H479799">H479799</ns4:creator>
+<ns6:owner ns1:resource="https://aeroclm.honeywell.com/jts/resource/itemName/com.ibm.team.repository.Contributor/H479799">H479799</ns6:owner>
+<ns9:frequency>Once</ns9:frequency>
+<ns9:regression>false</ns9:regression>
+<ns9:priority ns1:resource="https://aeroclm.honeywell.com/qm/service/com.ibm.rqm.integration.service.IIntegrationService/process-info/_rslqkDCFEemayu7qV9Guwg/priority/literal.priority.101">literal.priority.101</ns9:priority>
+<ns9:weight>100</ns9:weight>
+<ns9:tags/>
+<ns2:testcase href="https://aeroclm.honeywell.com/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Maintenance+Solutions+%28QM%29/testcase/urn:com.ibm.rqm:testcase:10931"/>
+<ns2:configuration href="https://aeroclm.honeywell.com/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Maintenance+Solutions+%28QM%29/configuration/TE136"/>
+<ns2:component href="https://aeroclm.honeywell.com/qm/service/com.ibm.rqm.integration.service.IIntegrationService/resources/Maintenance+Solutions+%28QM%29/component/_zwGUsA1VEeqCBIvjvkIcDQ"/>
+</ns2:executionworkitem>

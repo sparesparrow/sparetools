@@ -4,7 +4,8 @@
 foundation:
   base: "2.0.3"
   cpython: "3.12.7"
-  bootstrap: "2.0.0"
+  bootstrap: "2.0.3"
+  test-framework: "1.0.0"
   test-harness: "2.0.0"
   shared-dev-tools: "2.0.0"
 
@@ -17,6 +18,10 @@ embedded:
   openssl: "3.3.2"
   freertos: "10.5.1"
   hal-sunton: "1.0.0"
+  embedded: "1.0.0"
+
+aerospace:
+  aerospace: "1.0.0"
 
 security:
   crypto-suite: "1.0.0"

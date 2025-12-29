@@ -1,0 +1,50 @@
+{
+    "version": 3,
+    "vendor": {
+        "conan": {}
+    },
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 15,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "conan-clang-18-x86_64-gnu17-release",
+            "displayName": "'conan-clang-18-x86_64-gnu17-release' config",
+            "description": "'conan-clang-18-x86_64-gnu17-release' configure using 'Unix Makefiles' generator",
+            "generator": "Unix Makefiles",
+            "cacheVariables": {
+                "CMAKE_POLICY_DEFAULT_CMP0091": "NEW",
+                "CMAKE_BUILD_TYPE": "Release"
+            },
+            "environment": {
+                "PYTHON_ROOT": "/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p",
+                "PATH": "/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/bin:/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/bin:/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/bin:$penv{PATH}",
+                "LD_LIBRARY_PATH": "/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/lib:/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/lib:$penv{LD_LIBRARY_PATH}",
+                "PYTHONHOME": "/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p",
+                "PYTHONPATH": "$penv{PYTHONPATH}:/home/sparrow/.conan2/p/b/spare95a887e6579a1/p:/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/lib/python3.12",
+                "DYLD_LIBRARY_PATH": "/home/sparrow/.conan2/p/b/spare0bae7766f03fa/p/lib:$penv{DYLD_LIBRARY_PATH}"
+            },
+            "toolchainFile": "conan/conan_toolchain.cmake",
+            "binaryDir": "/home/sparrow/projects/dev-tools/sparetools/packages/python/sparetools-py/test_package/build-release"
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "conan-clang-18-x86_64-gnu17-release",
+            "configurePreset": "conan-clang-18-x86_64-gnu17-release",
+            "jobs": 4
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "conan-clang-18-x86_64-gnu17-release",
+            "configurePreset": "conan-clang-18-x86_64-gnu17-release",
+            "environment": {
+                "PYTHONPATH": "$penv{PYTHONPATH}:/home/sparrow/.conan2/p/b/spare95a887e6579a1/p",
+                "SPARETOOLS_PY_PACKAGE_DIR": "/home/sparrow/.conan2/p/b/spare95a887e6579a1/p"
+            }
+        }
+    ]
+}

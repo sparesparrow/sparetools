@@ -1,0 +1,77 @@
+# {{package_name}}
+
+{{package_description}}
+
+## Key Capabilities
+
+{% for capability in capabilities %}
+- {{capability}}
+{% endfor %}
+
+## Package Dependencies
+
+```mermaid
+graph TD
+    {{package_name}}[{{package_name}}/{{version}}]
+    
+    {% for dep in dependencies %}
+    {{dep.name}}[{{dep.name}}/{{dep.version}}]
+    {{package_name}} -->|{{dep.type}}| {{dep.name}}
+    {% endfor %}
+
+    style {{package_name}} fill:{{package_fill_color}},stroke:{{package_stroke_color}},color:{{package_text_color}},stroke-width:3px
+    {% for dep in dependencies %}
+    style {{dep.name}} fill:{{dep.fill_color}},stroke:{{dep.stroke_color}},color:{{dep.text_color}}
+    {% endfor %}
+```
+
+## Conan Usage
+
+```bash
+# Optional: build locally
+cd packages/{{package_name}}
+conan create . --version={{version}} [--build=missing]
+
+# Consume from {{registry}}
+conan install --requires={{package_name}}/{{version}}@ [additional flags]
+```
+
+## Architecture
+
+```mermaid
+graph LR
+    {% for component in components %}
+    {{component.id}}[{{component.name}}]
+    {% endfor %}
+
+    {% for connection in connections %}
+    {{connection.from}} -->|{{connection.label}}| {{connection.to}}
+    {% endfor %}
+
+    {% for component in components %}
+    style {{component.id}} fill:{{component.fill_color}},stroke:{{component.stroke_color}},color:{{component.text_color}}
+    {% endfor %}
+```
+
+## Development Notes
+
+{% for note in development_notes %}
+- {{note}}
+{% endfor %}
+
+## Related References
+
+{% for ref in related_references %}
+- {{ref}}
+{% endfor %}
+
+## Color Scheme
+
+This package uses the SpareTools color scheme for diagrams:
+- **Schema Layer**: Blue (#2196F3) - Protocol definitions
+- **Provider Layer**: Orange (#FF9800) - Hardware/firmware providers
+- **Consumer Layer**: Purple (#9C27B0) - Applications/consumers
+- **Tooling Layer**: Yellow (#FFC107) - Shared utilities
+- **Success/Production**: Green (#4CAF50) - Production deployments
+
+For more details, see [SpareTools Color Scheme Reference](../../templates/docs/colors/sparetools-colors.md).

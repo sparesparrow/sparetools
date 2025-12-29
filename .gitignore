@@ -66,3 +66,22 @@ dist/
 
 # Build artifacts from publishing workflows
 _build_artifacts/
+
+# Build and sync reports
+BUILD_UPLOAD_REPORT.json
+SYNC_REPORT.json
+SYNC_VALIDATION_REPORT.json
+*_REPORT.json
+*_VALIDATION_REPORT.json
+
+# Temporary build scripts and configs
+build_and_upload_all.sh
+build_packages_skip_cpython.sh
+upload_all_packages.sh
+upload_with_cloudsmith_cli.sh
+create_cloudsmith_repo.sh
+
+# Development tools and configs
+dev-tools/
+repo-config.json
+turbo.json

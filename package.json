@@ -1,0 +1,51 @@
+{
+  "name": "sparetools-monorepo",
+  "version": "1.0.0",
+  "description": "SpareTools - Meta-repository for shared embedded development infrastructure",
+  "private": true,
+  "workspaces": [
+    "packages/python/sparetools-py"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "build:schemas": "turbo run build:schemas",
+    "build:embedded": "turbo run build:embedded",
+    "build:python": "turbo run build:python",
+    "build:cpython": "turbo run build:cpython",
+    "test": "turbo run test",
+    "test:schemas": "turbo run test:schemas",
+    "test:python": "turbo run test:python",
+    "test:embedded": "turbo run test:embedded",
+    "lint": "turbo run lint",
+    "format": "turbo run format",
+    "clean": "turbo run clean",
+    "publish": "turbo run publish",
+    "publish:conan": "turbo run publish:conan",
+    "publish:python": "turbo run publish:python",
+    "docs": "turbo run docs",
+    "ci": "turbo run ci"
+  },
+  "devDependencies": {
+    "turbo": "^1.10.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sparesparrow/sparetools.git"
+  },
+  "keywords": [
+    "embedded",
+    "monorepo",
+    "conan",
+    "flatbuffers",
+    "esp32",
+    "android",
+    "protocols",
+    "utilities"
+  ],
+  "author": "SpareSparrow",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/sparesparrow/sparetools/issues"
+  },
+  "homepage": "https://github.com/sparesparrow/sparetools#readme"
+}

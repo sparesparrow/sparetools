@@ -1,0 +1,82 @@
+name: Android Build
+
+on:
+  workflow_call:
+    inputs:
+      conan_packages:
+        description: 'Conan packages to install'
+        required: false
+        default: 'sparesparrow-protocols/1.0.0@sparesparrow/stable'
+        type: string
+      android_api_level:
+        description: 'Android API level'
+        required: false
+        default: '28'
+        type: string
+      build_tools_version:
+        description: 'Android build tools version'
+        required: false
+        default: '30.0.3'
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v2
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Setup Conan
+      uses: turtlebrowser/get-conan@v1.2
+
+    - name: Configure Conan remote
+      run: |
+        conan remote add sparesparrow https://conan.cloudsmith.io/sparesparrow/
+        conan remote auth sparesparrow ${{ secrets.CLOUDSMITH_API_KEY }}
+
+    - name: Create Conan profile for Android
+      run: |
+        conan profile new android --detect
+        conan profile update settings.os=Android esp32
+        conan profile update settings.arch=armv8 esp32
+        conan profile update settings.compiler=clang esp32
+        conan profile update settings.compiler.version=11 esp32
+        conan profile update settings.compiler.libcxx=c++_shared esp32
+        conan profile update settings.os.api_level=${{ inputs.android_api_level }} android
+
+    - name: Install dependencies
+      run: |
+        conan install ${{ inputs.conan_packages }} \
+          --profile android \
+          --build missing \
+          --generator CMakeDeps
+
+    - name: Build Android project
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleDebug
+
+    - name: Run tests
+      run: |
+        ./gradlew testDebugUnitTest
+
+    - name: Upload APK artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-apk
+        path: app/build/outputs/apk/debug/app-debug.apk

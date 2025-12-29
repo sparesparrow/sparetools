@@ -1,0 +1,17 @@
+{
+    "project_name": "esp32-sensor-project",
+    "project_slug": "{{ cookiecutter.project_name|lower|replace(' ', '_')|replace('-', '_') }}",
+    "project_short_description": "ESP32-based sensor project using SpareTools ecosystem",
+    "author": "SpareSparrow",
+    "email": "contact@sparesparrow.com",
+    "repository_url": "https://github.com/sparesparrow/{{cookiecutter.project_slug}}",
+    "version": "1.0.0",
+    "schema_component": ["bpm", "mia", "mcp", "none"],
+    "board_type": ["esp32dev", "esp32-s3-devkitc-1", "esp32-c3-devkitc-02"],
+    "include_wifi": ["y", "n"],
+    "include_display": ["y", "n"],
+    "include_websocket": ["y", "n"]
+}
+
+
+

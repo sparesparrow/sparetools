@@ -1,0 +1,473 @@
+name: Documentation Generation & Publishing
+
+on:
+  workflow_call:
+    inputs:
+      documentation_targets:
+        description: 'Comma-separated list of docs to generate (api,schema,project,all)'
+        type: string
+        default: 'all'
+      publish_docs:
+        description: 'Publish generated documentation'
+        type: boolean
+        default: true
+      docs_branch:
+        description: 'Branch to publish documentation to'
+        type: string
+        default: 'gh-pages'
+      api_languages:
+        description: 'Programming languages for API docs (cpp,python,java,all)'
+        type: string
+        default: 'cpp,python'
+    secrets:
+      gh_token:
+        description: 'GitHub token for publishing docs'
+        required: false
+
+jobs:
+  generate-api-docs:
+    name: Generate API Documentation
+    runs-on: ubuntu-latest
+    if: contains(inputs.documentation_targets, 'api') || inputs.documentation_targets == 'all'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install documentation tools
+        run: |
+          pip install sphinx sphinx-rtd-theme breathe exhale
+          pip install pdoc mkdocs mkdocs-material
+          npm install -g typedoc jsdoc
+
+      - name: Generate C++ API docs
+        if: contains(inputs.api_languages, 'cpp') || inputs.api_languages == 'all'
+        run: |
+          mkdir -p docs/api/cpp
+          # Generate Doxygen config
+          cat > Doxyfile << 'EOF'
+          PROJECT_NAME           = "SpareTools"
+          INPUT                  = include src
+          RECURSIVE              = YES
+          EXTRACT_ALL            = YES
+          GENERATE_HTML          = YES
+          HTML_OUTPUT            = docs/api/cpp
+          GENERATE_LATEX         = NO
+          EOF
+
+          # Install and run Doxygen if available
+          if command -v doxygen &> /dev/null; then
+            doxygen Doxyfile
+          else
+            echo "Doxygen not available, skipping C++ docs"
+          fi
+
+      - name: Generate Python API docs
+        if: contains(inputs.api_languages, 'python') || inputs.api_languages == 'all'
+        run: |
+          mkdir -p docs/api/python
+          # Generate Python docs using pdoc
+          python -m pdoc --html --output-dir docs/api/python sparetools
+
+      - name: Generate Java/Kotlin API docs
+        if: contains(inputs.api_languages, 'java') || inputs.api_languages == 'all'
+        run: |
+          mkdir -p docs/api/android
+          # Android/Kotlin docs would be generated from Android project
+          echo "# Android API Documentation" > docs/api/android/index.html
+          echo "Generated from Android project sources" >> docs/api/android/index.html
+
+      - name: Upload API docs artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-documentation
+          path: docs/api/
+          retention-days: 30
+
+  generate-schema-docs:
+    name: Generate Schema Documentation
+    runs-on: ubuntu-latest
+    if: contains(inputs.documentation_targets, 'schema') || inputs.documentation_targets == 'all'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install schema documentation tools
+        run: |
+          pip install flatbuffers
+          npm install -g @apidevtools/json-schema-ref-parser
+
+      - name: Generate FlatBuffers schema docs
+        run: |
+          mkdir -p docs/schemas
+
+          # Find all .fbs files
+          find . -name "*.fbs" -type f | while read -r schema_file; do
+            echo "Processing schema: $schema_file"
+
+            # Generate basic schema documentation
+            schema_name=$(basename "$schema_file" .fbs)
+            schema_dir=$(dirname "$schema_file")
+            output_file="docs/schemas/${schema_name}.md"
+
+            cat > "$output_file" << EOF
+          # $schema_name Schema Documentation
+
+          ## Overview
+          This document describes the $schema_name FlatBuffers schema used in SpareTools.
+
+          ## Location
+          - **File**: \`$schema_file\`
+          - **Namespace**: Extracted from schema file
+
+          ## Schema Content
+          \`\`\`flatbuffers
+          $(cat "$schema_file")
+          \`\`\`
+
+          ## Generated Code
+          This schema generates the following files:
+          - \`${schema_name}_generated.h\` (C++)
+          - \`${schema_name}_generated.py\` (Python)
+          - \`${schema_name}_generated.java\` (Java)
+
+          ## Usage Examples
+
+          ### C++
+          \`\`\`cpp
+          #include "${schema_name}_generated.h"
+
+          // Create and use schema objects
+          flatbuffers::FlatBufferBuilder builder;
+          // ... schema usage code ...
+          \`\`\`
+
+          ### Python
+          \`\`\`python
+          import ${schema_name}_generated as schema
+
+          # Create and use schema objects
+          # ... schema usage code ...
+          \`\`\`
+
+          ## Related Schemas
+          - See SpareTools documentation for integration examples
+          EOF
+          done
+
+      - name: Generate schema cross-references
+        run: |
+          cat > docs/schemas/index.md << 'EOF'
+          # SpareTools Schema Documentation
+
+          ## Overview
+          This section contains documentation for all FlatBuffers schemas used in the SpareTools ecosystem.
+
+          ## Available Schemas
+
+          ### Core Protocols
+          - **[BPM Schema](BPM.md)** - Beat Processing Module protocols
+          - **[MIA Schema](MIA.md)** - Multi-Interface Adapter protocols
+          - **[MCP Schema](MCP.md)** - Model Context Protocol
+          - **[Vehicle Schema](VEHICLE.md)** - Vehicle telemetry protocols
+          - **[Common Schema](common.md)** - Shared types and utilities
+
+          ### Usage
+          All schemas are available through the `sparesparrow-protocols` Conan package:
+
+          ```bash
+          conan install sparesparrow-protocols/1.0.0
+          ```
+
+          ### Integration Examples
+          - **ESP32 Projects**: Use PlatformIO with Conan integration
+          - **Python Projects**: Import generated Python modules
+          - **Android Projects**: Use generated Java classes
+
+          ## Schema Development
+          When modifying schemas:
+          1. Update the `.fbs` file in `packages/schemas/`
+          2. Run `conan create .` to regenerate packages
+          3. Update dependent projects to use new schema version
+
+          ## Validation
+          Schemas are automatically validated during CI/CD pipeline execution.
+          EOF
+
+      - name: Upload schema docs artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema-documentation
+          path: docs/schemas/
+          retention-days: 30
+
+  generate-project-docs:
+    name: Generate Project Documentation
+    runs-on: ubuntu-latest
+    if: contains(inputs.documentation_targets, 'project') || inputs.documentation_targets == 'all'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install project documentation tools
+        run: |
+          pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+          pip install sphinx sphinx-rtd-theme
+          npm install -g markdown-toc
+
+      - name: Generate README and project docs
+        run: |
+          mkdir -p docs/project
+
+          # Generate table of contents for README
+          if [ -f "README.md" ]; then
+            markdown-toc -i README.md
+          fi
+
+          # Generate project overview
+          cat > docs/project/overview.md << 'EOF'
+          # SpareTools Project Overview
+
+          ## Architecture
+
+          ### Meta-Repository Structure
+          ```
+          sparetools/
+          ├── packages/           # Conan packages
+          │   ├── schemas/       # Protocol definitions
+          │   ├── embedded/      # Shared utilities
+          │   └── python/        # Python tools
+          ├── templates/         # Project templates
+          ├── configs/           # Shared configurations
+          │   └── github-actions/ # CI/CD workflows
+          └── docs/              # Documentation
+          ```
+
+          ### Package Ecosystem
+          - **sparesparrow-protocols**: FlatBuffers schemas
+          - **sparetools-embedded**: C/C++ utilities
+          - **sparetools-py**: Python protocol tools
+          - **sparetools-base**: Foundation utilities
+
+          ## Development Workflow
+
+          ### For New Projects
+          1. Choose appropriate template (ESP32, Android, Python)
+          2. Bootstrap with SpareTools packages
+          3. Use shared CI/CD workflows
+          4. Deploy using optimized artifacts
+
+          ### For Existing Projects
+          1. Add SpareTools packages to conanfile.txt
+          2. Update CI/CD to use shared workflows
+          3. Migrate to shared schemas and utilities
+
+          ## Quality Assurance
+          - Automated testing across all platforms
+          - Performance monitoring and regression detection
+          - Security scanning and SBOM generation
+          - Code quality and documentation standards
+          EOF
+
+      - name: Generate dependency graphs
+        run: |
+          cat > docs/project/dependencies.md << 'EOF'
+          # Dependency Management
+
+          ## Conan Package Dependencies
+
+          ### Core Packages
+          - `sparesparrow-protocols/1.0.0` - Protocol schemas
+          - `sparetools-embedded/1.0.0` - Embedded utilities
+          - `sparetools-base/2.0.3` - Foundation utilities
+
+          ### Tool Packages
+          - `sparetools-cpython/3.12.7` - Bundled Python
+          - `sparetools-hal-sunton/2.0.0` - ESP32 HAL
+
+          ## Platform-Specific Dependencies
+
+          ### ESP32 Projects
+          - PlatformIO for build system
+          - Arduino framework
+          - FreeRTOS for multitasking
+
+          ### Android Projects
+          - Gradle build system
+          - Kotlin programming language
+          - Material Design components
+
+          ### Python Projects
+          - Hermetic Python environments
+          - AsyncIO for concurrency
+          - FastAPI for web services
+          EOF
+
+      - name: Upload project docs artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-documentation
+          path: docs/project/
+          retention-days: 30
+
+  publish-documentation:
+    name: Publish Documentation
+    runs-on: ubuntu-latest
+    needs: [generate-api-docs, generate-schema-docs, generate-project-docs]
+    if: inputs.publish_docs && inputs.documentation_targets != ''
+
+    steps:
+      - name: Checkout docs branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.docs_branch }}
+          path: docs-site
+
+      - name: Download all documentation artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: generated-docs
+
+      - name: Setup documentation publishing
+        run: |
+          # Create docs structure
+          mkdir -p docs-site/docs
+
+          # Copy generated documentation
+          if [ -d "generated-docs/api-documentation" ]; then
+            cp -r generated-docs/api-documentation/* docs-site/docs/api/
+          fi
+
+          if [ -d "generated-docs/schema-documentation" ]; then
+            cp -r generated-docs/schema-documentation/* docs-site/docs/schemas/
+          fi
+
+          if [ -d "generated-docs/project-documentation" ]; then
+            cp -r generated-docs/project-documentation/* docs-site/docs/project/
+          fi
+
+      - name: Generate MkDocs configuration
+        run: |
+          cat > docs-site/mkdocs.yml << 'EOF'
+          site_name: SpareTools Documentation
+          site_description: Comprehensive embedded development ecosystem
+          site_author: SpareSparrow
+
+          theme:
+            name: material
+            palette:
+              primary: blue
+              accent: blue
+            features:
+              - navigation.tabs
+              - navigation.sections
+              - toc.integrate
+              - search.suggest
+              - search.highlight
+
+          plugins:
+            - search
+            - mermaid2
+
+          markdown_extensions:
+            - pymdownx.highlight
+            - pymdownx.superfences
+            - pymdownx.tabbed
+            - pymdownx.emoji
+            - toc:
+                permalink: true
+
+          nav:
+            - Home: index.md
+            - Getting Started:
+              - Overview: project/overview.md
+              - Dependencies: project/dependencies.md
+            - API Documentation:
+              - C++ APIs: api/cpp/index.html
+              - Python APIs: api/python/index.html
+              - Android APIs: api/android/index.html
+            - Schema Documentation:
+              - Overview: schemas/index.md
+              - BPM Schema: schemas/BPM.md
+              - MIA Schema: schemas/MIA.md
+              - MCP Schema: schemas/MCP.md
+              - Vehicle Schema: schemas/VEHICLE.md
+              - Common Types: schemas/common.md
+          EOF
+
+      - name: Install MkDocs
+        run: |
+          pip install mkdocs mkdocs-material mkdocs-mermaid2-plugin
+
+      - name: Build documentation site
+        run: |
+          cd docs-site
+          mkdocs build --clean
+
+      - name: Deploy to GitHub Pages
+        if: inputs.docs_branch == 'gh-pages'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.gh_token || secrets.GITHUB_TOKEN }}
+          publish_dir: docs-site/site
+          cname: docs.sparetools.dev
+
+      - name: Create documentation deployment report
+        run: |
+          cat > docs-deployment-report.md << 'EOF'
+          # 📚 Documentation Deployment Report
+
+          ## Deployment Summary
+          - **Status**: ✅ Documentation published successfully
+          - **Branch**: ${{ inputs.docs_branch }}
+          - **Timestamp**: $(date)
+          - **Commit**: ${{ github.sha }}
+
+          ## Generated Documentation
+          EOF
+
+          if [[ "${{ inputs.documentation_targets }}" == *"api"* ]] || [[ "${{ inputs.documentation_targets }}" == *"all"* ]]; then
+            echo "- ✅ API Documentation (C++, Python, Android)" >> docs-deployment-report.md
+          fi
+          if [[ "${{ inputs.documentation_targets }}" == *"schema"* ]] || [[ "${{ inputs.documentation_targets }}" == *"all"* ]]; then
+            echo "- ✅ Schema Documentation (FlatBuffers)" >> docs-deployment-report.md
+          fi
+          if [[ "${{ inputs.documentation_targets }}" == *"project"* ]] || [[ "${{ inputs.documentation_targets }}" == *"all"* ]]; then
+            echo "- ✅ Project Documentation (Architecture, Dependencies)" >> docs-deployment-report.md
+          fi
+
+          echo "" >> docs-deployment-report.md
+          echo "## Access URLs" >> docs-deployment-report.md
+          echo "- **GitHub Pages**: https://sparesparrow.github.io/sparetools/" >> docs-deployment-report.md
+          echo "- **Custom Domain**: https://docs.sparetools.dev/" >> docs-deployment-report.md
+
+          cat docs-deployment-report.md
+
+
+

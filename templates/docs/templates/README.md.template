@@ -1,0 +1,91 @@
+# {{project_name}}
+
+{{project_description}}
+
+## Quick Start
+
+{{quick_start_instructions}}
+
+## Package Dependencies
+
+```mermaid
+graph TD
+    {% for package in packages %}
+    {{package.id}}[{{package.name}}/{{package.version}}]
+    {% endfor %}
+
+    {% for dep in dependencies %}
+    {{dep.from}} -->|{{dep.type}}| {{dep.to}}
+    {% endfor %}
+
+    {% for package in packages %}
+    style {{package.id}} fill:{{package.fill_color}},stroke:{{package.stroke_color}},color:{{package.text_color}}
+    {% endfor %}
+```
+
+## Architecture Overview
+
+```mermaid
+graph TB
+    {% for component in components %}
+    {{component.id}}[{{component.name}}<br/>{{component.description}}]
+    {% endfor %}
+
+    {% for connection in connections %}
+    {{connection.from}} -->|{{connection.label}}| {{connection.to}}
+    {% endfor %}
+
+    {% for component in components %}
+    style {{component.id}} fill:{{component.fill_color}},stroke:{{component.stroke_color}},color:{{component.text_color}}
+    {% endfor %}
+```
+
+## Usage Examples
+
+### Basic Usage
+
+```bash
+{{basic_usage_command}}
+```
+
+### Advanced Usage
+
+```bash
+{{advanced_usage_command}}
+```
+
+## Development
+
+### Prerequisites
+
+{{prerequisites}}
+
+### Building
+
+```bash
+{{build_command}}
+```
+
+### Testing
+
+```bash
+{{test_command}}
+```
+
+## Contributing
+
+{{contributing_guidelines}}
+
+## License
+
+{{license_info}}
+
+## Related Documentation
+
+- [Architecture Documentation](ARCHITECTURE.md)
+- [Package README Template](docs/PACKAGE-README-TEMPLATE.md)
+- [SpareTools Color Scheme](templates/docs/colors/sparetools-colors.md)
+
+---
+
+*For more information, see the [full documentation](docs/).*

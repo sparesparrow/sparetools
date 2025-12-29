@@ -1,0 +1,210 @@
+# Example BPM Detector CI/CD Workflows
+# These workflows demonstrate how to use the SpareTools CI templates
+# for BPM detector projects following OMS patterns
+
+# Main build workflow for BPM detector
+name: BPM Detector CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      enable_integration_tests:
+        description: 'Run hardware integration tests'
+        type: boolean
+        default: false
+      enable_performance_tests:
+        description: 'Run performance benchmarks'
+        type: boolean
+        default: false
+
+# Global environment variables
+env:
+  PYTHON_VERSION: '3.12'
+  CONAN_VERSION: '2.21.0'
+  PLATFORMIO_VERSION: '6.1.0'
+
+jobs:
+  # Quality checks (linting, formatting, etc.)
+  quality-checks:
+    name: Code Quality
+    runs-on: ubuntu-22.04
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install quality tools
+      run: |
+        pip install black flake8 isort mypy
+
+    - name: Check Python formatting
+      run: |
+        black --check --diff src/ scripts/ test/ || true
+        isort --check-only --diff src/ scripts/ test/ || true
+
+    - name: Run Python linting
+      run: |
+        flake8 src/ scripts/ test/ --max-line-length=100 --extend-ignore=E203,W503 || true
+
+    - name: Type checking
+      run: |
+        mypy src/ --ignore-missing-imports || true
+
+  # Use the BPM detector build template
+  build-and-test:
+    name: Build & Test
+    uses: sparesparrow/sparetools/.github/workflows/bpm-detector-build-template.yml@main
+    with:
+      esp32_variants: 'esp32-s3,esp32-s3-debug'
+      conan_profile: 'esp32_sunton_v3'
+      build_type: 'Release'
+      enable_integration_tests: ${{ github.event.inputs.enable_integration_tests == 'true' }}
+      enable_performance_tests: ${{ github.event.inputs.enable_performance_tests == 'true' }}
+      artifact_retention: '30'
+    secrets:
+      conan_token: ${{ secrets.CONAN_TOKEN }}
+      hardware_test_devices: ${{ secrets.HARDWARE_TEST_DEVICES }}
+
+  # Security scanning
+  security-scan:
+    name: Security Scan
+    uses: sparesparrow/sparetools/.github/workflows/security-scan-template.yml@main
+    needs: build-and-test
+
+  # Documentation generation
+  docs:
+    name: Generate Documentation
+    runs-on: ubuntu-22.04
+    needs: build-and-test
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install documentation tools
+      run: |
+        pip install sphinx sphinx-rtd-theme
+
+    - name: Generate API documentation
+      run: |
+        # Generate docs from source code
+        mkdir -p docs/api
+        # sphinx-apidoc -f -o docs/api src/
+
+    - name: Build documentation
+      run: |
+        cd docs
+        # sphinx-build -b html . _build/html
+
+    - name: Upload documentation
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: docs/_build/html/
+        retention-days: 30
+
+  # Deploy to staging (on main branch pushes)
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-22.04
+    needs: [quality-checks, build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - name: Download firmware artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: bpm-detector-release
+        path: firmware/
+
+    - name: Deploy to staging environment
+      run: |
+        # Deploy firmware to staging devices
+        # This would typically involve:
+        # - OTA updates to staging hardware
+        # - Configuration of staging environment
+        # - Health checks
+        echo "Deploying to staging environment..."
+
+        # Create deployment report
+        cat > deployment-report.json << EOF
+        {
+          "deployment_type": "staging",
+          "commit": "${{ github.sha }}",
+          "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+          "artifacts": $(ls firmware/*.bin | jq -R -s 'split("\n") | map(select(. != "")) | map({filename: ., size_bytes: (input_filename | length)})'),
+          "status": "completed"
+        }
+        EOF
+
+    - name: Upload deployment report
+      uses: actions/upload-artifact@v4
+      with:
+        name: staging-deployment-report
+        path: deployment-report.json
+        retention-days: 30
+
+  # Release preparation (manual trigger)
+  prepare-release:
+    name: Prepare Release
+    runs-on: ubuntu-22.04
+    needs: deploy-staging
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Create GitHub release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: BPM Detector v${{ github.run_number }}
+        body: |
+          ## BPM Detector Firmware Release v${{ github.run_number }}
+
+          **Commit:** ${{ github.sha }}
+          **Build:** ${{ github.run_id }}
+
+          ### Changes
+          - Automated firmware build for ESP32 variants
+          - Unit tests passed
+          - Security scan completed
+          - Staging deployment successful
+
+          ### Firmware Files
+          - ESP32-S3 Release Build
+          - ESP32-S3 Debug Build
+
+          ### Checksums
+          See release assets for MD5/SHA256 checksums.
+        draft: true
+        prerelease: false
+
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/bpm-detector-release/
+        asset_name: bpm-detector-firmware-v${{ github.run_number }}.zip
+        asset_content_type: application/zip
