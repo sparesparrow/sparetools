@@ -39,7 +39,7 @@ class SpareToolsHalSuntonConan(ConanFile):
     # Dependencies
     def requirements(self):
         if self.options.with_lvgl:
-            self.requires("lvgl/8.3.11")
+            self.requires("lvgl/8.3.11@sparetools/stable")
         # Add other HAL dependencies as needed
 
     def configure(self):
