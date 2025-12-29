@@ -64,7 +64,7 @@ class SpareToolsBpmDetectorConan(ConanFile):
 
     def build_requirements(self):
         # ESP32 consumer foundation packages - use dynamic versions
-        self.tool_requires(f"cpython/3.12")
+        self.tool_requires(f"sparetools-cpython/{versions['cpython']}")
         self.tool_requires(f"sparetools-test-harness/{versions['test-harness']}")
         self.tool_requires(f"sparetools-shared-dev-tools/{versions['shared-dev-tools']}")
         # Note: bootstrap is used at environment setup time, not build time
@@ -77,7 +77,7 @@ class SpareToolsBpmDetectorConan(ConanFile):
         self.requires(f"gtest/{versions['gtest']}")
 
         # ESP32 firmware package (from existing consumer)
-        self.requires("sparetools-hal-sunton/1.0.0")
+        self.requires("sparetools-hal-sunton/1.0.0@sparetools/stable")
 
         # Audio processing dependencies (if available)
         # self.requires("sparetools-dsp/1.0.0")  # Future package
