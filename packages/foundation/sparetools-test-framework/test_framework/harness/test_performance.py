@@ -10,10 +10,10 @@
 #
 
 """
-Performance Benchmarking Tests for Ngapy
-========================================
+Performance Benchmarking Tests for SpareTools
+==============================================
 
-This module provides comprehensive performance benchmarking for ngapy components,
+This module provides comprehensive performance benchmarking for sparetools components,
 measuring execution times, memory usage, and scalability metrics.
 """
 
@@ -121,7 +121,7 @@ class PerformanceTestHarness(NgapyTestHarnes):
         return profile_output
 
     def test_import_performance(self) -> bool:
-        """Test import performance for ngapy modules."""
+        """Test import performance for sparetools modules."""
         success = True
 
         # Benchmark core imports

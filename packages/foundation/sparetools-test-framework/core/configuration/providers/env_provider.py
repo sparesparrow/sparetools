@@ -50,14 +50,13 @@ Review Status: [Pending/Approved]
 import os
 
 from sparetools.core.configuration.config_manager import get_conan_merged_configuration
-from ngapy.exceptions.ngapy_exceptions import NgapyConfigurationError
 
 
 def get_path_by_os_variable(variable_name):
     if variable_name not in os.environ:
-        raise NgapyConfigurationError(f'{variable_name} is not set. Please add it to your environment variables!')
+        raise ValueError(f'{variable_name} is not set. Please add it to your environment variables!')
     if not os.path.exists(os.environ[variable_name]):
-        raise NgapyConfigurationError(f'{variable_name} is pointing to incorrect path')
+        raise ValueError(f'{variable_name} is pointing to incorrect path')
     return os.environ[variable_name]
 
 

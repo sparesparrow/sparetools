@@ -1,0 +1,36 @@
+{
+  "mcpServers": {
+    "sparetools-esp32": {
+      "command": "sparetools-mcp-esp32",
+      "env": {
+        "ESP32_LOG_LEVEL": "INFO",
+        "ESP32_LOG_DIR": "/tmp/esp32_logs",
+        "ESP32_SESSION_STORAGE": "/tmp/esp32_sessions.json"
+      }
+    },
+    "sparetools-android": {
+      "command": "sparetools-mcp-android",
+      "env": {
+        "ANDROID_LOG_LEVEL": "INFO",
+        "ANDROID_LOG_DIR": "/tmp/android_logs",
+        "ANDROID_SESSION_STORAGE": "/tmp/android_sessions.json"
+      }
+    },
+    "sparetools-conan": {
+      "command": "sparetools-mcp-conan",
+      "env": {
+        "CONAN_LOG_LEVEL": "INFO",
+        "CONAN_LOG_DIR": "/tmp/conan_logs",
+        "CONAN_SESSION_STORAGE": "/tmp/conan_sessions.json",
+        "CLOUDSMITH_API_KEY": "${CLOUDSMITH_API_KEY}",
+        "CLOUDSMITH_ORG": "${CLOUDSMITH_ORG}"
+      }
+    },
+    "sparetools-repo": {
+      "command": "sparetools-mcp-repo",
+      "env": {
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}

@@ -25,6 +25,9 @@ class SparetoolsMonorepoConan(ConanFile):
         # CPython extensions
         self.requires("sparetools-cpython/1.0.0@sparesparrow/stable")
 
+        # MCP servers for development workflows
+        self.requires("sparetools-mcp-servers/1.0.0@sparesparrow/stable")
+
     def package_info(self):
         # Meta-package doesn't provide libraries directly
         # Consumers get components through individual package requirements
@@ -37,7 +40,8 @@ class SparetoolsMonorepoConan(ConanFile):
             "protocols": "sparesparrow-protocols/1.0.0",
             "embedded": "sparetools-embedded/1.0.0",
             "python": "sparetools-py/1.0.0",
-            "cpython": "sparetools-cpython/1.0.0"
+            "cpython": "sparetools-cpython/1.0.0",
+            "mcp_servers": "sparetools-mcp-servers/1.0.0"
         }
 
     def layout(self):

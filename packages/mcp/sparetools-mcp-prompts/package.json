@@ -1,0 +1,101 @@
+{
+  "name": "@sparesparrow/sparetools-mcp-prompts",
+  "version": "3.13.0",
+  "description": "MCP Prompts server integrated with SpareTools ecosystem for AI-assisted development workflows",
+  "main": "dist/mcp-server-standalone.js",
+  "types": "dist/mcp-server-standalone.d.ts",
+  "bin": {
+    "sparetools-mcp-prompts": "dist/cli.js",
+    "sparetools-mcp-prompts-server": "dist/mcp-server-standalone.js",
+    "sparetools-mcp-prompts-http": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "data",
+    "scripts",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "prompts",
+    "templates",
+    "llm",
+    "ai",
+    "typescript",
+    "server",
+    "sparetools",
+    "development",
+    "automation",
+    "esp32",
+    "android",
+    "conan",
+    "embedded"
+  ],
+  "author": "sparesparrow",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sparesparrow/sparetools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sparesparrow/sparetools/issues"
+  },
+  "homepage": "https://github.com/sparesparrow/sparetools#readme",
+  "scripts": {
+    "build": "tsc && swc src -d dist",
+    "build:clean": "pnpm run clean && pnpm run build",
+    "clean": "rm -rf dist",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev:http": "MODE=http nodemon --exec ts-node src/index.ts",
+    "dev:mcp": "MODE=mcp nodemon --exec ts-node src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "test:ui": "vitest ui",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "express": "^4.18.0",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0",
+    "compression": "^1.7.4",
+    "morgan": "^1.10.0",
+    "dotenv": "^16.0.0",
+    "zod": "^3.22.0",
+    "winston": "^3.8.0",
+    "axios": "^1.4.0",
+    "uuid": "^9.0.0",
+    "fast-json-stable-stringify": "^2.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.0",
+    "@types/cors": "^2.8.0",
+    "@types/compression": "^1.7.0",
+    "@types/morgan": "^1.9.0",
+    "@types/uuid": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "nodemon": "^3.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0",
+    "@swc/cli": "^0.1.0",
+    "@swc/core": "^1.3.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0",
+    "tsx": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "volta": {
+    "node": "18.17.0",
+    "pnpm": "8.6.0"
+  }
+}

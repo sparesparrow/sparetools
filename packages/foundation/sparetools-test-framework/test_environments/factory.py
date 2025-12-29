@@ -29,11 +29,17 @@ import threading
 import psutil
 import time
 
-from sparetools.test_environments.ase_bench import ASEBench
-from sparetools.test_environments.jets_bench import JETSBench
-from sparetools.test_environments.sits_bench import SITSBench
-from ngapy.util.setup_environment import get_repository_config
-from ngapy.util.singleton import SingletonType
+
+class SingletonType(type):
+    """Simple singleton metaclass to replace ngapy.util.singleton.SingletonType"""
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super().__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+from sparetools.core.configuration.providers.env_provider import get_config_from_env
 
 log = logging.getLogger('__main__.' + __name__)
 
@@ -73,19 +79,15 @@ class TestBenchContainer(metaclass=SingletonType):
     # TODO: This needs to be called as the first step in the test
     def __init__(self):
         super().__init__()
-        self.cfg_hndl = get_repository_config()
+        self.cfg_hndl = get_config_from_env()
         self.platform = self.cfg_hndl.configuration.platform
-        if self.platform.lower() == "ase":
-            # call ASE bench
-            self.hndl = ASEBench(config_loader=self.cfg_hndl)
-        elif self.platform.lower() == "jets":
-            # call JETS bench
-            self.hndl = JETSBench(config_loader=self.cfg_hndl)
-        elif self.platform.lower() == "sits":
-            # call SITS bench
-            self.hndl = SITSBench(config_loader=self.cfg_hndl)
+        if self.platform.lower() in ["ase", "jets", "sits"]:
+            # Aerospace platforms require sparetools-aerospace package
+            raise ImportError(f"Aerospace platform '{self.platform}' requires sparetools-aerospace package. "
+                            "Install with: pip install sparetools-aerospace or conan install sparetools-aerospace")
         else:
-            raise NotImplementedError("Platform support not implemented.")
+            raise NotImplementedError(f"Platform '{self.platform}' support not implemented. "
+                                    "Available: embedded platforms (ESP32, etc.)")
 
     def get_instance(self):
         return self.hndl

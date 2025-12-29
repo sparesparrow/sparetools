@@ -11,11 +11,9 @@ from multiprocessing import Pool, Manager
 import psutil
 import tqdm
 
-from ngapy.util.custom_logging import setup_logging_from_config
-from ngapy.util.execute_command import execute_command
 from sparetools.core.configuration.providers.env_provider import get_config_from_env
 
-log = logging.getLogger('__main__.ngapy.miscellaneous.process_pool')
+log = logging.getLogger('__main__.sparetools.test_framework.execution.parallel_executor')
 gb = 1024 * 1024 * 1024
 
 

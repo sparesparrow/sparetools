@@ -52,14 +52,13 @@ from typing import Optional
 import tkinterhtml
 
 # external
-import ngapy
+import sparetools
 import test_harness
-from ngapy.util.file_operations import create_whole_dir_path
 from sparetools.core.configuration.providers.env_provider import get_config_from_env
 from test_harness import run_test, test_logging
 
 th_logger = None
-ngapy_th = None
+sparetools_th = None
 dng_json = None
 config_loader = None
 debug_logs = False
@@ -88,7 +87,7 @@ O/S Version             :  {platform.platform()}
 Python Version          :  {sys.version}
 Python Exe Location     :  {sys.executable}
 
-NGAPy Version           :  {ngapy.__version__} ( {ngapy.__path__[0]} )
+SpareTools Version      :  {sparetools.__version__} ( {sparetools.__path__[0]} )
 Test Harness Version    :  {test_harness.__version__} ( {test_harness.__path__[0]} )
 =============================================================================="""
 
@@ -254,7 +253,7 @@ def exec(routine, header_dict=None):
         if not results_dir:
             results_dir = os.path.join(pathlib.Path(__file__).parent.parent, "results")
 
-        create_whole_dir_path(results_dir)
+        os.makedirs(results_dir, exist_ok=True)
 
         if not header_dict:
             header_dict = {'filename': _get_default_filename(routine),
@@ -323,8 +322,8 @@ def _init():
     """
     global th_logger
     th_logger = test_harness.ThLogger()
-    global ngapy_th
-    ngapy_th = test_harness.NgapyTestHarnes()
+    global sparetools_th
+    sparetools_th = test_harness.NgapyTestHarnes()
     test_logging.__callback_function__ = None
 
 
@@ -389,7 +388,7 @@ def get_th() -> Optional[test_harness.NgapyTestHarnes]:
     :return: Test harness
     :rtype: test_harness.NgapyTestHarnes
     """
-    return ngapy_th
+    return sparetools_th
 
 
 class Application(Frame):
@@ -548,7 +547,7 @@ class Application(Frame):
     def interrupt_pass_button_pressed(self):
         print("Pass button pressed")
         self.response_vector.append("PASS")
-        self.tp.ngapy_th.verify("PASS", self.html_pages[self.html_page_idx - 1]["expected"],
+        self.tp.sparetools_th.verify("PASS", self.html_pages[self.html_page_idx - 1]["expected"],
                                 msg="User interactive selected response",
                                 test_num=self.html_pages[self.html_page_idx - 1]["tc_id"])
         self.load_next_page()
@@ -556,7 +555,7 @@ class Application(Frame):
     def interrupt_fail_button_pressed(self):
         print("Fail button pressed")
         self.response_vector.append("FAIL")
-        self.tp.ngapy_th.verify("FAIL", self.html_pages[self.html_page_idx - 1]["expected"],
+        self.tp.sparetools_th.verify("FAIL", self.html_pages[self.html_page_idx - 1]["expected"],
                                 msg="User interactive selected response",
                                 test_num=self.html_pages[self.html_page_idx - 1]["tc_id"])
         self.load_next_page()

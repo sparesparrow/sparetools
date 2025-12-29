@@ -16,9 +16,9 @@ fi
 echo "🔑 Using Cloudsmith API Key: ${CLOUDSMITH_API_KEY:0:8}..."
 echo ""
 
-# Authenticate with cloudsmith-cli
+# Authenticate with cloudsmith-cli using environment variable
 echo "🔐 Authenticating with Cloudsmith..."
-cloudsmith login --api-key "$CLOUDSMITH_API_KEY" || {
+CLOUDSMITH_API_KEY="$CLOUDSMITH_API_KEY" cloudsmith whoami >/dev/null 2>&1 || {
     echo "❌ Authentication failed"
     exit 1
 }
@@ -50,12 +50,12 @@ publish_conan_package() {
         # Export to find the package files
         conan export "$package_path" --version="$version"
         
-        # Find the package files (this is a simplified approach)
-        PACKAGE_FILE=$(find ~/.conan/data -name "*${package_name}-${version}*" -type f | head -1)
+        # Find the package files for Conan 2.x
+        PACKAGE_FILE=$(find ~/.conan2/p -name "*${package_name}-${version}*.tgz" 2>/dev/null | head -1)
         
         if [ -n "$PACKAGE_FILE" ]; then
             echo "   📤 Uploading to Cloudsmith..."
-            if cloudsmith push conan sparesparrow-conan/sparetools "$PACKAGE_FILE"; then
+            if CLOUDSMITH_API_KEY="$CLOUDSMITH_API_KEY" cloudsmith push conan sparesparrow-conan/sparetools "$PACKAGE_FILE"; then
                 echo "   ✅ Successfully uploaded $package_name v$version"
             else
                 echo "   ❌ Failed to upload $package_name v$version"
@@ -69,20 +69,31 @@ publish_conan_package() {
     fi
 }
 
-# Publish the main new consolidated packages
-publish_conan_package "packages/pentest/sparetools-pentest-toolkit" "sparetools-pentest-toolkit" "1.0.0"
-publish_conan_package "packages/prompt/sparetools-prompt-system" "sparetools-prompt-system" "1.0.0"
-publish_conan_package "packages/sdr/sparetools-sdr-tools" "sparetools-sdr-tools" "1.0.0"
-publish_conan_package "packages/streaming/sparetools-streaming-solutions" "sparetools-streaming-solutions" "1.0.0"
-publish_conan_package "packages/wifi/sparetools-wifi-sensing" "sparetools-wifi-sensing" "1.0.0"
+# Publish the working foundation packages
+publish_conan_package "packages/foundation/sparetools-base" "sparetools-base" "2.0.3"
+publish_conan_package "packages/foundation/sparetools-bootstrap" "sparetools-bootstrap" "2.0.3"
+publish_conan_package "packages/foundation/sparetools-cpython" "sparetools-cpython" "3.12.7"
+publish_conan_package "packages/foundation/sparetools-shared-dev-tools" "sparetools-shared-dev-tools" "2.0.3"
+publish_conan_package "packages/foundation/sparetools-test-harness" "sparetools-test-harness" "2.0.3"
+publish_conan_package "packages/schemas" "sparesparrow-protocols" "1.0.0"
+publish_conan_package "packages/python/sparetools-py" "sparetools-py" "1.0.0"
+
+# Publish the fixed embedded packages
+publish_conan_package "packages/embedded/sparetools-lvgl" "sparetools-lvgl" "8.3.11"
+
+# Publish MCP packages
+publish_conan_package "packages/mcp/sparetools-mcp-prompts" "sparetools-mcp-prompts" "3.13.0"
+publish_conan_package "packages/mcp/sparetools-mcp-servers" "sparetools-mcp-servers" "1.0.0"
+publish_conan_package "packages/mcp/sparetools-mcp-ecosystem" "sparetools-mcp-ecosystem" "1.0.0"
+publish_conan_package "packages/mcp/sparetools-mcp-project-orchestrator" "sparetools-mcp-project-orchestrator" "0.1.0"
 
 echo ""
 echo "🎉 Package publishing process complete!"
 echo ""
 echo "🔍 Verify uploads:"
-echo "cloudsmith list packages sparesparrow-conan/sparetools --query='sparetools-pentest-toolkit OR sparetools-prompt-system OR sparetools-sdr-tools OR sparetools-streaming-solutions OR sparetools-wifi-sensing'"
+echo "cloudsmith list packages sparesparrow-conan/sparetools --query='sparetools-base OR sparetools-bootstrap OR sparetools-cpython OR sparetools-shared-dev-tools OR sparetools-test-harness OR sparesparrow-protocols OR sparetools-py OR sparetools-lvgl OR sparetools-mcp-prompts OR sparetools-mcp-servers OR sparetools-mcp-ecosystem OR sparetools-mcp-project-orchestrator'"
 echo ""
 echo "🌐 View packages at: https://cloudsmith.io/~sparesparrow-conan/repos/sparetools/packages/"
 echo ""
 echo "📚 For manual upload if needed:"
-echo "cloudsmith push conan sparesparrow-conan/openssl-conan /path/to/package.tgz"
+echo "CLOUDSMITH_API_KEY=\$CLOUDSMITH_API_KEY cloudsmith push conan sparesparrow-conan/sparetools /path/to/package.tgz"

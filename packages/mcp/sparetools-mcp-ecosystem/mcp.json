@@ -1,0 +1,50 @@
+{
+  "mcpServers": {
+    "sparetools-mcp-prompts": {
+      "command": "sparetools-mcp-ecosystem",
+      "args": ["mcp-prompts"],
+      "env": {
+        "MODE": "mcp",
+        "LOG_LEVEL": "info",
+        "PORT": "3001"
+      }
+    },
+    "sparetools-esp32": {
+      "command": "sparetools-mcp-ecosystem",
+      "args": ["mcp-servers", "esp32"],
+      "env": {
+        "ESP32_LOG_LEVEL": "info",
+        "ESP32_LOG_DIR": "~/.sparetools/esp32/logs",
+        "ESP32_SESSION_STORAGE": "~/.sparetools/esp32/sessions.json"
+      }
+    },
+    "sparetools-android": {
+      "command": "sparetools-mcp-ecosystem",
+      "args": ["mcp-servers", "android"],
+      "env": {
+        "ANDROID_LOG_LEVEL": "info",
+        "ANDROID_LOG_DIR": "~/.sparetools/android/logs",
+        "ANDROID_SESSION_STORAGE": "~/.sparetools/android/sessions.json"
+      }
+    },
+    "sparetools-conan": {
+      "command": "sparetools-mcp-ecosystem",
+      "args": ["mcp-servers", "conan"],
+      "env": {
+        "CONAN_LOG_LEVEL": "info",
+        "CONAN_LOG_DIR": "~/.sparetools/conan/logs",
+        "CONAN_SESSION_STORAGE": "~/.sparetools/conan/sessions.json",
+        "CLOUDSMITH_API_KEY": "${CLOUDSMITH_API_KEY}",
+        "CLOUDSMITH_ORG": "sparesparrow-conan"
+      }
+    },
+    "sparetools-repo": {
+      "command": "sparetools-mcp-ecosystem",
+      "args": ["mcp-servers", "repo"],
+      "env": {
+        "LOG_LEVEL": "info",
+        "REPO_LOG_DIR": "~/.sparetools/repo/logs"
+      }
+    }
+  }
+}
