@@ -13,5 +13,5 @@ do
 done
 
 
-export PYTHONPATH="$PYTHONPATH:/home/sparrow/.conan2/p/b/spare95a887e6579a1/p"
-export SPARETOOLS_PY_PACKAGE_DIR="/home/sparrow/.conan2/p/b/spare95a887e6579a1/p"
+export PYTHONPATH="$PYTHONPATH:/home/sparrow/.conan2/p/b/spare44845c575afa9/p"
+export SPARETOOLS_PY_PACKAGE_DIR="/home/sparrow/.conan2/p/b/spare44845c575afa9/p"

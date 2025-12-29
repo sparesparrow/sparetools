@@ -33,7 +33,7 @@ class SparetoolsPyConan(ConanFile):
     def package(self):
         # Copy Python package files
         copy(self, "setup.py", src=self.source_folder, dst=self.package_folder)
-        copy(self, "sparetools/**/*.py", src=self.source_folder, dst=self.package_folder)
+        copy(self, "sparetools/*", src=self.source_folder, dst=self.package_folder)
         copy(self, "README.md", src=self.source_folder, dst=self.package_folder)
 
         # Copy any built extensions if they exist

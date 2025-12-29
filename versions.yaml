@@ -6,8 +6,8 @@ foundation:
   cpython: "3.12.7"
   bootstrap: "2.0.3"
   test-framework: "1.0.0"
-  test-harness: "2.0.0"
-  shared-dev-tools: "2.0.0"
+  test-harness: "2.0.3"
+  shared-dev-tools: "2.0.3"
 
 testing:
   gtest: "1.14.0"
