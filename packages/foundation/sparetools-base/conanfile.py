@@ -38,7 +38,37 @@ class SpareToolsVersions:
     versions = _load_versions()
 
 
-class SpareToolsBaseConan(ConanFile):
+class SpareToolsSecurityMixin:
+    """Mixin providing security gate and SBOM generation methods.
+    
+    Packages that call apply_security_gates() or generate_sbom() should
+    inherit from this mixin class to get the method implementations.
+    """
+    
+    def apply_security_gates(self) -> None:
+        """Run security scanning (placeholder for Trivy, Syft integration)."""
+        self.output.info("🔒 Applying security gates...")
+        # TODO: Integrate actual Trivy/Syft scanning
+        # Example integration points:
+        # - trivy fs --scanners vuln,secret,config .
+        # - syft packages . -o json
+        self.output.info("✅ Security gates passed (placeholder)")
+    
+    def generate_sbom(self, format: str = "cyclonedx") -> None:
+        """Generate SBOM in specified format.
+        
+        Args:
+            format: SBOM format - 'cyclonedx', 'spdx', or 'syft-json'
+        """
+        self.output.info(f"📋 Generating SBOM in {format} format...")
+        # TODO: Integrate actual SBOM generation
+        # Example integration points:
+        # - syft packages . -o cyclonedx-json > sbom.json
+        # - cyclonedx-py environment > sbom.xml
+        self.output.info("✅ SBOM generated (placeholder)")
+
+
+class SpareToolsBaseConan(ConanFile, SpareToolsSecurityMixin):
     name = "sparetools-base"
     version = "2.0.3"
     package_type = "python-require"

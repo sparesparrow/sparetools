@@ -3,15 +3,16 @@ import sys
 from conan import ConanFile
 from conan.tools.files import copy
 
-# Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.3"
-
 
 class SpareToolsMcpOrchestratorConan(ConanFile):
+    # Use SpareTools base utilities (Conan 2.x pattern)
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
+
     """MCP Orchestrator - AI-powered development orchestration using Model Context Protocol."""
 
     name = "sparetools-mcp-orchestrator"
-    version = "2.0.3"
+    version = "2.0.0"
     package_type = "python-require"
     description = "MCP orchestrator with FastMCP integration, project orchestration, and AI-powered development tools"
     license = "Apache-2.0"
@@ -20,9 +21,6 @@ class SpareToolsMcpOrchestratorConan(ConanFile):
 
     # Declare consumer context
     consumer_domain = "mcp"
-
-    # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.3"
 
     # Runtime dependencies
     requires = (

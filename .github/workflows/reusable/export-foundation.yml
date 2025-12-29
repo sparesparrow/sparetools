@@ -63,40 +63,40 @@ jobs:
               BASE_EXPORTED="true"
             else
               echo "📦 Exporting sparetools-base locally..."
-              cd packages/sparetools-base
+              cd packages/foundation/sparetools-base
               conan export . --version=${{ inputs.version_base }}
               BASE_EXPORTED="true"
-              cd ../..
+              cd ../../..
             fi
-            
+
             # Export other foundation packages
-            cd packages/sparetools-bootstrap
+            cd packages/foundation/sparetools-bootstrap
             conan export . --version=${{ inputs.version_base }} || true
-            
+
             cd ../sparetools-shared-dev-tools
             conan export . --version=${{ inputs.version_base }} || true
-            
-            cd ../sparetools-openssl-tools
+
+            cd ../../consumers/openssl/sparetools-openssl-tools
             conan export . --version=${{ inputs.version_base }} || true
             TOOLS_EXPORTED="true"
-            cd ../..
+            cd ../../../..
           else
             # Direct export without trying remote
             echo "📦 Exporting foundation packages locally..."
-            cd packages/sparetools-base
+            cd packages/foundation/sparetools-base
             conan export . --version=${{ inputs.version_base }}
             BASE_EXPORTED="true"
-            
+
             cd ../sparetools-bootstrap
             conan export . --version=${{ inputs.version_base }} || true
-            
+
             cd ../sparetools-shared-dev-tools
             conan export . --version=${{ inputs.version_base }} || true
-            
-            cd ../sparetools-openssl-tools
+
+            cd ../../consumers/openssl/sparetools-openssl-tools
             conan export . --version=${{ inputs.version_base }} || true
             TOOLS_EXPORTED="true"
-            cd ../..
+            cd ../../../..
           fi
           
           echo "base_exported=$BASE_EXPORTED" >> $GITHUB_OUTPUT

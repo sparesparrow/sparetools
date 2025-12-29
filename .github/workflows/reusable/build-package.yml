@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       profile_base:
-        description: "Base profile path (e.g., packages/sparetools-openssl-tools/profiles/base/linux-gcc11)"
+        description: "Base profile path (e.g., packages/consumers/openssl/sparetools-openssl-tools/profiles/base/linux-gcc11)"
         required: false
         type: string
         default: ""
@@ -91,20 +91,20 @@ jobs:
       - name: Build dependencies (if needed)
         run: |
           # Build foundation packages first
-          if [ -d "packages/sparetools-base" ]; then
-            conan create packages/sparetools-base --version=2.0.0 --build=missing || true
+          if [ -d "packages/foundation/sparetools-base" ]; then
+            conan create packages/foundation/sparetools-base --version=2.0.0 --build=missing || true
           fi
-          
-          if [ -d "packages/sparetools-cpython" ]; then
-            conan create packages/sparetools-cpython --version=3.12.7 --build=missing || true
+
+          if [ -d "packages/foundation/sparetools-cpython" ]; then
+            conan create packages/foundation/sparetools-cpython --version=3.12.7 --build=missing || true
           fi
-          
-          if [ -d "packages/sparetools-shared-dev-tools" ]; then
-            conan create packages/sparetools-shared-dev-tools --version=2.0.0 --build=missing || true
+
+          if [ -d "packages/foundation/sparetools-shared-dev-tools" ]; then
+            conan create packages/foundation/sparetools-shared-dev-tools --version=2.0.0 --build=missing || true
           fi
-          
-          if [ -d "packages/sparetools-openssl-tools" ]; then
-            conan create packages/sparetools-openssl-tools --version=2.0.0 --build=missing || true
+
+          if [ -d "packages/consumers/openssl/sparetools-openssl-tools" ]; then
+            conan create packages/consumers/openssl/sparetools-openssl-tools --version=2.0.0 --build=missing || true
           fi
         shell: bash
           

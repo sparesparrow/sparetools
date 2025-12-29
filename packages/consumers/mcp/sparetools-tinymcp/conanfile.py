@@ -3,11 +3,12 @@ import sys
 from conan import ConanFile
 from conan.tools.files import copy
 
-# Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.3"
-
 
 class SpareToolsTinyMcpConan(ConanFile):
+    # Use SpareTools base utilities (Conan 2.x pattern)
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
+
     """TinyMCP - Lightweight MCP client/server implementation."""
 
     name = "sparetools-tinymcp"
@@ -20,9 +21,6 @@ class SpareToolsTinyMcpConan(ConanFile):
 
     # Declare consumer context
     consumer_domain = "mcp"
-
-    # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.3"
 
     # Runtime dependencies
     requires = (

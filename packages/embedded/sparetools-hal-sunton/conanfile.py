@@ -3,8 +3,6 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake, cmake_layout
 from conan.tools.files import copy
 
-# Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.3"
 
 class SpareToolsHalSuntonConan(ConanFile):
     name = "sparetools-hal-sunton"
@@ -15,7 +13,7 @@ class SpareToolsHalSuntonConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
     topics = ("esp32", "hal", "display", "sunton", "lvgl", "embedded")
 
-    # Use sparetools-base utilities
+    # Use sparetools-base utilities (Conan 2.x pattern - class attribute only)
     python_requires = "sparetools-base/2.0.3"
 
     # Export sources
@@ -39,7 +37,7 @@ class SpareToolsHalSuntonConan(ConanFile):
     # Dependencies
     def requirements(self):
         if self.options.with_lvgl:
-            self.requires("lvgl/8.3.11@sparetools/stable")
+            self.requires("lvgl/8.3.11")
         # Add other HAL dependencies as needed
 
     def configure(self):

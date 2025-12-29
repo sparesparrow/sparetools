@@ -3,8 +3,6 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake, cmake_layout
 from conan.tools.files import copy
 
-# Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.3"
 
 class SpareToolsCryptoSuiteConan(ConanFile):
     name = "sparetools-crypto-suite"
@@ -15,8 +13,9 @@ class SpareToolsCryptoSuiteConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
     topics = ("esp32", "cryptography", "security", "mbedTLS", "wolfSSL", "hardware-acceleration")
 
-    # Use sparetools-base utilities
+    # Use sparetools-base utilities (Conan 2.x pattern - class attribute only)
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Settings and options
     settings = "os", "compiler", "build_type", "arch"

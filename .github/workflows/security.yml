@@ -188,15 +188,15 @@ jobs:
           conan profile detect --force
           
           # Build foundation packages
-          conan create packages/sparetools-base --version=2.0.0 --build=missing
-          conan create packages/sparetools-bootstrap --version=2.0.0 --build=missing
+          conan create packages/foundation/sparetools-base --version=2.0.0 --build=missing
+          conan create packages/foundation/sparetools-bootstrap --version=2.0.0 --build=missing
           
       - name: Run FIPS Validator
         run: |
           echo "🔒 Running FIPS validation..."
           
-          if [ -f "packages/sparetools-bootstrap/bootstrap/openssl/fips_validator.py" ]; then
-            python packages/sparetools-bootstrap/bootstrap/openssl/fips_validator.py --help || echo "FIPS validator available"
+          if [ -f "packages/foundation/sparetools-bootstrap/bootstrap/openssl/fips_validator.py" ]; then
+            python packages/foundation/sparetools-bootstrap/bootstrap/openssl/fips_validator.py --help || echo "FIPS validator available"
             echo "✅ FIPS validator found and executable"
           else
             echo "⚠️  FIPS validator not found at expected location"

@@ -18,14 +18,14 @@ class MiaProject(ConanFile):
     tool_requires = (
         "sparetools-cpython/3.12.7",
         "sparetools-test-harness/2.0.3",
-        "sparetools-obd-sim/2.0.3",
+        "sparetools-obd-sim/2.0.0",
     )
 
     # Interface contracts (ICD)
     build_requires = (
         # "sparetools-icd/2.0.0",  # TODO: Package not yet created - see docs/PROJECT-RELATIONSHIPS-ANALYSIS.md
         "sparetools-tinymcp/2.0.0",
-        "sparetools-mcp-orchestrator/2.0.3",
+        "sparetools-mcp-orchestrator/2.0.0",
     )
 
     # Runtime dependencies
@@ -96,8 +96,8 @@ class MiaProject(ConanFile):
         # Set Python path
         self.conf_info.define("user.cpython:site_packages", os.path.join(self.package_folder, "src"))
 
-        # Set environment variables for consumers
-        self.env_info.PYTHONPATH.append(os.path.join(self.package_folder, "src"))
+        # Set environment variables for consumers (Conan 2.x API)
+        self.runenv_info.append_path("PYTHONPATH", os.path.join(self.package_folder, "src"))
 
     def package_id(self):
         # Package ID should be platform-independent for Python packages

@@ -3,8 +3,6 @@ import sys
 from conan import ConanFile
 from conan.tools.files import copy
 
-# Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.3"
 
 class SpareToolsSharedDevToolsConan(ConanFile):
     name = "sparetools-shared-dev-tools"
@@ -14,8 +12,9 @@ class SpareToolsSharedDevToolsConan(ConanFile):
     license = "Apache-2.0"
     url = "https://github.com/sparesparrow/sparetools"
 
-    # Use sparetools-base utilities
+    # Use SpareTools base utilities (Conan 2.x pattern)
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     exports_sources = "shared_dev_tools/**", "scripts/**"
 

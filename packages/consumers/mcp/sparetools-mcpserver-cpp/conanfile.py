@@ -5,7 +5,7 @@ from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.files import copy
 
 # Use SpareTools base utilities
-python_requires = "sparetools-base/2.0.3"
+python_requires = "sparetools-base/2.0.0"
 
 
 class SpareToolsMcpServerCppConan(ConanFile):
@@ -21,9 +21,6 @@ class SpareToolsMcpServerCppConan(ConanFile):
 
     # Declare consumer context
     consumer_domain = "mcp"
-
-    # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.3"
 
     # Runtime dependencies
     requires = (

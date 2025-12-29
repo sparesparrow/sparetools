@@ -182,10 +182,10 @@ jobs:
       - name: Export Foundation Packages
         run: |
           echo "BUILD_START=$(date +%s)" >> $GITHUB_ENV
-          conan export packages/sparetools-base --version=${{ env.VERSION_BASE }}
-          conan export packages/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
-          conan export packages/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
-          conan export packages/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
+          conan export packages/foundation/sparetools-base --version=${{ env.VERSION_BASE }}
+          conan export packages/foundation/sparetools-bootstrap --version=${{ env.VERSION_BASE }}
+          conan export packages/foundation/sparetools-shared-dev-tools --version=${{ env.VERSION_BASE }}
+          conan export packages/consumers/openssl/sparetools-openssl-tools --version=${{ env.VERSION_BASE }}
         shell: bash
       
       # Stage 2: Build CPython (tool_requires) - may take 5-15 minutes

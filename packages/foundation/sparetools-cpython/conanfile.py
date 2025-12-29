@@ -16,7 +16,7 @@ class CPythonToolConan(ConanFile):
     url = "https://github.com/sparesparrow/sparetools"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.3"
+    python_requires = "sparetools-base/2.0.0"
 
     settings = "os", "arch", "compiler", "build_type"
     options = {
@@ -29,9 +29,6 @@ class CPythonToolConan(ConanFile):
         "fips": False,
         "optimize": "2",
     }
-
-    # Use sparetools-base utilities
-    python_requires = "sparetools-base/2.0.3"
     
     def source(self):
         """Download CPython source"""
@@ -177,97 +174,25 @@ class CPythonToolConan(ConanFile):
             else:
                 raise ConanException(f"Python not found at {python_bin} or {python3_12}")
         
-        # Create convenience symlinks/wrappers if needed
+        # Create convenience symlinks if needed
         bin_dir = os.path.join(self.package_folder, "bin")
         python3_12_bin = os.path.join(bin_dir, "python3.12")
         python3_bin = os.path.join(bin_dir, "python3")
         python_bin_sym = os.path.join(bin_dir, "python")
-
+        
         # python3 → python3.12 (if python3.12 exists but python3 doesn't)
         if os.path.exists(python3_12_bin) and not os.path.exists(python3_bin):
-            self._create_python_wrapper(python3_bin, python3_12_bin)
-
+            os.symlink("python3.12", python3_bin)
+        
         # python → python3.12 (for bare 'python' command)
         if os.path.exists(python3_12_bin) and not os.path.exists(python_bin_sym):
-            self._create_python_wrapper(python_bin_sym, python3_12_bin)
+            os.symlink("python3.12", python_bin_sym)
         
-        # Install cloudsmith-cli if not already present
-        cloudsmith_bin = os.path.join(bin_dir, "cloudsmith")
-        if not os.path.exists(cloudsmith_bin):
-            self._install_cloudsmith_cli(python_bin)
-        else:
-            self.output.info("✅ cloudsmith-cli already installed")
-
         # Apply security gates and generate SBOM as final step
-        # TODO: Re-implement security gates and SBOM generation
-        # self.apply_security_gates()
-        # self.generate_sbom()
+        self.apply_security_gates()
+        self.generate_sbom()
 
         self.output.info(f"✅ Package verified: {python_bin}")
-
-    def _create_python_wrapper(self, wrapper_path, target_path):
-        """Create a cross-platform wrapper for Python executable."""
-        if self.settings.os == "Windows":
-            # On Windows, create a .bat file that calls the target
-            bat_content = f'@echo off\n"{target_path}" %*\n'
-            with open(wrapper_path + '.bat', 'w') as f:
-                f.write(bat_content)
-        else:
-            # On Unix-like systems, use symlinks
-            try:
-                os.symlink(os.path.basename(target_path), wrapper_path)
-            except OSError as e:
-                # If symlink fails, copy the file as fallback
-                import shutil
-                shutil.copy2(target_path, wrapper_path)
-
-    def _install_cloudsmith_cli(self, python_bin):
-        """Install cloudsmith-cli using the bundled Python"""
-        self.output.info("📦 Installing cloudsmith-cli...")
-
-        try:
-            # Use pip from the bundled Python to install cloudsmith-cli
-            pip_cmd = [python_bin, "-m", "pip", "install", "cloudsmith-cli", "--no-cache-dir", "--quiet"]
-
-            # Set environment for the subprocess
-            env = os.environ.copy()
-            env["PYTHONHOME"] = self.package_folder
-            env["PYTHONPATH"] = os.path.join(self.package_folder, "lib", "python3.12")
-
-            import subprocess
-            result = subprocess.run(
-                pip_cmd,
-                cwd=self.package_folder,
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minute timeout
-            )
-
-            if result.returncode == 0:
-                self.output.info("✅ cloudsmith-cli installed successfully")
-
-                # Verify installation
-                verify_cmd = [python_bin, "-c", "import cloudsmith_cli; print('cloudsmith-cli version:', cloudsmith_cli.__version__ if hasattr(cloudsmith_cli, '__version__') else 'installed')"]
-                verify_result = subprocess.run(
-                    verify_cmd,
-                    cwd=self.package_folder,
-                    env=env,
-                    capture_output=True,
-                    text=True
-                )
-
-                if verify_result.returncode == 0:
-                    self.output.info(f"✅ cloudsmith-cli verified: {verify_result.stdout.strip()}")
-                else:
-                    self.output.warning(f"⚠️ cloudsmith-cli verification failed: {verify_result.stderr}")
-            else:
-                self.output.warning(f"⚠️ Failed to install cloudsmith-cli: {result.stderr}")
-
-        except subprocess.TimeoutExpired:
-            self.output.warning("⚠️ cloudsmith-cli installation timed out")
-        except Exception as e:
-            self.output.warning(f"⚠️ cloudsmith-cli installation failed: {e}")
 
     def package_id(self):
         """Package ID depends on OS and architecture only"""
@@ -297,11 +222,3 @@ class CPythonToolConan(ConanFile):
         
         self.conf_info.define("user.cpython:executable", python_exec)
         self.conf_info.define("user.cpython:home", self.package_folder)
-
-        # Expose cloudsmith-cli
-        cloudsmith_bin = os.path.join(self.package_folder, "bin", "cloudsmith")
-        if os.path.exists(cloudsmith_bin):
-            self.conf_info.define("user.cloudsmith:cli", cloudsmith_bin)
-        else:
-            # Fallback: use python module
-            self.conf_info.define("user.cloudsmith:cli", f"{python_exec} -m cloudsmith_cli")

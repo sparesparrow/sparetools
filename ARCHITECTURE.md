@@ -1,41 +1,53 @@
-# SpareTools Architecture
+# SpareTools Multi-Domain Architecture
 
 ## Overview
 
-SpareTools is a modern, Python-based tooling ecosystem for OpenSSL development, building, and deployment. It provides a unified package system with multiple build methods, comprehensive security integration, and zero-copy deployment patterns.
+SpareTools is a comprehensive, multi-domain package ecosystem spanning embedded systems, AI/ML, cybersecurity, aerospace, and enterprise applications. It provides hermetic builds, security-first architecture, and zero-copy deployment patterns across diverse technology domains.
 
 ## Core Architecture
 
-### Package Ecosystem
+### Multi-Domain Package Ecosystem
 
 ```mermaid
 graph TD
-    subgraph "Production Packages"
-        openssl[sparetools-openssl/3.3.2<br/>MAIN DELIVERABLE]
-        tools[sparetools-openssl-tools/2.0.0]
-        base[sparetools-base/2.0.0<br/>FOUNDATION]
-        cpython[sparetools-cpython/3.12.7]
-        shared[sparetools-shared-dev-tools/2.0.0]
-        bootstrap[sparetools-bootstrap/2.0.0]
+    subgraph "Foundation Layer"
+        base[sparetools-base/2.0.0<br/>SECURITY & UTILITIES]
+        cpython[sparetools-cpython/3.12.7<br/>PYTHON RUNTIME]
+        shared[sparetools-shared-dev-tools/2.0.0<br/>DEV TOOLS]
+        bootstrap[sparetools-bootstrap/2.0.0<br/>ORCHESTRATION]
     end
 
-    subgraph "Build Dependencies"
-        openssl -.->|tool_requires| tools
-        openssl -.->|tool_requires| cpython
-        openssl -->|python_requires| base
-
-        tools -->|python_requires| base
-        shared -->|python_requires| base
-        cpython -->|python_requires| base
-        bootstrap -.->|should add| base
+    subgraph "Consumer Domains"
+        mcp[sparetools-mcp-orchestrator<br/>AI ASSISTANTS]
+        esp32[sparetools-nucleus<br/>EMBEDDED SYSTEMS]
+        aerospace[sparetools-aerospace<br/>AVIATION SOFTWARE]
+        android[sparetools-cliphist-android<br/>MOBILE DEVELOPMENT]
+        wifi[sparetools-wifi-sensing<br/>NETWORK ANALYSIS]
+        sdr[sparetools-sdr-tools<br/>SOFTWARE RADIO]
+        security[sparetools-crypto-suite<br/>CYBERSECURITY]
+        pentest[sparetools-pentest-toolkit<br/>PENETRATION TESTING]
     end
 
-    style openssl fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+    subgraph "Specialized Packages"
+        streaming[sparetools-streaming-solutions<br/>MEDIA STREAMING]
+        input[sparetools-input-backends<br/>HUMAN INTERFACE]
+        schemas[sparetools-bpm-schemas<br/>PROTOCOL SCHEMAS]
+        openssl[sparetools-openssl<br/>CRYPTOGRAPHIC LIBRARY]
+    end
+
+    base --> mcp
+    base --> esp32
+    base --> aerospace
+    base --> android
+    cpython --> mcp
+    cpython --> pentest
+    shared -->|All Consumers| mcp
+
     style base fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
-    style tools fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
     style cpython fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:2px
-    style shared fill:#FFC107,stroke:#F57C00,color:#000,stroke-width:2px
-    style bootstrap fill:#607D8B,stroke:#37474F,color:#fff,stroke-width:2px
+    style mcp fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style esp32 fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+    style aerospace fill:#FF5722,stroke:#D84315,color:#fff,stroke-width:2px
 ```
 
 **Legend:**
@@ -46,24 +58,28 @@ graph TD
 
 ```mermaid
 graph LR
-    A[sparetools-openssl] --> B{build_method option}
+    A[Consumer Package] --> B{build_method option}
 
     B -->|perl<br/>default| C[Perl Configure<br/>✅ Production Ready]
     B -->|cmake| D[CMake Build<br/>✅ Modern]
     B -->|autotools| E[Autotools<br/>✅ Unix Standard]
     B -->|python| F[Python configure.py<br/>⚠️ Experimental]
+    B -->|meson| G[Meson Build<br/>✅ Cross-Platform]
+    B -->|bazel| H[Bazel<br/>⚠️ Experimental]
 
-    C --> G[OpenSSL Binary]
-    D --> G
-    E --> G
-    F --> G
+    C --> I[Package Binary]
+    D --> I
+    E --> I
+    F --> I
+    G --> I
+    H --> I
 
     style C fill:#4CAF50,stroke:#2E7D32,color:#fff
     style D fill:#2196F3,stroke:#1565C0,color:#fff
     style E fill:#FF9800,stroke:#E65100,color:#fff
-    style F fill:#FFC107,stroke:#F57C00,color:#000
-    style A fill:#9C27B0,stroke:#6A1B9A,color:#fff
-    style G fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
+    style G fill:#9C27B0,stroke:#6A1B9A,color:#fff
+    style A fill:#607D8B,stroke:#37474F,color:#fff,stroke-width:2px
+    style I fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:3px
 ```
 
 ### Profile Composition System
@@ -232,27 +248,32 @@ graph TD
 
 ```
 sparetools/
-├── packages/                    # Conan packages (source)
-│   ├── sparetools-base/         # Foundation utilities
-│   ├── sparetools-cpython/      # Prebuilt Python runtime
-│   ├── sparetools-openssl/      # Main OpenSSL package
-│   ├── sparetools-openssl-tools/# Build tooling & profiles
-│   ├── sparetools-shared-dev-tools/
-│   ├── sparetools-bootstrap/    # Orchestration system
-│   └── deprecated/              # Archived packages
+├── packages/                    # Conan packages by domain
+│   ├── foundation/              # Core infrastructure
+│   │   ├── sparetools-base/      # Security gates & utilities
+│   │   ├── sparetools-cpython/   # Prebuilt Python runtime
+│   │   ├── sparetools-bootstrap/ # Orchestration framework
+│   │   └── sparetools-shared-dev-tools/ # Development utilities
+│   ├── consumers/               # Domain-specific applications
+│   │   ├── mcp/                  # AI assistant protocols
+│   │   ├── esp32/                # Embedded systems
+│   │   ├── aerospace/            # Aviation software
+│   │   ├── android/              # Mobile development
+│   │   ├── openssl/              # Cryptographic libraries
+│   │   └── [other-domains]/      # Additional consumer domains
+│   ├── [other-categories]/       # SDR, security, streaming, etc.
+│   └── deprecated/               # Archived packages
 ├── _Build/                      # Zero-copy build artifacts
-│   ├── openssl-builds/          # OpenSSL build results
-│   │   ├── master/              # Development branch
-│   │   └── 3.3.2/               # Release builds
 │   ├── packages/                # Symlinks to Conan cache
 │   └── conan-cache -> ~/.conan2 # Symlink to cache root
-├── build_results/               # Build reports
-├── reviews/                     # Release reviews
-├── test_results/                # Test outputs
-├── test/                        # Test suite
-├── scripts/                     # Automation scripts
-├── docs/                        # Documentation
+├── build_results/               # Build reports & artifacts
+├── test_results/                # Test outputs & coverage
+├── test/                        # Multi-domain test suite
+├── scripts/                     # Automation & utilities
+├── docs/                        # Comprehensive documentation
+├── templates/                   # Project templates by domain
 ├── workspaces/                  # IDE configurations
+├── mcp/                         # MCP server ecosystem
 └── .github/workflows/           # CI/CD pipelines
 ```
 
@@ -306,41 +327,65 @@ graph TD
 
 ## Key Design Principles
 
-1. **Single Source of Truth**: All artifacts stored once in Conan cache
-2. **Zero-Copy Deployment**: Symlinks eliminate binary duplication
-3. **Multi-Method Flexibility**: Support multiple build systems
-4. **Security First**: Integrated scanning and validation
-5. **CI/CD Integration**: Automated workflows with manual approvals
-6. **Modular Architecture**: Independent packages with clear dependencies
+1. **Multi-Domain Architecture**: Consumer-centric organization spanning diverse technology domains
+2. **Hermetic Builds**: No system dependencies beyond SpareTools packages
+3. **Zero-Copy Deployment**: Symlinks eliminate binary duplication across domains
+4. **Security-First Approach**: Integrated scanning, FIPS compliance, and supply chain security
+5. **Layered Design**: Foundation → Runtime → Utilities → Orchestration → Consumer layers
+6. **Template-Based Development**: Rapid project creation across technology domains
+7. **CI/CD Integration**: Automated workflows with manual approvals for production releases
 
 ## Data Flow
 
-### Build Process
+### Multi-Domain Build Process
 
-1. **Source** → `packages/sparetools-openssl/`
-2. **Dependencies** → Resolve via Conan (base, tools, cpython)
-3. **Configuration** → Apply profiles (platform + features)
-4. **Build** → Execute selected method (perl/cmake/autotools/python)
-5. **Package** → Create Conan package in cache
-6. **Test** → Run integration tests
-7. **Scan** → Security validation (Trivy, Syft, FIPS)
-8. **Publish** → Upload to Cloudsmith + GitHub Packages
+1. **Source** → Domain-specific package (e.g., `packages/consumers/mcp/sparetools-mcp-orchestrator/`)
+2. **Dependencies** → Resolve via Conan (foundation + domain-specific requirements)
+3. **Configuration** → Apply profiles (platform + features + domain requirements)
+4. **Build** → Execute selected method (varies by domain: cmake, meson, autotools, etc.)
+5. **Package** → Create Conan package in cache with domain metadata
+6. **Test** → Run domain-specific integration and unit tests
+7. **Scan** → Security validation (Trivy, Syft, domain-specific checks)
+8. **Publish** → Upload to Cloudsmith with domain categorization
 
-### Consumption Pattern
+### Cross-Domain Consumption Pattern
 
 1. **Remote Add** → `conan remote add sparesparrow-conan ...`
-2. **Install** → `conan install --requires=sparetools-openssl/3.3.2`
-3. **Symlink** → Zero-copy deployment to workspace
-4. **Use** → Link libraries in consumer projects
+2. **Install Foundation** → `conan install --tool-requires=sparetools-cpython/3.12.7`
+3. **Install Domain** → `conan install --requires=sparetools-mcp-orchestrator/2.0.3`
+4. **Symlink** → Zero-copy deployment across multiple domains
+5. **Orchestrate** → Use bootstrap tools for multi-domain project setup
 
 ## External Integrations
 
-- **Conan Center**: Base dependencies (CMake, Ninja, etc.)
-- **Cloudsmith**: Package hosting and distribution
-- **GitHub Packages**: Secondary package registry
-- **Security Tools**: Trivy, Syft, CodeQL integration
-- **CI/CD**: GitHub Actions for multi-platform builds
+### Package Management
+- **Conan Center**: Base dependencies (CMake, Ninja, Meson, etc.)
+- **Cloudsmith**: Primary package registry with domain categorization
+- **GitHub Packages**: Secondary registry and container hosting
+
+### Development Tools
+- **VS Code**: Workspace configurations for multi-domain development
+- **Cursor**: AI-assisted development with domain-specific prompts
+- **GitHub Copilot**: Code completion across technology domains
+
+### Security & Compliance
+- **Trivy**: Vulnerability scanning across all domains
+- **Syft**: SBOM generation with domain-specific metadata
+- **CodeQL**: Static analysis for multiple languages
+- **FIPS Validators**: Cryptographic compliance across domains
+
+### CI/CD & Testing
+- **GitHub Actions**: Multi-platform, multi-domain build matrices
+- **Dependabot**: Automated dependency updates across domains
+- **Codecov**: Test coverage tracking for all packages
+
+### Domain-Specific Integrations
+- **ESP32**: PlatformIO, ESP-IDF toolchain integration
+- **Android**: JNI, NDK, cross-ABI compilation
+- **Aerospace**: DO-178C compliance tooling
+- **MCP**: Model Context Protocol server ecosystem
+- **SDR**: RTL-SDR, HackRF, and other radio hardware
 
 ---
 
-*Last Updated: 2025-11-03*
+*Last Updated: December 29, 2025*
