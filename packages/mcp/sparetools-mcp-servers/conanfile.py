@@ -26,13 +26,21 @@ class SparetoolsMcpServersConan(ConanFile):
         self.folders.build = "build"
 
     def package(self):
-        # Package Python modules
-        copy(self, "*.py", src=os.path.join(self.source_folder, "src"),
-             dst=os.path.join(self.package_folder, "python"))
+        # Package Python modules recursively
+        copy(self, "**/*.py", src=os.path.join(self.source_folder, "src"),
+             dst=os.path.join(self.package_folder, "python"), keep_path=True)
+
+        # Package scripts
+        copy(self, "scripts/*", src=self.source_folder,
+             dst=os.path.join(self.package_folder, "scripts"), keep_path=True)
 
         # Package documentation
-        copy(self, "*.md", src=self.source_folder,
-             dst=os.path.join(self.package_folder, "docs"))
+        copy(self, "**/*.md", src=self.source_folder,
+             dst=os.path.join(self.package_folder, "docs"), keep_path=True)
+
+        # Package config files
+        copy(self, "config/*.json", src=self.source_folder,
+             dst=os.path.join(self.package_folder, "config"), keep_path=True)
 
         # Package license
         copy(self, "LICENSE*", src=self.source_folder,
