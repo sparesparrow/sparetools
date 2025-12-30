@@ -26,24 +26,45 @@ class SparetoolsMcpServersConan(ConanFile):
         self.folders.build = "build"
 
     def package(self):
+        src_dir = os.path.join(self.source_folder, "src")
+        
         # Package Python modules recursively
-        copy(self, "**/*.py", src=os.path.join(self.source_folder, "src"),
-             dst=os.path.join(self.package_folder, "python"), keep_path=True)
+        copy(self, "**/*.py", 
+             src=src_dir,
+             dst=os.path.join(self.package_folder, "python"), 
+             keep_path=True)
 
         # Package scripts
-        copy(self, "scripts/*", src=self.source_folder,
-             dst=os.path.join(self.package_folder, "scripts"), keep_path=True)
+        scripts_dir = os.path.join(self.source_folder, "scripts")
+        if os.path.exists(scripts_dir):
+            copy(self, "*", 
+                 src=scripts_dir,
+                 dst=os.path.join(self.package_folder, "scripts"), 
+                 keep_path=False)
 
-        # Package documentation
-        copy(self, "**/*.md", src=self.source_folder,
-             dst=os.path.join(self.package_folder, "docs"), keep_path=True)
+        # Package documentation from src
+        copy(self, "**/*.md", 
+             src=src_dir,
+             dst=os.path.join(self.package_folder, "docs"), 
+             keep_path=True)
+        
+        # Package root README
+        if os.path.exists(os.path.join(self.source_folder, "README.md")):
+            copy(self, "README.md", 
+                 src=self.source_folder,
+                 dst=os.path.join(self.package_folder, "docs"))
 
         # Package config files
-        copy(self, "config/*.json", src=self.source_folder,
-             dst=os.path.join(self.package_folder, "config"), keep_path=True)
+        config_dir = os.path.join(self.source_folder, "config")
+        if os.path.exists(config_dir):
+            copy(self, "*.json", 
+                 src=config_dir,
+                 dst=os.path.join(self.package_folder, "config"), 
+                 keep_path=False)
 
         # Package license
-        copy(self, "LICENSE*", src=self.source_folder,
+        copy(self, "LICENSE*", 
+             src=self.source_folder,
              dst=self.package_folder)
 
         # Apply security gates and generate SBOM
