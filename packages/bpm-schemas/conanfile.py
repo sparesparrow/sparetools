@@ -8,7 +8,7 @@ class SpareToolsBpmSchemasConan(ConanFile):
     """SpareTools BPM Schemas - FlatBuffers schemas for BPM detection protocol."""
 
     name = "sparetools-bpm-schemas"
-    version = "2.0.0"
+    version = "2.0.1"
     package_type = "header-library"
 
     # SpareTools foundation package with security mixins
@@ -68,6 +68,10 @@ class SpareToolsBpmSchemasConan(ConanFile):
             copy(self, "*.py",
                  src=python_gen_path,
                  dst=os.path.join(self.package_folder, "python"))
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         # Header-only package - clear platform-specific settings

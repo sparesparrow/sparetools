@@ -6,7 +6,7 @@ from conan.tools.files import copy
 
 class SpareToolsHalSuntonConan(ConanFile):
     name = "sparetools-hal-sunton"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "library"
     description = "Hardware Abstraction Layer for Sunton ESP32-2432S028Rv3 displays"
     license = "Apache-2.0"
@@ -38,7 +38,7 @@ class SpareToolsHalSuntonConan(ConanFile):
     # Dependencies
     def requirements(self):
         if self.options.with_lvgl:
-            self.requires("lvgl/8.3.11")
+            self.requires("sparetools-lvgl/8.3.11")
         # Add other HAL dependencies as needed
 
     def configure(self):
@@ -82,7 +82,7 @@ class SpareToolsHalSuntonConan(ConanFile):
 
         # Define components
         self.cpp_info.components["display"].libs = ["sparetools-hal-sunton-display"]
-        self.cpp_info.components["display"].requires = ["lvgl::lvgl"] if self.options.with_lvgl else []
+        self.cpp_info.components["display"].requires = ["sparetools-lvgl::sparetools-lvgl"] if self.options.with_lvgl else []
 
         if self.options.with_touch:
             self.cpp_info.components["touch"].libs = ["sparetools-hal-sunton-touch"]

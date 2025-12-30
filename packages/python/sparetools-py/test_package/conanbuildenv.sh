@@ -13,9 +13,9 @@ do
 done
 
 
-export PYTHON_ROOT="/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p"
-export PATH="/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/bin:/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/bin:/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/bin:$PATH"
-export LD_LIBRARY_PATH="/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/lib:/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/lib:$LD_LIBRARY_PATH"
-export PYTHONHOME="/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p"
-export PYTHONPATH="$PYTHONPATH:/home/sparrow/.conan2/p/b/spare44845c575afa9/p:/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/lib/python3.12"
-export DYLD_LIBRARY_PATH="/home/sparrow/.conan2/p/b/sparee571a54d28e0e/p/lib:$DYLD_LIBRARY_PATH"
+export PYTHON_ROOT="/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p"
+export PATH="/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/bin:/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/bin:/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/bin:$PATH"
+export LD_LIBRARY_PATH="/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/lib:/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/lib:$LD_LIBRARY_PATH"
+export PYTHONHOME="/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p"
+export PYTHONPATH="$PYTHONPATH:/home/sparrow/.conan2/p/b/spare44fde7fc0285e/p:/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/lib/python3.12"
+export DYLD_LIBRARY_PATH="/home/sparrow/.conan2/p/b/spareb0cd78b74c4e0/p/lib:$DYLD_LIBRARY_PATH"

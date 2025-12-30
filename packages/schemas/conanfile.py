@@ -4,8 +4,16 @@ from conan.tools.files import copy
 
 class ProtocolsConan(ConanFile):
     name = "sparesparrow-protocols"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "header-library"
+    description = "SpareSparrow Protocol Schemas - FlatBuffers schemas for inter-service communication"
+    license = "Apache-2.0"
+    url = "https://github.com/sparesparrow/sparetools"
+    topics = ("protocols", "schemas", "flatbuffers", "communication", "interfaces")
+
+    # Use SpareTools foundation utilities and security gates
+    python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     exports_sources = "*.fbs", "CMakeLists.txt"
 
@@ -24,6 +32,10 @@ class ProtocolsConan(ConanFile):
         # Copy generated headers and original schemas
         copy(self, "*_generated.h", src=self.build_folder, dst=os.path.join(self.package_folder, "include"))
         copy(self, "*.fbs", src=self.source_folder, dst=os.path.join(self.package_folder, "schemas"))
+
+        # Apply security gates and generate SBOM
+        self.apply_security_gates()
+        self.generate_sbom()
 
     def package_info(self):
         # Component per schema (independent versioning)

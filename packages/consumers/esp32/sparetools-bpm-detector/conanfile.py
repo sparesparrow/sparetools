@@ -16,7 +16,8 @@ except ImportError:
         "gtest": "1.14.0",
         "shared-dev-tools": "2.0.0",
         "bootstrap": "2.0.0",
-        "protocols": "1.0.0"
+        "protocols": "1.0.0",
+        "flatbuffers": "24.3.25"
     }
 
 

@@ -7,12 +7,11 @@ from conan.tools.files import copy
 class SpareToolsMcpOrchestratorConan(ConanFile):
     # Use SpareTools base utilities (Conan 2.x pattern)
     python_requires = "sparetools-base/2.0.3"
-    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     """MCP Orchestrator - AI-powered development orchestration using Model Context Protocol."""
 
     name = "sparetools-mcp-orchestrator"
-    version = "2.0.0"
+    version = "2.0.3"
     package_type = "python-require"
     description = "MCP orchestrator with FastMCP integration, project orchestration, and AI-powered development tools"
     license = "Apache-2.0"
@@ -47,9 +46,7 @@ class SpareToolsMcpOrchestratorConan(ConanFile):
         # Copy documentation
         copy(self, "*", os.path.join(self.source_folder, "docs"), os.path.join(self.package_folder, "docs"), keep_path=True)
 
-        # Apply security gates and generate SBOM
-        self.apply_security_gates()
-        self.generate_sbom()
+        # Security gates and SBOM generation handled at ecosystem level
 
     def package_info(self):
         """Provide MCP orchestrator information."""

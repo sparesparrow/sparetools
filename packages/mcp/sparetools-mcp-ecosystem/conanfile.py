@@ -5,7 +5,7 @@ import os
 
 class SpareToolsMCPEcosystemConan(ConanFile):
     name = "sparetools-mcp-ecosystem"
-    version = "1.0.0"
+    version = "1.0.1"
     license = "MIT"
     author = "sparesparrow"
     url = "https://github.com/sparesparrow/sparetools"
@@ -128,8 +128,11 @@ class SpareToolsMCPEcosystemConan(ConanFile):
         os.makedirs(bin_dir, exist_ok=True)
 
         # Main ecosystem launcher
-        ecosystem_launcher = """#!/usr/bin/env bash
+        ecosystem_launcher = f"""#!/usr/bin/env bash
 set -euo pipefail
+
+# Define package directory
+PACKAGE_DIR="{self.package_folder}"
 
 echo "🚀 SpareTools MCP Ecosystem"
 echo "Available components:"
@@ -383,6 +386,7 @@ echo "   sparetools-mcp-ecosystem setup"
 
         # Set package directories
         self.runenv_info.define("SPARETOOLS_MCP_ECOSYSTEM_DIR", self.package_folder)
+        self.runenv_info.define("PACKAGE_DIR", self.package_folder)  # For launcher scripts
         self.runenv_info.define("SPARETOOLS_MCP_PROMPTS_DIR", os.path.join(self.package_folder, "mcp-prompts"))
         self.runenv_info.define("SPARETOOLS_MCP_SERVERS_DIR", os.path.join(self.package_folder, "mcp-servers"))
         self.runenv_info.define("SPARETOOLS_ORCHESTRATOR_DIR", os.path.join(self.package_folder, "orchestrator"))
