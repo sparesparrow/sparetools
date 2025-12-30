@@ -20,6 +20,8 @@ class SparetoolsMcpServersConan(ConanFile):
         # Require Python utilities from sparetools
         self.requires("sparetools-py/1.0.0")
 
+    exports_sources = "src/**", "scripts/**", "config/**", "*.md", "LICENSE*"
+    
     def layout(self):
         # Python package layout
         self.folders.source = "."
