@@ -6,7 +6,7 @@ from conan.tools.files import copy
 
 class SpareToolsSharedDevToolsConan(ConanFile):
     name = "sparetools-shared-dev-tools"
-    version = "2.0.3"
+    version = "2.0.4"
     package_type = "python-require"
     description = "Shared development tools for SpareTools ecosystem"
     license = "Apache-2.0"

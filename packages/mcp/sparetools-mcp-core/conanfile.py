@@ -5,7 +5,7 @@ import os
 
 class SparetoolsMcpCoreConan(ConanFile):
     name = "sparetools-mcp-core"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Core MCP utilities: templates, prompts, diagrams, device detection"
     license = "Apache-2.0"
     url = "https://github.com/sparesparrow/sparetools"

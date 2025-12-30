@@ -6,7 +6,7 @@ from conan.tools.layout import basic_layout
 
 class SparetoolsPyConan(ConanFile):
     name = "sparetools-py"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "application"
 
     # Python package with protocol tools and test harness

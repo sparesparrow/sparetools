@@ -4,7 +4,7 @@ from conan.tools.files import copy
 
 class SpareToolsLvglConan(ConanFile):
     name = "sparetools-lvgl"
-    version = "8.3.11"
+    version = "8.3.12"
     package_type = "header-library"
     description = "Light and Versatile Graphics Library configuration for embedded systems"
     license = "MIT"

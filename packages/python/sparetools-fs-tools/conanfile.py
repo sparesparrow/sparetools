@@ -5,7 +5,7 @@ from pathlib import Path
 
 class SpareToolsFsToolsConan(ConanFile):
     name = "sparetools-fs-tools"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Filesystem operations and utilities"
     license = "MIT"
     author = "SpareTools Team"

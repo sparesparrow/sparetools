@@ -12,7 +12,7 @@ class SpareToolsOpenSSLHybrid(ConanFile):
     """Hybrid OpenSSL build using Perl Configure plus Python enhancement."""
 
     name = "sparetools-openssl-hybrid"
-    version = "3.3.2"
+    version = "3.3.3"
 
     package_type = "library"
     description = "OpenSSL built with hybrid Python-enhanced approach"

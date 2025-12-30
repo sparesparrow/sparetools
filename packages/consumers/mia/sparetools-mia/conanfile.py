@@ -7,7 +7,7 @@ class SpareToolsMiaConan(ConanFile):
     """MIA (Modular IoT Architecture) - AI-orchestrated IoT platform."""
 
     name = "sparetools-mia"
-    version = "2.0.0"
+    version = "2.0.1"
     package_type = "python-require"
     description = "AI-orchestrated IoT platform with MCP integration, hardware control, and self-healing capabilities"
     license = "Apache-2.0"

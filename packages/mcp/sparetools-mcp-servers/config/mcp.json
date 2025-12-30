@@ -31,6 +31,17 @@
       "env": {
         "LOG_LEVEL": "INFO"
       }
+    },
+    "sparetools-static-analysis": {
+      "command": "python",
+      "args": [
+        "-m",
+        "sparetools.mcp_servers.static_analysis.static_analysis_mcp_server"
+      ],
+      "env": {
+        "LOG_LEVEL": "INFO",
+        "ANALYSIS_TIMEOUT_MINUTES": "60"
+      }
     }
   }
 }

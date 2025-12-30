@@ -10,7 +10,7 @@ from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 
 class SparetoolsInputBackendsConan(ConanFile):
     name = "sparetools-input-backends"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Multi-platform input simulation backends"
     homepage = "https://github.com/sparesparrow/sparetools"
     url = "https://github.com/sparesparrow/sparetools"

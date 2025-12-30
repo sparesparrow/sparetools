@@ -6,7 +6,7 @@ from conan.tools.files import copy
 
 class SpareToolsCryptoSuiteConan(ConanFile):
     name = "sparetools-crypto-suite"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "library"
     description = "Pre-configured cryptographic profiles for ESP32 with hardware acceleration"
     license = "Apache-2.0"

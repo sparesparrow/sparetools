@@ -3,7 +3,7 @@ from conan.tools.files import copy
 
 class SpareToolsOpenSSLToolsMiniConan(ConanFile):
     name = "sparetools-openssl-tools-mini"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "python-require"
     description = "Minimal OpenSSL tools for SpareTools ecosystem"
     license = "Apache-2.0"

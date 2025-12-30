@@ -4,7 +4,7 @@ from conan.tools.files import copy
 
 class SparetoolsVoiceFsmConan(ConanFile):
     name = "sparetools-voice-fsm"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "library"
     description = "Voice control finite state machine using Boost.SML"
     license = "Apache-2.0"

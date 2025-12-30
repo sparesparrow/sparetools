@@ -6,7 +6,7 @@ import os
 class SpareToolsOpenSSLCMake(ConanFile):
     """OpenSSL built with CMake (if supported)"""
     name = "sparetools-openssl-cmake"
-    version = "3.3.2"
+    version = "3.3.3"
     
     package_type = "library"
     description = "OpenSSL built with CMake build system"

@@ -7,7 +7,7 @@ import os
 class SpareToolsOpenSSLAutotools(ConanFile):
     """OpenSSL built with Conan Autotools integration"""
     name = "sparetools-openssl-autotools"
-    version = "3.3.2"
+    version = "3.3.3"
     
     package_type = "library"
     description = "OpenSSL built with Conan Autotools toolchain"

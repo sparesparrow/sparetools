@@ -15,7 +15,7 @@ class SparetoolsStreamingSolutionsConan(ConanFile):
     python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     name = "sparetools-streaming-solutions"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Real-time streaming solutions for screen casting and media streaming"
     homepage = "https://github.com/sparesparrow/sparetools"
     url = "https://github.com/sparesparrow/sparetools"

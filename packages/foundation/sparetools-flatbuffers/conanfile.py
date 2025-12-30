@@ -9,7 +9,7 @@ class SparetoolsFlatbuffersConan(ConanFile):
     """SpareTools FlatBuffers - FlatBuffers compiler and runtime for SpareTools ecosystem."""
 
     name = "sparetools-flatbuffers"
-    version = "24.3.25"
+    version = "24.3.26"
     package_type = "application"
 
     # SpareTools foundation package

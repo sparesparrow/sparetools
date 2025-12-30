@@ -4,7 +4,7 @@ import os
 
 class MiaProject(ConanFile):
     name = "mia-project"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "{{project_description}}"
     license = "MIT"
     author = "Your Name"

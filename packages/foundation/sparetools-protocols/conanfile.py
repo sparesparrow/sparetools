@@ -10,7 +10,7 @@ class SparetoolsProtocolsConan(ConanFile):
     """SpareTools Protocols - Consolidated FlatBuffers schemas for SpareTools ecosystem."""
 
     name = "sparetools-protocols"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "header-library"
 
     # SpareTools foundation package with security mixins

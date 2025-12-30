@@ -11,7 +11,7 @@ from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 
 class SparetoolsWifiSensingConan(ConanFile):
     name = "sparetools-wifi-sensing"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "WiFi sensing and CSI processing toolkit"
     homepage = "https://github.com/sparesparrow/sparetools"
     url = "https://github.com/sparesparrow/sparetools"

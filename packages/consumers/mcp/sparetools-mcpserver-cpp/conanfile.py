@@ -11,7 +11,7 @@ class SpareToolsMcpServerCppConan(ConanFile):
     python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     name = "sparetools-mcpserver-cpp"
-    version = "2.0.0"
+    version = "2.0.1"
     package_type = "library"
     description = "High-performance MCP (Model Context Protocol) server implementation in C++"
     license = "Apache-2.0"

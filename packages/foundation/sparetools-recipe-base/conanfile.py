@@ -4,7 +4,7 @@ from conan.tools.files import copy
 
 class SpareToolsRecipeBaseConan(ConanFile):
     name = "sparetools-recipe-base"
-    version = "2.0.3"
+    version = "2.0.4"
     package_type = "python-require"
     description = "Base classes for SpareTools layered architecture recipes"
     license = "Apache-2.0"

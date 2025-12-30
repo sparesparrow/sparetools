@@ -11,7 +11,7 @@ from recipe_base import ConsumerPackageConan
 
 class SpareToolsClipHistAndroidConan(ConsumerPackageConan):
     name = "sparetools-cliphist-android"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "application"
     description = "ClipHist Android consumer application for SpareTools ecosystem"
     license = "Apache-2.0"

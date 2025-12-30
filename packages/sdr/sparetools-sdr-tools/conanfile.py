@@ -10,7 +10,7 @@ from conan import ConanFile
 
 class SparetoolsSdrToolsConan(ConanFile):
     name = "sparetools-sdr-tools"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "SDR, RF, and WiFi analysis tools"
     homepage = "https://github.com/sparesparrow/sparetools"
     url = "https://github.com/sparesparrow/sparetools"

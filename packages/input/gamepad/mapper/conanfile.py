@@ -13,7 +13,7 @@ import os
 
 class SparetoolsGamepadMapperConan(ConanFile):
     name = "sparetools-gamepad-mapper"
-    version = "1.0.0"
+    version = "1.0.1"
     test_type = "explicit"
 
     # Package metadata

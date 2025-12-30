@@ -4,7 +4,7 @@ import os
 
 class SparetoolsMonorepoConan(ConanFile):
     name = "sparetools-monorepo"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Meta-package for SpareTools monorepo - includes all shared components"
     license = "Apache-2.0"
     author = "SpareSparrow"

@@ -5,7 +5,7 @@ from pathlib import Path
 
 class SpareToolsProcToolsConan(ConanFile):
     name = "sparetools-proc-tools"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Process management and command execution utilities"
     license = "MIT"
     author = "SpareTools Team"

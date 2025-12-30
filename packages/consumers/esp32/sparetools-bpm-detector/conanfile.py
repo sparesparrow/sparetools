@@ -25,7 +25,7 @@ class SpareToolsBpmDetectorConan(ConanFile):
     """ESP32 BPM Detector Conan package - SpareTools ESP32 consumer implementation."""
 
     name = "sparetools-bpm-detector"
-    version = "0.1.0"
+    version = "0.1.1"
     package_type = "application"
 
     # This is an ESP32 consumer package in the SpareTools ecosystem

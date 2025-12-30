@@ -7,7 +7,7 @@ python_requires = "sparetools-base/2.0.3"
 
 class SpareToolsCiTemplatesConan(ConanFile):
     name = "sparetools-ci-templates"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "python-require"
     description = "Reusable GitHub Actions workflows and CI/CD templates for SpareTools ecosystem"
     license = "Apache-2.0"

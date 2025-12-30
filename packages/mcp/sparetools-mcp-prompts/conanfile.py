@@ -5,7 +5,7 @@ import os
 
 class SpareToolsMCPPromptsConan(ConanFile):
     name = "sparetools-mcp-prompts"
-    version = "3.13.0"
+    version = "3.13.1"
     license = "MIT"
     author = "sparesparrow"
     url = "https://github.com/sparesparrow/sparetools"

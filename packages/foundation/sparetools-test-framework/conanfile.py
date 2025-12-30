@@ -3,7 +3,7 @@ from conan.tools.files import copy
 
 class SparetoolsTestFrameworkConan(ConanFile):
     name = "sparetools-test-framework"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "python-require"
     description = "Core test framework components for SpareTools"
     license = "Apache-2.0"

@@ -12,7 +12,7 @@ class SpareToolsTinyMcpConan(ConanFile):
     """TinyMCP - Lightweight MCP client/server implementation."""
 
     name = "sparetools-tinymcp"
-    version = "2.0.0"
+    version = "2.0.1"
     package_type = "python-require"
     description = "Lightweight MCP (Model Context Protocol) client/server for resource-constrained environments"
     license = "Apache-2.0"

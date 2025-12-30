@@ -8,7 +8,7 @@ from conans import ConanFile, tools
 
 class Esp32BusPirateConan(ConanFile):
     name = "esp32-bus-pirate"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "ESP32 Bus Pirate - Multi-protocol hacker's tool firmware"
     url = "https://github.com/geo-tp/ESP32-Bus-Pirate"
     license = "MIT"

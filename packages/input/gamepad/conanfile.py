@@ -14,7 +14,7 @@ class SparetoolsGamepadCoreConan(ConanFile):
     python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     name = "sparetools-gamepad-core"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "Core gamepad mapping and device management library"
     homepage = "https://github.com/sparesparrow/sparetools"
     url = "https://github.com/sparesparrow/sparetools"

@@ -5,7 +5,7 @@ import os
 
 class SparetoolsMcpServersConan(ConanFile):
     name = "sparetools-mcp-servers"
-    version = "1.0.0"
+    version = "1.0.1"
     description = "MCP (Model Context Protocol) servers for development workflows"
     license = "Apache-2.0"
     author = "SpareSparrow"

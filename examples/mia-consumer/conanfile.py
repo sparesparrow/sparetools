@@ -14,7 +14,7 @@ class MIAConsumerConan(ConanFile):
     """
     
     name = "mia-consumer-example"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "application"
     
     settings = "os", "arch", "compiler", "build_type"

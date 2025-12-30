@@ -11,7 +11,7 @@ class SpareToolsOpenSSLConan(ConanFile):
     """Production-grade OpenSSL with multiple build methods for SpareTools ecosystem."""
 
     name = "sparetools-openssl"
-    version = "3.3.2"
+    version = "3.3.3"
     package_type = "library"
     description = "OpenSSL with multiple build methods (Perl Configure, CMake, Autotools)"
     license = "Apache-2.0"

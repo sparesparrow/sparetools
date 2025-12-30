@@ -9,7 +9,7 @@ class SparetoolsSchemaTestsConan(ConanFile):
     """SpareTools Schema Tests - Automated FlatBuffers schema compatibility testing."""
 
     name = "sparetools-schema-tests"
-    version = "1.0.0"
+    version = "1.0.1"
     package_type = "application"
 
     # SpareTools foundation package with security mixins

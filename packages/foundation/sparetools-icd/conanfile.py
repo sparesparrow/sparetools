@@ -3,7 +3,7 @@ from conan.tools.files import copy
 
 class SparetoolsIcdConan(ConanFile):
     name = "sparetools-icd"
-    version = "2.0.0"
+    version = "2.0.1"
     package_type = "python-require"
     description = "Interface Control Document schemas and generators for SpareTools ecosystem"
     license = "Apache-2.0"
