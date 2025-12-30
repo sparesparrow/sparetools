@@ -6,7 +6,7 @@ on:
       conan_packages:
         description: 'Conan packages to install (comma-separated)'
         required: false
-        default: 'sparesparrow-protocols/1.0.0,sparetools-embedded/1.0.0'
+        default: 'sparetools-protocols/1.0.0,sparetools-embedded/1.0.0'
         type: string
       android_api_level:
         description: 'Android API level'
@@ -89,6 +89,46 @@ jobs:
         echo "Installing packages: $PACKAGES"
         conan install $PACKAGES --build=missing --generator=CMakeDeps
 
+    - name: Generate FlatBuffers code for Android
+      run: |
+        echo "Generating FlatBuffers code for Android..."
+        # Activate Conan environment to get flatc in PATH
+        source conanbuild.sh || true
+
+        # Check if flatc is available
+        if command -v flatc &> /dev/null; then
+            echo "flatc found, generating code..."
+
+            # Find and generate code from protocol schemas
+            if conan info sparetools-protocols/1.0.0 &> /dev/null; then
+                # Get schema directory from installed package
+                SCHEMA_DIR=$(find ~/.conan2 -name "sparetools-protocols" -type d | head -1)
+                if [ -d "$SCHEMA_DIR/schemas" ]; then
+                    echo "Found schemas in $SCHEMA_DIR/schemas"
+
+                    # Create generated code directory for Android
+                    mkdir -p app/src/main/cpp/generated
+
+                    # Generate code for relevant schemas (MCP and IoT for Android apps)
+                    find "$SCHEMA_DIR/schemas/mcp" "$SCHEMA_DIR/schemas/iot" "$SCHEMA_DIR/schemas/medical" -name "*.fbs" | while read schema; do
+                        echo "Generating C++ code for $(basename "$schema")"
+                        flatc --cpp --scoped-enums --gen-mutable -o app/src/main/cpp/generated "$schema"
+                    done
+
+                    # Generate Java code for Android
+                    mkdir -p app/src/main/java
+                    find "$SCHEMA_DIR/schemas/mcp" "$SCHEMA_DIR/schemas/iot" -name "*.fbs" | while read schema; do
+                        echo "Generating Java code for $(basename "$schema")"
+                        flatc --java -o app/src/main/java "$schema"
+                    done
+                fi
+            else
+                echo "sparetools-protocols not available, skipping FlatBuffers code generation"
+            fi
+        else
+            echo "flatc not found, skipping FlatBuffers code generation"
+        fi
+
     - name: Make gradlew executable
       run: chmod +x gradlew
 
@@ -116,6 +156,7 @@ jobs:
         path: |
           app/build/reports/tests/testDebugUnitTest/
           app/build/test-results/testDebugUnitTest/
+
 
 
 

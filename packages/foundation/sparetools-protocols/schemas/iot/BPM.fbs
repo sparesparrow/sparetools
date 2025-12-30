@@ -1,0 +1,586 @@
+/*
+ * BPM (Beat Processing Module) Interface Control Document
+ *
+ * This schema defines the message protocol for the ESP32 BPM detector,
+ * following aerospace/defense system patterns for robust communication.
+ *
+ * Protocol Design Principles:
+ * - Separate Request/Response root types for type safety
+ * - Consistent Header structure across all messages
+ * - Standardized StatusEnum for error handling
+ * - Hierarchical namespace organization
+ * - SOLID principles: Single Responsibility per message type
+ *
+ * Transport Layers:
+ * - HTTP REST API (JSON) - backward compatibility
+ * - WebSocket (binary) - real-time streaming
+ * - UDP (binary) - multicast for multiple clients
+ * - FlatBuffers - efficient serialization
+ *
+ * Typical sequence:
+ * Client ----------Request------------->    ESP32
+ * Client    <------Response---------------- ESP32
+ * ESP32     ----------BPMUpdate-------->   Client (streaming)
+ * ESP32     ----------StatusUpdate------>   Client (periodic)
+ */
+
+include "common.fbs";
+
+namespace sparesparrow.bpm;
+
+// ==========================================
+// Common Types and Enumerations
+// ==========================================
+
+// Detection status enumeration
+enum DetectionStatus : byte {
+    INITIALIZING = 0,
+    DETECTING = 1,
+    LOW_SIGNAL = 2,
+    NO_SIGNAL = 3,
+    ERROR = 4,
+    CALIBRATING = 5
+}
+
+// Display type enumeration
+enum DisplayType : byte {
+    NONE = 0,
+    OLED_SSD1306 = 1,
+    TM1637_7SEGMENT = 2,
+    BOTH = 3
+}
+
+// Error code enumeration (following ngaims-icd-dev error code ranges)
+enum ErrorCode : uint16 {
+    // Unknown error
+    UNKNOWN_ERROR = 0,
+
+    // Audio system errors (100-199)
+    AUDIO_INIT_FAILED = 100,
+    AUDIO_BUFFER_OVERFLOW = 101,
+    AUDIO_BUFFER_UNDERFLOW = 102,
+    MICROPHONE_NOT_FOUND = 103,
+
+    // BPM detection errors (200-299)
+    BPM_DETECTION_FAILED = 200,
+    LOW_SIGNAL_QUALITY = 201,
+    BPM_OUT_OF_RANGE = 202,
+
+    // Network errors (300-399)
+    WIFI_CONNECTION_FAILED = 300,
+    WEBSERVER_INIT_FAILED = 301,
+    WEBSOCKET_ERROR = 302,
+
+    // Display errors (400-499)
+    DISPLAY_INIT_FAILED = 400,
+    DISPLAY_COMM_ERROR = 401,
+
+    // System errors (500-599)
+    MEMORY_ALLOCATION_FAILED = 500,
+    WATCHDOG_RESET = 501,
+    POWER_SUPPLY_ERROR = 502,
+
+    // Configuration errors (600-699)
+    INVALID_CONFIG = 600,
+    CONFIG_SAVE_FAILED = 601
+}
+
+// Error severity levels
+enum ErrorSeverity : byte {
+    INFO = 0,
+    WARNING = 1,
+    ERROR = 2,
+    CRITICAL = 3
+}
+
+// Request type enumeration
+enum RequestType : byte {
+    GET_STATUS = 0,
+    GET_CONFIG = 1,
+    SET_CONFIG = 2,
+    RESET_DEVICE = 3,
+    CALIBRATE_AUDIO = 4,
+    START_STREAMING = 5,
+    STOP_STREAMING = 6,
+    GET_DIAGNOSTICS = 7
+}
+
+// Response status enumeration (standardized across all responses)
+enum StatusEnum : int {
+    Success = 0,
+    InvalidRequest = 1,
+    MalformedMessage = 2,
+    InvalidConfig = 3,
+    DeviceBusy = 4,
+    NotSupported = 5
+}
+
+// Stream type enumeration
+enum StreamType : byte {
+    WEBSOCKET = 0,
+    UDP_MULTICAST = 1,
+    TCP_UNICAST = 2
+}
+
+// ==========================================
+// Common Header Structure
+// ==========================================
+
+// Standard header for all messages (following ngaims-icd-dev pattern)
+table Header {
+    version:int = 1;
+}
+
+// ==========================================
+// Requests
+// ==========================================
+
+// Get status request
+table GetStatusRequest {
+}
+
+// Get configuration request
+table GetConfigRequest {
+}
+
+// Set configuration request
+table SetConfigRequest {
+    config:ConfigUpdate;
+}
+
+// Reset device request
+table ResetDeviceRequest {
+}
+
+// Calibrate audio request
+table CalibrateAudioRequest {
+}
+
+// Start streaming request
+table StartStreamingRequest {
+    stream_type:StreamType;
+    client_id:string;
+    destination:string;
+}
+
+// Stop streaming request
+table StopStreamingRequest {
+    client_id:string;
+}
+
+// Get diagnostics request
+table GetDiagnosticsRequest {
+}
+
+// Union of all request payloads
+union RequestPayload {
+    GetStatusRequest,
+    GetConfigRequest,
+    SetConfigRequest,
+    ResetDeviceRequest,
+    CalibrateAudioRequest,
+    StartStreamingRequest,
+    StopStreamingRequest,
+    GetDiagnosticsRequest
+}
+
+// Main request structure (root type)
+table Request {
+    header:Header;
+    request_type:RequestType;
+    data:RequestPayload;
+}
+
+root_type Request;
+
+// ==========================================
+// Responses
+// ==========================================
+
+// Status response
+table GetStatusResponse {
+    status:StatusUpdate;
+}
+
+// Configuration response
+table GetConfigResponse {
+    config:ConfigUpdate;
+}
+
+// Set configuration response
+table SetConfigResponse {
+    applied:bool;
+    error_message:string;
+}
+
+// Reset device response
+table ResetDeviceResponse {
+    reset_initiated:bool;
+}
+
+// Calibrate audio response
+table CalibrateAudioResponse {
+    calibration_complete:bool;
+    calibration_data:AudioCalibrationData;
+}
+
+// Start streaming response
+table StartStreamingResponse {
+    stream_active:bool;
+    stream_id:string;
+}
+
+// Stop streaming response
+table StopStreamingResponse {
+    stream_stopped:bool;
+}
+
+// Diagnostics response
+table GetDiagnosticsResponse {
+    diagnostics:DiagnosticsData;
+}
+
+// Union of all response payloads
+union ResponsePayload {
+    GetStatusResponse,
+    GetConfigResponse,
+    SetConfigResponse,
+    ResetDeviceResponse,
+    CalibrateAudioResponse,
+    StartStreamingResponse,
+    StopStreamingResponse,
+    GetDiagnosticsResponse
+}
+
+// Standard status structure (following ngaims-icd-dev pattern)
+table Status {
+    status:StatusEnum;
+    description:string;
+}
+
+// Main response structure (root type)
+table Response {
+    header:Header;
+    status:Status;
+    data:ResponsePayload;
+}
+
+root_type Response;
+
+// ==========================================
+// Unsolicited Updates (Server -> Client)
+// ==========================================
+
+// BPM update message (unsolicited, streaming)
+table BPMUpdate {
+    // Detected beats per minute (0-300 range)
+    bpm:float;
+
+    // Confidence level of detection (0.0-1.0)
+    confidence:float;
+
+    // Normalized audio signal strength (0.0-1.0)
+    signal_level:float;
+
+    // Detection status
+    status:DetectionStatus;
+
+    // Additional analysis data
+    analysis:BPMAnalysis;
+
+    // Quality metrics
+    quality:BPMQuality;
+
+    // Timestamp (milliseconds since device boot)
+    timestamp:uint64;
+}
+
+// Status update message (unsolicited, periodic)
+table StatusUpdate {
+    // Device uptime in seconds
+    uptime_seconds:uint64;
+
+    // Free heap memory in bytes
+    free_heap_bytes:uint32;
+
+    // Minimum free heap since boot
+    min_free_heap_bytes:uint32;
+
+    // CPU usage percentage (0-100)
+    cpu_usage_percent:uint8;
+
+    // WiFi signal strength in dBm
+    wifi_rssi:int8;
+
+    // Audio sampling status
+    audio_status:AudioStatus;
+
+    // Temperature in Celsius (if available)
+    temperature_celsius:float;
+
+    // Battery level percentage (0-100, if battery-powered)
+    battery_level_percent:uint8;
+}
+
+// Error report message (unsolicited)
+table ErrorReport {
+    // Error code
+    error_code:ErrorCode;
+
+    // Human-readable error message
+    message:string;
+
+    // Error severity
+    severity:ErrorSeverity;
+
+    // Additional error context data
+    context:string;
+
+    // Timestamp when error occurred
+    error_timestamp:uint64;
+
+    // Recovery action taken (if any)
+    recovery_action:string;
+}
+
+// ==========================================
+// Data Structures
+// ==========================================
+
+// BPM analysis metadata
+table BPMAnalysis {
+    // BPM stability over time (0.0-1.0)
+    stability:float;
+
+    // Beat regularity score (0.0-1.0)
+    regularity:float;
+
+    // Dominant frequency in Hz
+    dominant_frequency:float;
+
+    // Spectral centroid (brightness of sound)
+    spectral_centroid:float;
+
+    // Beat position within measure (0.0-1.0)
+    beat_position:float;
+
+    // Tempo consistency score (0.0-1.0)
+    tempo_consistency:float;
+}
+
+// BPM detection quality metrics
+table BPMQuality {
+    // Signal-to-noise ratio in dB
+    snr_db:float;
+
+    // Number of consecutive valid detections
+    consecutive_detections:uint16;
+
+    // Detection reliability score (0.0-1.0)
+    reliability_score:float;
+
+    // False positive rate estimation
+    false_positive_rate:float;
+
+    // Algorithm confidence score
+    algorithm_confidence:float;
+}
+
+// Audio system status
+table AudioStatus {
+    // Audio input active
+    input_active:bool;
+
+    // Current sample rate in Hz
+    sample_rate:uint32;
+
+    // Audio buffer utilization (0.0-1.0)
+    buffer_utilization:float;
+
+    // Number of audio dropouts since boot
+    audio_dropouts:uint32;
+
+    // Audio latency in milliseconds
+    latency_ms:uint16;
+
+    // Microphone gain level (0.0-1.0)
+    microphone_gain:float;
+}
+
+// Audio calibration data
+table AudioCalibrationData {
+    // Calibrated gain level
+    calibrated_gain:float;
+
+    // Baseline noise level
+    noise_floor:float;
+
+    // Optimal input range
+    optimal_range_min:float;
+    optimal_range_max:float;
+}
+
+// Device configuration parameters
+table ConfigUpdate {
+    // BPM detection parameters
+    bpm_config:BPMConfig;
+
+    // Audio processing parameters
+    audio_config:AudioConfig;
+
+    // Network parameters
+    network_config:NetworkConfig;
+
+    // Display parameters
+    display_config:DisplayConfig;
+}
+
+// BPM detection configuration
+table BPMConfig {
+    // Minimum detectable BPM
+    min_bpm:uint8 = 60;
+
+    // Maximum detectable BPM
+    max_bpm:uint8 = 200;
+
+    // Detection threshold sensitivity (0.0-1.0)
+    detection_threshold:float = 0.3;
+
+    // Minimum confidence for valid detection
+    min_confidence:float = 0.6;
+
+    // Analysis window size in milliseconds
+    analysis_window_ms:uint16 = 2000;
+
+    // Beat tracking history length
+    history_length:uint16 = 8;
+}
+
+// Audio processing configuration
+table AudioConfig {
+    // ADC pin for microphone input
+    microphone_pin:uint8 = 32;
+
+    // Audio sample rate in Hz
+    sample_rate:uint16 = 25000;
+
+    // FFT size (must be power of 2)
+    fft_size:uint16 = 1024;
+
+    // Audio buffer size in samples
+    buffer_size:uint16 = 2048;
+
+    // High-pass filter cutoff in Hz
+    high_pass_cutoff:uint16 = 20;
+
+    // Low-pass filter cutoff in Hz
+    low_pass_cutoff:uint16 = 8000;
+
+    // Automatic gain control enabled
+    agc_enabled:bool = true;
+}
+
+// Network configuration
+table NetworkConfig {
+    // WiFi SSID (empty for no change)
+    wifi_ssid:string;
+
+    // WiFi password (empty for no change)
+    wifi_password:string;
+
+    // Device hostname
+    hostname:string;
+
+    // Web server port
+    web_port:uint16 = 80;
+
+    // WebSocket port (0 to disable)
+    websocket_port:uint16 = 81;
+
+    // Multicast group for UDP streaming
+    multicast_group:string;
+
+    // Multicast port
+    multicast_port:uint16;
+}
+
+// Display configuration
+table DisplayConfig {
+    // Display type
+    display_type:DisplayType;
+
+    // OLED I2C address (for SSD1306)
+    oled_address:uint8 = 60;
+
+    // OLED SDA pin
+    oled_sda_pin:uint8 = 21;
+
+    // OLED SCL pin
+    oled_scl_pin:uint8 = 22;
+
+    // 7-segment display CLK pin
+    tm1637_clk_pin:uint8 = 22;
+
+    // 7-segment display DIO pin
+    tm1637_dio_pin:uint8 = 23;
+
+    // Display brightness (0-255)
+    brightness:uint8 = 128;
+
+    // Display update interval in milliseconds
+    update_interval_ms:uint16 = 100;
+
+    // Auto-brightness based on ambient light
+    auto_brightness:bool = false;
+}
+
+// Diagnostic information
+table DiagnosticsData {
+    // System information
+    system_info:SystemInfo;
+
+    // Audio diagnostics
+    audio_diagnostics:AudioDiagnostics;
+
+    // Network diagnostics
+    network_diagnostics:NetworkDiagnostics;
+
+    // Performance metrics
+    performance_metrics:PerformanceMetrics;
+}
+
+// System information
+table SystemInfo {
+    firmware_version:string;
+    hardware_version:string;
+    build_date:string;
+    uptime_seconds:uint64;
+    reset_reason:string;
+}
+
+// Audio diagnostics
+table AudioDiagnostics {
+    samples_processed:uint64;
+    bpm_detections:uint32;
+    average_confidence:float;
+    signal_quality_score:float;
+    audio_dropouts:uint32;
+}
+
+// Network diagnostics
+table NetworkDiagnostics {
+    bytes_sent:uint64;
+    bytes_received:uint64;
+    connections_accepted:uint32;
+    websocket_clients:uint8;
+    multicast_clients:uint8;
+}
+
+// Performance metrics
+table PerformanceMetrics {
+    cpu_usage_percent:uint8;
+    memory_usage_percent:uint8;
+    audio_latency_ms:uint16;
+    network_latency_ms:uint16;
+    detection_latency_ms:uint16;
+}

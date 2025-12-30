@@ -1,0 +1,81 @@
+---
+template_name: "device-manifest"
+description: "Device detection output format and manifest generation"
+category: "embedded"
+variables:
+  project_name: "my-project"
+  devices: []
+---
+# Device Manifest: {{ project_name }}
+
+## Detected Devices
+
+```json
+{
+  "project": "{{ project_name }}",
+  "timestamp": "{{ timestamp | default(now) }}",
+  "devices": [
+{% for device in devices %}
+    {
+      "port": "{{ device.port }}",
+      "name": "{{ device.name }}",
+      "type": "{{ device.type }}",
+      "variant": "{{ device.variant }}",
+      "vid": "{{ device.vid }}",
+      "pid": "{{ device.pid }}",
+      "serial": "{{ device.serial | default('') }}",
+      "capabilities": {{ device.capabilities | default([]) | tojson }},
+      "baud_rates": {{ device.baud_rates | default([115200]) | tojson }},
+      "has_jtag": {{ device.has_jtag | default(false) | lower }}
+    }{% if not loop.last %},{% endif %}
+{% endfor %}
+  ]
+}
+```
+
+## Device Summary
+
+| Port | Device | Type | Serial |
+|------|--------|------|--------|
+{% for device in devices %}
+| {{ device.port }} | {{ device.name }} | {{ device.type }}/{{ device.variant }} | {{ device.serial | default('N/A') }} |
+{% endfor %}
+
+## Configuration Mapping
+
+```yaml
+# Device assignments for {{ project_name }}
+devices:
+{% for device in devices %}
+  - id: {{ device.name | snakecase }}
+    port: {{ device.port }}
+    profile: {{ device.type }}{% if device.variant %}_{{ device.variant }}{% endif %}
+    baud_rate: {{ device.baud_rates[0] | default(115200) }}
+{% if device.has_jtag %}
+    jtag_enabled: true
+{% endif %}
+{% endfor %}
+```
+
+## Deployment Script
+
+```bash
+#!/bin/bash
+# Auto-generated deployment script for {{ project_name }}
+
+PROJECT="{{ project_name }}"
+{% for device in devices %}
+
+# Deploy to {{ device.name }}
+echo "Deploying to {{ device.name }} at {{ device.port }}..."
+{% if device.type == "esp32" %}
+esptool.py --port {{ device.port }} --baud {{ device.baud_rates[0] | default(921600) }} \
+    write_flash 0x0 build/{{ device.type }}/firmware.bin
+{% elif device.type == "arduino" %}
+avrdude -p atmega328p -c arduino -P {{ device.port }} -b {{ device.baud_rates[0] | default(115200) }} \
+    -U flash:w:build/arduino/firmware.hex:i
+{% endif %}
+{% endfor %}
+
+echo "Deployment complete!"
+```

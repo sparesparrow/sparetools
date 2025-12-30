@@ -1,0 +1,98 @@
+---
+template_name: "mcp-tool"
+description: "MCP tool code generation template"
+category: "mcp"
+variables:
+  tool_name: "my_tool"
+  description: "A helpful tool"
+  return_type: "str"
+  async_handler: true
+  params: []
+---
+# MCP Tool: {{ tool_name }}
+
+## Tool Definition
+
+```python
+@self.server.tool()
+{% if async_handler %}async {% endif %}def {{ tool_name }}(
+{% for param in params %}
+    {{ param.name }}: {{ param.type }}{% if param.default %} = {{ param.default }}{% endif %},
+{% endfor %}
+) -> {{ return_type }}:
+    """{{ description }}
+    
+    Args:
+{% for param in params %}
+        {{ param.name }}: {{ param.description }}
+{% endfor %}
+    
+    Returns:
+        {{ return_description | default("Result of the operation") }}
+    """
+    try:
+        # Implementation
+{% if implementation %}
+        {{ implementation | indent(8) }}
+{% else %}
+        result = {
+            "status": "success",
+            "message": "{{ tool_name }} executed"
+        }
+        return json.dumps(result)
+{% endif %}
+    except Exception as e:
+        return json.dumps({
+            "status": "error",
+            "error": str(e)
+        })
+```
+
+## Registration
+
+```python
+class MyServer(BaseMCPServer):
+    def __init__(self):
+        super().__init__("my-server")
+        self.server = FastMCP(self.server_name)
+        self.setup_tools()
+    
+    def setup_tools(self):
+        # Tool is registered with @self.server.tool() decorator
+        pass
+```
+
+## Usage Example
+
+```python
+# From MCP client
+result = await client.call_tool("{{ tool_name }}", {
+{% for param in params %}
+    "{{ param.name }}": {{ param.example | default("...") }},
+{% endfor %}
+})
+print(result)
+```
+
+## Testing
+
+```python
+import pytest
+import json
+
+@pytest.mark.asyncio
+async def test_{{ tool_name | snakecase }}():
+    # Initialize server
+    server = MyServer()
+    
+    # Call tool
+    result = await {{ tool_name }}(
+{% for param in params %}
+        {{ param.name }}={{ param.test_value | default("...") }},
+{% endfor %}
+    )
+    
+    # Verify result
+    data = json.loads(result)
+    assert data["status"] == "success"
+```

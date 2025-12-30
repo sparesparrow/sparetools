@@ -35,8 +35,8 @@ jobs:
           scan-ref: '.'
           format: 'json'
           output: 'trivy-results.json'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
-          exit-code: '0'  # Don't fail yet, we'll check manually
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'  # Fail on CRITICAL/HIGH vulnerabilities
           
       - name: Run Trivy filesystem scan (SARIF for GitHub Security)
         uses: aquasecurity/trivy-action@master
@@ -45,8 +45,8 @@ jobs:
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
-          exit-code: '0'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'  # Keep SARIF scan non-blocking for security tab
           
       - name: Upload Trivy results to GitHub Security
         uses: github/codeql-action/upload-sarif@v3

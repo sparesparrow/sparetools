@@ -1,0 +1,17 @@
+[settings]
+os=Linux
+arch=xtensa
+compiler=gcc
+compiler.version=8
+compiler.libcxx=libstdc++11
+build_type=Release
+
+[tool_requires]
+sparetools-cpython/3.12.7@sparesparrow-conan/sparetools
+sparetools-flatbuffers/24.3.25@sparesparrow-conan/sparetools
+cmake/[>=3.25]
+ninja/[>=1.11]
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja
+tools.cmake.cmaketoolchain:extra_variables={"CMAKE_SYSTEM_NAME": "Generic", "CMAKE_SYSTEM_PROCESSOR": "xtensa"}

@@ -55,3 +55,4 @@ class Esp32BusPirateTestConan(ConanFile):
         self.output.success("ESP32-Bus-Pirate package validation completed successfully!")
 
 
+

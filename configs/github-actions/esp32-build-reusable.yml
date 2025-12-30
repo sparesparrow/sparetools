@@ -6,7 +6,7 @@ on:
       conan_packages:
         description: 'Conan packages to install (comma-separated)'
         required: false
-        default: 'sparesparrow-protocols/1.0.0,sparetools-embedded/1.0.0'
+        default: 'sparetools-protocols/1.0.0,sparetools-embedded/1.0.0'
         type: string
       board_type:
         description: 'ESP32 board type'
@@ -82,6 +82,39 @@ jobs:
         echo "Installing packages: $PACKAGES"
         conan install $PACKAGES --build=missing --generator=CMakeDeps
 
+    - name: Generate FlatBuffers code
+      run: |
+        echo "Generating FlatBuffers code for ESP32..."
+        # Activate Conan environment to get flatc in PATH
+        source conanbuild.sh || true
+
+        # Check if flatc is available
+        if command -v flatc &> /dev/null; then
+            echo "flatc found, generating code..."
+
+            # Find and generate code from protocol schemas
+            if conan info sparetools-protocols/1.0.0 &> /dev/null; then
+                # Get schema directory from installed package
+                SCHEMA_DIR=$(find ~/.conan2 -name "sparetools-protocols" -type d | head -1)
+                if [ -d "$SCHEMA_DIR/schemas" ]; then
+                    echo "Found schemas in $SCHEMA_DIR/schemas"
+
+                    # Create generated code directory
+                    mkdir -p src/generated
+
+                    # Generate code for relevant schemas (IoT and embedded for ESP32)
+                    find "$SCHEMA_DIR/schemas/iot" "$SCHEMA_DIR/schemas/embedded" -name "*.fbs" | while read schema; do
+                        echo "Generating C++ code for $(basename "$schema")"
+                        flatc --cpp --scoped-enums --gen-mutable -o src/generated "$schema"
+                    done
+                fi
+            else
+                echo "sparetools-protocols not available, skipping FlatBuffers code generation"
+            fi
+        else
+            echo "flatc not found, skipping FlatBuffers code generation"
+        fi
+
     - name: Build ESP32 firmware
       run: |
         platformio run --environment ${{ inputs.environment }}
@@ -108,6 +141,7 @@ jobs:
         path: |
           .pio/test_results/
           test-results.xml
+
 
 
 

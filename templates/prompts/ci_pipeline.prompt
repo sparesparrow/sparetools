@@ -1,0 +1,159 @@
+---
+template_name: "ci-pipeline"
+description: "CI/CD pipeline for embedded projects"
+category: "deployment"
+variables:
+  project_name: "my-embedded-project"
+  targets: ["esp32s3", "esp32", "arduino_uno"]
+  use_conan: true
+  run_tests: true
+---
+# CI/CD Pipeline: {{ project_name }}
+
+## GitHub Actions Workflow
+
+```yaml
+name: Build and Test
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  CONAN_USER_HOME: ${{ '{{' }} github.workspace {{ '}}' }}/.conan
+
+jobs:
+{% for target in targets %}
+  build-{{ target | replace('_', '-') }}:
+    name: Build {{ target }}
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      
+      - name: Install dependencies
+        run: |
+          pip install conan mcp pydantic pyserial
+{% if target.startswith('esp32') %}
+          pip install esptool
+{% endif %}
+{% if use_conan %}
+      
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ '{{' }} env.CONAN_USER_HOME {{ '}}' }}/p
+            ${{ '{{' }} env.CONAN_USER_HOME {{ '}}' }}/d
+          key: conan-{{ target }}-${{ '{{' }} hashFiles('conanfile.py') {{ '}}' }}
+      
+      - name: Configure Conan
+        run: |
+          conan profile detect --force
+          conan remote add cloudsmith https://dl.cloudsmith.io/public/sparesparrow/sparetools/conan/ || true
+      
+      - name: Install dependencies
+        run: |
+          conan install . --profile:host=conan-profiles/{{ target }}.profile --build=missing
+      
+      - name: Build
+        run: |
+          conan build . --profile:host=conan-profiles/{{ target }}.profile
+{% endif %}
+{% if run_tests %}
+      
+      - name: Run unit tests
+        run: |
+          pytest tests/unit/ -v --tb=short
+{% endif %}
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-{{ target }}
+          path: build/{{ target }}/*.bin
+
+{% endfor %}
+{% if run_tests %}
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [{% for target in targets %}build-{{ target | replace('_', '-') }}{% if not loop.last %}, {% endif %}{% endfor %}]
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Run integration tests
+        run: |
+          pip install pytest pytest-asyncio mcp
+          pytest tests/integration/ -v --tb=short
+{% endif %}
+```
+
+## Local Build Script
+
+```bash
+#!/bin/bash
+# Build script for {{ project_name }}
+set -euo pipefail
+
+TARGETS=({% for target in targets %}"{{ target }}" {% endfor %})
+
+echo "Building {{ project_name }}..."
+
+for target in "${TARGETS[@]}"; do
+    echo ""
+    echo "=== Building for $target ==="
+{% if use_conan %}
+    conan install . --profile:host=conan-profiles/$target.profile --build=missing
+    conan build . --profile:host=conan-profiles/$target.profile
+{% else %}
+    mkdir -p build/$target
+    cd build/$target
+    cmake ../.. -DTARGET=$target
+    make -j$(nproc)
+    cd ../..
+{% endif %}
+done
+
+echo ""
+echo "Build complete!"
+ls -la build/*/
+```
+
+## Deployment Workflow
+
+```yaml
+name: Deploy
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+      
+      - name: Upload to Cloudsmith
+        run: |
+          pip install cloudsmith-cli
+          for artifact in firmware-*/; do
+            cloudsmith push raw sparesparrow/{{ project_name }} "$artifact"/*.bin
+          done
+```

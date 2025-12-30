@@ -1,0 +1,89 @@
+---
+template_name: "conan-profile"
+description: "Conan profile generation for embedded and cross-compilation"
+category: "conan"
+variables:
+  profile_name: "esp32s3"
+  os_name: "baremetal"
+  arch: "xtensa"
+  compiler: "gcc"
+  compiler_version: "11"
+  build_type: "Release"
+  cppstd: "20"
+---
+# Conan Profile: {{ profile_name }}
+
+## Profile Configuration
+
+```ini
+[settings]
+os={{ os_name }}
+arch={{ arch }}
+compiler={{ compiler }}
+compiler.version={{ compiler_version }}
+build_type={{ build_type }}
+compiler.cppstd={{ cppstd }}
+{% if libcxx %}compiler.libcxx={{ libcxx }}{% endif %}
+
+[options]
+*:fPIC=True
+
+[buildenv]
+{% if idf_target %}IDF_TARGET={{ idf_target }}{% endif %}
+{% if idf_path %}IDF_PATH={{ idf_path }}{% endif %}
+
+[tool_requires]
+sparetools-cpython/3.12.7
+```
+
+## Usage
+
+### Save Profile
+```bash
+# Create profile directory
+mkdir -p conan-profiles
+
+# Save profile
+cat > conan-profiles/{{ profile_name }}.profile << 'EOF'
+[settings]
+os={{ os_name }}
+arch={{ arch }}
+compiler={{ compiler }}
+compiler.version={{ compiler_version }}
+build_type={{ build_type }}
+compiler.cppstd={{ cppstd }}
+
+[options]
+*:fPIC=True
+
+[buildenv]
+{% if idf_target %}IDF_TARGET={{ idf_target }}{% endif %}
+EOF
+```
+
+### Use Profile
+```bash
+# Install with profile
+conan install . --profile:host=conan-profiles/{{ profile_name }}.profile --build=missing
+
+# Build with profile
+conan build . --profile:host=conan-profiles/{{ profile_name }}.profile
+```
+
+## Platform-Specific Notes
+
+{% if arch == "xtensa" %}
+### ESP32 (Xtensa)
+- Requires ESP-IDF toolchain
+- Use `IDF_TARGET` environment variable
+- JTAG debugging available on ESP32-S3
+{% elif arch == "avr" %}
+### Arduino (AVR)
+- Requires avr-gcc toolchain
+- Use avrdude for flashing
+- Limited to C++11
+{% elif arch == "riscv32" %}
+### ESP32-C3/C6 (RISC-V)
+- Requires RISC-V toolchain from ESP-IDF
+- Native USB support on C3/C6
+{% endif %}

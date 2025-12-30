@@ -66,13 +66,14 @@ class SpareToolsBpmDetectorConan(ConanFile):
     def build_requirements(self):
         # ESP32 consumer foundation packages - use dynamic versions
         self.tool_requires(f"sparetools-cpython/{versions['cpython']}")
+        self.tool_requires(f"sparetools-flatbuffers/{versions['flatbuffers']}")
         self.tool_requires(f"sparetools-test-harness/{versions['test-harness']}")
         self.tool_requires(f"sparetools-shared-dev-tools/{versions['shared-dev-tools']}")
         # Note: bootstrap is used at environment setup time, not build time
 
     def requirements(self):
-        # BPM protocol schemas from SpareTools foundation
-        self.requires(f"sparetools-bpm-schemas/2.0.0")
+        # Consolidated protocol schemas from SpareTools foundation
+        self.requires(f"sparetools-protocols/1.0.0")
 
         # Testing framework for host-based C++ unit tests - use dynamic version
         self.requires(f"gtest/{versions['gtest']}")

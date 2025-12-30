@@ -239,3 +239,4 @@ exec node dist/cli.js "$@"
                 self.runenv_info.prepend_path("PATH", cpython_info.bin_paths[0])
         except Exception:
             pass
+

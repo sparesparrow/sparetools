@@ -1,0 +1,65 @@
+---
+template_name: "embedded-deployment"
+description: "Generic embedded deployment workflow for ESP32 and Arduino"
+category: "deployment"
+variables:
+  device_type: "esp32"
+  target_port: "/dev/ttyUSB0"
+  profile_name: "esp32s3"
+  build_type: "Release"
+  firmware_name: "firmware.bin"
+---
+# Embedded Deployment: {{ device_type }}
+
+## Target Configuration
+- Device: {{ device_type }}
+- Port: {{ target_port }}
+- Profile: {{ profile_name }}
+- Build Type: {{ build_type }}
+
+## Deployment Steps
+
+### 1. Device Detection
+```bash
+# Detect connected devices
+python -c "
+from sparetools.mcp_core.devices import DeviceDetector
+detector = DeviceDetector()
+devices = detector.detect_all()
+for d in devices:
+    print(f'{d.name} at {d.port}')
+"
+```
+
+### 2. Build with Conan Profile
+```bash
+# Install dependencies with profile
+conan install . --profile:host={{ profile_name }} --build=missing
+
+# Build firmware
+conan build . --profile:host={{ profile_name }}
+```
+
+### 3. Flash Firmware
+{% if device_type == "esp32" %}
+```bash
+# Flash ESP32 using esptool
+esptool.py --port {{ target_port }} write_flash 0x0 {{ firmware_name }}
+```
+{% elif device_type == "arduino" %}
+```bash
+# Flash Arduino using avrdude
+avrdude -p atmega328p -c arduino -P {{ target_port }} -U flash:w:{{ firmware_name }}:i
+```
+{% endif %}
+
+### 4. Verify Deployment
+```bash
+# Open serial monitor to verify
+miniterm {{ target_port }} 115200
+```
+
+## Notes
+- Ensure the device is in bootloader mode before flashing
+- Use appropriate baud rate for your device
+- For ESP32-S3, both CDC and JTAG ports may appear

@@ -1,0 +1,50 @@
+// Common FlatBuffers schema definitions
+// Shared types and utilities used across all protocols
+
+namespace sparetools.common;
+
+// Common status enumeration
+enum Status: byte {
+    OK = 0,
+    ERROR = 1,
+    PENDING = 2,
+    TIMEOUT = 3,
+    INVALID = 4
+}
+
+// Common response envelope
+table Response {
+    status: Status;
+    message: string;
+    timestamp: uint64;
+    request_id: uint64;
+}
+
+// Common error information
+table ErrorInfo {
+    code: int;
+    message: string;
+    details: string;
+    timestamp: uint64;
+}
+
+// Timestamp utility
+table Timestamp {
+    seconds: uint64;
+    nanoseconds: uint32;
+}
+
+// Version information
+table Version {
+    major: uint16;
+    minor: uint16;
+    patch: uint16;
+    build: string;
+}
+
+// Device identification
+table DeviceId {
+    type: string;        // e.g., "esp32", "android", "linux"
+    id: string;          // Unique device identifier
+    name: string;        // Human readable name
+}

@@ -1,0 +1,120 @@
+# Pre-commit hooks for SpareTools repository
+# Ensures code quality, consistency, and prevents common CI/CD issues
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        args: [--unsafe]  # Allow GitHub Actions specific syntax
+      - id: check-json
+      - id: check-merge-conflict
+        exclude: ^docs/.*\.md$  # Allow conflict markers in docs
+      - id: end-of-file-fixer
+        exclude: ^\.git/  # Don't modify git files
+      - id: trailing-whitespace
+        exclude: ^\.git/  # Don't modify git files
+      - id: check-case-conflict
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+
+  # YAML linting for GitHub Actions
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.6.26
+    hooks:
+      - id: actionlint
+        args: [--verbose]
+
+  # Python formatting and linting
+  - repo: https://github.com/psf/black
+    rev: 23.12.1
+    hooks:
+      - id: black
+        language_version: python3.12
+        exclude: ^\.git/
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.0.0
+    hooks:
+      - id: flake8
+        args: [--max-line-length=100, --extend-ignore=E203,W503]
+        exclude: ^\.git/|^docs/
+
+  # Local hooks for SpareTools-specific validation
+  - repo: local
+    hooks:
+      # Enhanced version management (OMS + SpareTools hybrid)
+      - id: version-management
+        name: Comprehensive version management validation
+        entry: python3 scripts/improved_version_management.py validate
+        language: system
+        pass_filenames: false
+        files: conanfile\.py$
+        description: Validates version consistency and semantic versioning
+
+      # Version increment enforcement (SpareTools approach)
+      - id: enforce-version-increment
+        name: Enforce version increments for changes
+        entry: python3 scripts/check_version_increment.py --all
+        language: system
+        pass_filenames: false
+        files: conanfile\.py$
+        description: Ensures versions are incremented when functionality changes
+
+      # Automatic version bumping suggestion (OMS-inspired)
+      - id: suggest-version-bump
+        name: Suggest appropriate version bump
+        entry: python3 scripts/improved_version_management.py analyze
+        language: system
+        pass_filenames: false
+        files: conanfile\.py$
+        description: Analyzes commits to suggest semantic version bumps
+
+      # Git-based versioning pattern validation
+      - id: validate-git-versioning
+        name: Validate git-based versioning pattern in conanfile.py
+        entry: python3 scripts/validate_git_versioning.py
+        language: system
+        pass_filenames: true
+        files: conanfile\.py$
+        description: Ensures conanfile.py uses git-based versioning pattern (CONAN_BUILD_VERSION)
+
+      # Conan structure validation
+      - id: validate-conan
+        name: Validate Conan package structure
+        entry: ./scripts/validate_conan_structure.sh
+        language: script
+        pass_filenames: false
+        files: conanfile\.py$
+        description: Checks for missing conanfile.py files and validates references
+
+      # YAML workflow validation
+      - id: validate-workflows
+        name: Validate GitHub Actions workflows
+        entry: ./scripts/validate_workflows.sh
+        language: script
+        pass_filenames: false
+        files: ^\.github/workflows/.*\.yml$
+        description: Comprehensive validation of workflow files
+
+      # Security scan for secrets
+      - id: check-secrets
+        name: Check for accidentally committed secrets
+        entry: ./scripts/check_secrets.sh
+        language: script
+        pass_filenames: false
+        description: Scans for potential secret leaks in code
+
+# Configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

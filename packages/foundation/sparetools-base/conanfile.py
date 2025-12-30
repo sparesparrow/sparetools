@@ -70,7 +70,9 @@ class SpareToolsSecurityMixin:
 
 class SpareToolsBaseConan(ConanFile, SpareToolsSecurityMixin):
     name = "sparetools-base"
-    version = "2.0.3"
+    # Use CONAN_BUILD_VERSION from environment (set by git-to-conan collector)
+    # Fallback to static version for local development
+    version = os.environ.get('CONAN_BUILD_VERSION', '2.0.3')
     package_type = "python-require"
     description = "Foundation utilities for SpareTools ecosystem"
     license = "Apache-2.0"

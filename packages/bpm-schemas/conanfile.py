@@ -11,8 +11,9 @@ class SpareToolsBpmSchemasConan(ConanFile):
     version = "2.0.0"
     package_type = "header-library"
 
-    # SpareTools foundation package
+    # SpareTools foundation package with security mixins
     python_requires = "sparetools-base/2.0.3"
+    python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     # Optional metadata
     license = "MIT"
@@ -34,8 +35,12 @@ class SpareToolsBpmSchemasConan(ConanFile):
         self.requires("flatbuffers/24.3.25")
 
     def build_requirements(self):
-        # FlatBuffers compiler for code generation - match SpareTools version
-        self.tool_requires("flatbuffers/24.3.25")
+        # SpareTools FlatBuffers compiler tool
+        self.tool_requires("sparetools-flatbuffers/24.3.25")
+        # Build tools
+        self.tool_requires("cmake/[>=3.25]")
+        # Bundled Python for any build scripts
+        self.tool_requires("sparetools-cpython/3.12.7")
     
     def generate(self):
         tc = CMakeToolchain(self)

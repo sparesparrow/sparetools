@@ -1,0 +1,105 @@
+// OBD-II Interface Control Document
+// FlatBuffers schema for OBD-II diagnostic operations
+
+namespace sparetools.icd.obd;
+
+// OBD-II Service Modes (as per SAE J1979)
+enum OBDService: byte {
+    CURRENT_DATA = 0x01,           // Show current data
+    FREEZE_FRAME = 0x02,           // Show freeze frame data
+    STORED_DIAGNOSTIC = 0x03,      // Show stored Diagnostic Trouble Codes
+    CLEAR_DIAGNOSTIC = 0x04,       // Clear Diagnostic Trouble Codes
+    TEST_RESULTS_OXYGEN = 0x05,    // Test results, oxygen sensor monitoring
+    TEST_RESULTS_SYSTEM = 0x06,    // Test results, other component/system monitoring
+    PENDING_DIAGNOSTIC = 0x07,     // Show pending Diagnostic Trouble Codes
+    CONTROL_OPERATION = 0x08,      // Control operation of on-board component/system
+    VEHICLE_INFO = 0x09,           // Request vehicle information
+    PERMANENT_DIAGNOSTIC = 0x0A    // Permanent Diagnostic Trouble Codes
+}
+
+// OBD-II Query - Request diagnostic data
+table OBDQuery {
+    service: OBDService = CURRENT_DATA;     // Service mode
+    pid: uint16;            // Parameter ID (0-65535)
+    timeout_ms: uint32;     // Timeout in milliseconds
+    timestamp: uint64;      // Query timestamp
+}
+
+table OBDResponse {
+    service: OBDService = CURRENT_DATA;     // Service mode
+    pid: uint16;            // Parameter ID
+    success: bool;          // Query success
+    data: [ubyte];          // Raw response data bytes
+    decoded_value: float;   // Decoded numeric value (if applicable)
+    unit: string;           // Unit (e.g., "km/h", "celsius", "rpm")
+    error_code: string;     // Error code if failed
+    timestamp: uint64;      // Response timestamp
+}
+
+// Diagnostic Trouble Code
+table DTCode {
+    code: string;           // DTC string (e.g., "P0123")
+    status: ubyte;          // Status byte
+    description: string;    // Human readable description
+}
+
+// DTC Query/Response
+table DTCQuery {
+    service: OBDService = STORED_DIAGNOSTIC;     // Service mode (STORED_DIAGNOSTIC, PENDING_DIAGNOSTIC, etc.)
+    timestamp: uint64;      // Query timestamp
+}
+
+table DTCResponse {
+    service: OBDService = STORED_DIAGNOSTIC;     // Service mode
+    dtcs: [DTCode];         // List of diagnostic trouble codes
+    success: bool;          // Query success
+    error_message: string;  // Error message if failed
+    timestamp: uint64;      // Response timestamp
+}
+
+// Clear DTC Command
+table DTCClear {
+    timestamp: uint64;      // Command timestamp
+}
+
+table DTCClearResponse {
+    success: bool;          // Clear operation success
+    cleared_count: uint32;  // Number of DTCs cleared
+    error_message: string;  // Error message if failed
+    timestamp: uint64;      // Response timestamp
+}
+
+// Vehicle Information Query
+table VehicleInfoQuery {
+    info_type: uint8;       // Info type (VIN, CALID, CVN, etc.)
+    timestamp: uint64;      // Query timestamp
+}
+
+table VehicleInfoResponse {
+    info_type: uint8;       // Info type
+    info_data: string;      // Info data (VIN string, CALID, etc.)
+    success: bool;          // Query success
+    error_message: string;  // Error message if failed
+    timestamp: uint64;      // Response timestamp
+}
+
+// Union for all OBD messages
+union OBDMessage {
+    OBDQuery,
+    OBDResponse,
+    DTCQuery,
+    DTCResponse,
+    DTCClear,
+    DTCClearResponse,
+    VehicleInfoQuery,
+    VehicleInfoResponse
+}
+
+table OBDEnvelope {
+    message_type: OBDMessage;
+    message_id: uint64;     // Unique message ID
+    ecu_address: ubyte;     // ECU address (default 0x7DF for broadcast)
+}
+
+// Root table for OBD ICD
+root_type OBDEnvelope;

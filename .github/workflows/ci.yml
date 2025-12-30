@@ -16,6 +16,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+jobs:
+  # Change detection
+  detect-changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5  # Quick job, should complete fast
+
 permissions:
   contents: read
   security-events: write
@@ -68,6 +74,7 @@ jobs:
   # Validate Python files
   validate-python:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -115,7 +122,8 @@ jobs:
   build-test:
     needs: [detect-changes, validate-python]
     if: needs.detect-changes.outputs.skip-build == 'false'
-    
+    timeout-minutes: 40
+
     strategy:
       fail-fast: false
       matrix:
@@ -255,6 +263,7 @@ jobs:
     needs: [detect-changes, build-test]
     if: always()
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Check CI Results
         run: |

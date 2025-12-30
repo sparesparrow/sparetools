@@ -1,0 +1,303 @@
+name: Version Management & Validation
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/conanfile.py'
+      - 'VERSION'
+      - 'scripts/improved_version_management.py'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**/conanfile.py'
+      - 'VERSION'
+
+concurrency:
+  group: version-management-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version-validation:
+    name: Version Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate version consistency
+        run: |
+          echo "🔍 Validating version consistency..."
+          python3 scripts/improved_version_management.py validate
+
+      - name: Validate semantic versioning
+        run: |
+          echo "🔍 Validating semantic version format..."
+          python3 scripts/improved_version_management.py current | grep -E '^[0-9]+\.[0-9]+\.[0-9]+' || {
+            echo "::error::Invalid semantic version format"
+            exit 1
+          }
+
+      - name: Generate version report
+        run: |
+          echo "📊 Generating version management report..."
+          python3 scripts/improved_version_management.py report --json > version_report.json
+
+          # Display key metrics
+          CURRENT_VERSION=$(python3 -c "import json; print(json.load(open('version_report.json'))['current_version'])")
+          GIT_VERSION=$(python3 -c "import json; print(json.load(open('version_report.json'))['git_based_version'])")
+
+          echo "📋 Version Report" >> $GITHUB_STEP_SUMMARY
+          echo "Current Version: $CURRENT_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "Git Version: $GIT_VERSION" >> $GITHUB_STEP_SUMMARY
+
+          # Check consistency
+          CONSISTENT=$(python3 -c "import json; print(json.load(open('version_report.json'))['consistency_check']['valid'])")
+          if [ "$CONSISTENT" = "True" ]; then
+            echo "✅ Version consistency: Valid" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Version consistency: Issues found" >> $GITHUB_STEP_SUMMARY
+            python3 -c "
+            import json
+            data = json.load(open('version_report.json'))
+            for issue in data['consistency_check']['inconsistencies']:
+                print(f'  - {issue[\"file\"]}: {issue[\"actual\"]} → {issue[\"expected\"]}')
+            " >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload version report
+        uses: actions/upload-artifact@v4
+        with:
+          name: version-report
+          path: version_report.json
+          retention-days: 30
+
+  pr-version-gate:
+    name: PR Version Gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Analyze version bump requirements
+        run: |
+          echo "🤖 Analyzing version bump requirements for PR..."
+
+          # Get the target branch
+          TARGET_BRANCH="${{ github.base_ref }}"
+
+          # Analyze commits in this PR
+          python3 scripts/improved_version_management.py analyze --since="origin/$TARGET_BRANCH" --json > commit_analysis.json
+
+          # Extract analysis results
+          BUMP_TYPE=$(python3 -c "import json; print(json.load(open('commit_analysis.json'))['bump_type'])")
+          CONFIDENCE=$(python3 -c "import json; print(json.load(open('commit_analysis.json'))['confidence'])")
+          BREAKING=$(python3 -c "import json; print(json.load(open('commit_analysis.json')).get('breaking_changes', 0))")
+
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "confidence=$CONFIDENCE" >> $GITHUB_OUTPUT
+          echo "breaking_changes=$BREAKING" >> $GITHUB_OUTPUT
+
+          echo "📊 PR Analysis:" >> $GITHUB_STEP_SUMMARY
+          echo "- Target Branch: $TARGET_BRANCH" >> $GITHUB_STEP_SUMMARY
+          echo "- Suggested Bump: $BUMP_TYPE" >> $GITHUB_STEP_SUMMARY
+          echo "- Confidence: ${CONFIDENCE}" >> $GITHUB_STEP_SUMMARY
+          if [ "$BREAKING" -gt 0 ]; then
+            echo "- Breaking Changes: $BREAKING ⚠️" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Validate version increment
+        run: |
+          echo "🔍 Validating version increment..."
+
+          # Check if version was incremented
+          if ! python3 scripts/check_version_increment.py --all; then
+            echo "::error::Version increment validation failed!"
+            echo "::error::Please increment version in conanfile.py for your changes"
+            echo ""
+            echo "💡 Suggested bump type: ${{ steps.analysis.outputs.bump_type }}"
+            echo "   Run: python3 scripts/improved_version_management.py bump --type ${{ steps.analysis.outputs.bump_type }}"
+            exit 1
+          fi
+
+      - name: Check for version conflicts with target branch
+        run: |
+          echo "🔍 Checking for version conflicts..."
+
+          TARGET_VERSION=$(git show "origin/${{ github.base_ref }}:VERSION" 2>/dev/null || echo "")
+          CURRENT_VERSION=$(cat VERSION 2>/dev/null || echo "")
+
+          if [[ -n "$TARGET_VERSION" && -n "$CURRENT_VERSION" && "$CURRENT_VERSION" == "$TARGET_VERSION" ]]; then
+            echo "::error::Version conflict detected!"
+            echo "::error::Version $CURRENT_VERSION already exists in ${{ github.base_ref }} branch"
+            echo "::error::Please increment version to resolve conflict"
+            exit 1
+          fi
+
+          echo "✅ No version conflicts found"
+
+      - name: Provide version bump guidance
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const bumpType = '${{ steps.analysis.outputs.bump_type }}';
+            const confidence = parseFloat('${{ steps.analysis.outputs.confidence }}');
+            const breaking = parseInt('${{ steps.analysis.outputs.breaking_changes }}');
+
+            let body = `## 📦 Version Management Check
+
+            ### Analysis Results
+            - **Suggested Bump**: \`${bumpType}\`
+            - **Confidence**: ${(confidence * 100).toFixed(1)}%
+            ${breaking > 0 ? `- **Breaking Changes**: ${breaking} ⚠️` : ''}
+
+            ### Version Increment Status
+            ✅ Version has been properly incremented
+            ✅ No conflicts with target branch
+
+            ### Next Steps
+            Your PR is ready for review. The version increment follows semantic versioning guidelines.`;
+
+            if (confidence < 0.5) {
+              body += `
+
+            ### Note
+            Low confidence in automatic bump detection. Please verify the suggested bump type is appropriate for your changes.`;
+            }
+
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body
+            });
+
+  release-version-management:
+    name: Release Version Management
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Extract release version
+        run: |
+          # Extract version from commit message or tag
+          if [[ "${{ github.event.head_commit.message }}" =~ release:\ ([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+            RELEASE_VERSION="${BASH_REMATCH[1]}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            RELEASE_VERSION="${{ github.ref_name }}"
+            RELEASE_VERSION="${RELEASE_VERSION#v}"
+          else
+            echo "::error::Could not determine release version"
+            exit 1
+          fi
+
+          echo "release_version=$RELEASE_VERSION" >> $GITHUB_OUTPUT
+          echo "📋 Release version: $RELEASE_VERSION"
+
+      - name: Validate release version
+        run: |
+          RELEASE_VERSION="${{ steps.extract.outputs.release_version }}"
+
+          # Validate semantic version format
+          if ! echo "$RELEASE_VERSION" | grep -E '^([0-9]+\.){2}[0-9]+(-[a-zA-Z0-9.-]+)?$'; then
+            echo "::error::Invalid release version format: $RELEASE_VERSION"
+            exit 1
+          fi
+
+          # Update VERSION file
+          echo "$RELEASE_VERSION" > VERSION
+
+          # Update conanfile.py
+          python3 scripts/improved_version_management.py bump --type patch --dry-run | tail -1 | grep "$RELEASE_VERSION" || {
+            echo "::error::Version mismatch: conanfile.py version doesn't match release version"
+            exit 1
+          }
+
+          echo "✅ Release version validated: $RELEASE_VERSION"
+
+      - name: Create version tag
+        run: |
+          RELEASE_VERSION="${{ steps.extract.outputs.release_version }}"
+          TAG_NAME="v$RELEASE_VERSION"
+
+          # Check if tag already exists
+          if git tag -l | grep -q "^$TAG_NAME$"; then
+            echo "ℹ️  Tag $TAG_NAME already exists"
+          else
+            echo "🏷️ Creating version tag: $TAG_NAME"
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git tag "$TAG_NAME"
+            git push origin "$TAG_NAME"
+            echo "✅ Tag $TAG_NAME created and pushed"
+          fi
+
+      - name: Generate release notes
+        run: |
+          RELEASE_VERSION="${{ steps.extract.outputs.release_version }}"
+
+          echo "📝 Generating release notes for v$RELEASE_VERSION..."
+
+          # Get commits since last release
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [[ -n "$LAST_TAG" ]]; then
+            git log --pretty=format:"%s" "${LAST_TAG}..HEAD" > commits_since_last_release.txt
+          else
+            git log --pretty=format:"%s" -50 > commits_since_last_release.txt
+          fi
+
+          # Analyze commits for release notes
+          BREAKING=$(grep -i -c "breaking\|break\|major\|incompatible" commits_since_last_release.txt || echo "0")
+          FEATURES=$(grep -i -c "feat\|feature\|add\|new" commits_since_last_release.txt || echo "0")
+          FIXES=$(grep -i -c "fix\|bug\|patch" commits_since_last_release.txt || echo "0")
+
+          echo "## 🎉 Release v$RELEASE_VERSION" > release_notes.md
+          echo "" >> release_notes.md
+          echo "### 📊 Summary" >> release_notes.md
+          echo "- **Breaking Changes**: $BREAKING" >> release_notes.md
+          echo "- **New Features**: $FEATURES" >> release_notes.md
+          echo "- **Bug Fixes**: $FIXES" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🔄 Changes" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+          cat commits_since_last_release.txt >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: |
+            release_notes.md
+            commits_since_last_release.txt
+          retention-days: 30

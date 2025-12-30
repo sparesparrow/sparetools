@@ -1,0 +1,20 @@
+enum AudioAction: byte {
+    RECORD = 0,
+    PLAY = 1,
+    STREAM = 2,
+    ENUMERATE = 3
+}
+
+table AudioCommand {
+    action: AudioAction;     // RECORD, PLAY, STREAM
+    device_index: int;       // USB device index
+    duration_ms: int;        // For recording
+    filename: string;        // WAV file path
+    sample_rate: int;        // 16000, 44100, etc.
+}
+
+table AudioResponse {
+    success: bool;
+    message: string;
+    data_size: int;          // For captured audio
+}

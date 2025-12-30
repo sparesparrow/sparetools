@@ -1,0 +1,16 @@
+[settings]
+os=Macos
+arch=x86_64
+compiler=apple-clang
+compiler.version=14
+compiler.libcxx=libc++
+build_type=Release
+
+[tool_requires]
+sparetools-cpython/3.12.7@sparesparrow-conan/sparetools
+sparetools-flatbuffers/24.3.25@sparesparrow-conan/sparetools
+cmake/[>=3.25]
+ninja/[>=1.11]
+
+[conf]
+tools.cmake.cmaketoolchain:generator=Ninja

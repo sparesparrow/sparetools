@@ -1,0 +1,140 @@
+// RF Interface Control Document
+// FlatBuffers schema for NucleusESP32 RF capture/replay operations
+
+namespace sparetools.icd.rf;
+
+// RF Modulation Types
+enum RFModulation: byte {
+    ASK = 0,      // Amplitude Shift Keying
+    FSK = 1,      // Frequency Shift Keying
+    OOK = 2,      // On-Off Keying
+    GFSK = 3,     // Gaussian Frequency Shift Keying
+    MSK = 4,      // Minimum Shift Keying
+    RAW = 5       // Raw signal
+}
+
+// RF Capture Configuration
+table RFCaptureConfig {
+    frequency: uint32;      // Frequency in Hz (e.g., 433920000 for 433.92MHz)
+    modulation: RFModulation; // Modulation type
+    sample_rate: uint32;    // Sample rate in Hz
+    gain: int8;            // RX gain (-20 to 60 dB, 0 = auto)
+    bandwidth: uint32;     // Bandwidth in Hz
+    squelch: uint8;        // Squelch threshold (0-255)
+}
+
+// RF Capture Start Command
+table RFCaptureStart {
+    config: RFCaptureConfig; // Capture configuration
+    duration_ms: uint32;    // Capture duration in milliseconds (0 = continuous)
+    max_frames: uint32;     // Maximum frames to capture (0 = unlimited)
+    timestamp: uint64;      // Command timestamp
+}
+
+table RFCaptureStop {
+    timestamp: uint64;      // Command timestamp
+}
+
+// RF Frame Data
+table RFFrame {
+    timestamp: uint64;      // Frame capture timestamp
+    frequency: uint32;      // Frequency in Hz
+    modulation: RFModulation; // Modulation type
+    data: [ubyte];         // Raw frame data bytes
+    rssi: int8;            // Received Signal Strength Indicator (dBm)
+    snr: float;            // Signal-to-Noise Ratio
+    frame_id: uint64;      // Unique frame identifier
+}
+
+// RF Capture Status/Response
+table RFCaptureStatus {
+    active: bool;          // Capture currently active
+    frames_captured: uint32; // Number of frames captured
+    duration_ms: uint32;   // Current capture duration
+    config: RFCaptureConfig; // Current configuration
+    timestamp: uint64;     // Status timestamp
+}
+
+table RFCaptureResponse {
+    success: bool;         // Operation success
+    error_message: string; // Error message if failed
+    status: RFCaptureStatus; // Current capture status
+    timestamp: uint64;     // Response timestamp
+}
+
+// RF Replay Configuration
+table RFReplayConfig {
+    frequency: uint32;     // Frequency in Hz
+    modulation: RFModulation; // Modulation type
+    tx_power: int8;        // TX power in dBm (-20 to 20)
+    repeat_count: uint8;   // Number of times to repeat (1-255)
+    repeat_delay_ms: uint16; // Delay between repeats in milliseconds
+}
+
+// RF Replay Command
+table RFReplay {
+    frame: RFFrame;        // Frame to replay
+    config: RFReplayConfig; // Replay configuration
+    timestamp: uint64;     // Command timestamp
+}
+
+table RFReplayResponse {
+    success: bool;         // Replay operation success
+    frames_sent: uint32;   // Number of frames actually sent
+    error_message: string; // Error message if failed
+    timestamp: uint64;     // Response timestamp
+}
+
+// RF Spectrum Analysis
+table RFSpectrumQuery {
+    start_freq: uint32;    // Start frequency in Hz
+    end_freq: uint32;      // End frequency in Hz
+    step_hz: uint32;       // Frequency step in Hz
+    dwell_ms: uint16;      // Dwell time per frequency in milliseconds
+    timestamp: uint64;     // Query timestamp
+}
+
+table RFSpectrumData {
+    frequency: uint32;     // Frequency in Hz
+    power: float;          // Power level in dBm
+    timestamp: uint64;     // Measurement timestamp
+}
+
+table RFSpectrumResponse {
+    success: bool;         // Query success
+    data: [RFSpectrumData]; // Spectrum analysis data
+    error_message: string; // Error message if failed
+    timestamp: uint64;     // Response timestamp
+}
+
+// Device Status Query
+table RFDeviceStatus {
+    firmware_version: string; // NucleusESP32 firmware version
+    temperature: float;     // Device temperature in Celsius
+    battery_voltage: float; // Battery voltage in Volts
+    rx_active: bool;        // RX currently active
+    tx_active: bool;        // TX currently active
+    timestamp: uint64;      // Status timestamp
+}
+
+// Union for all RF messages
+union RFMessage {
+    RFCaptureStart,
+    RFCaptureStop,
+    RFCaptureStatus,
+    RFCaptureResponse,
+    RFReplay,
+    RFReplayResponse,
+    RFSpectrumQuery,
+    RFSpectrumResponse,
+    RFDeviceStatus
+}
+
+table RFEnvelope {
+    message_type: RFMessage;
+    message_id: uint64;     // Unique message ID
+    device_id: string;      // NucleusESP32 device identifier
+}
+
+// Root table for RF ICD
+root_type RFEnvelope;

@@ -1,0 +1,134 @@
+---
+template_name: "mcp-server-generator"
+description: "Generate a complete MCP server with tools and resources"
+category: "code-generation"
+variables:
+  server_name: "example-server"
+  tools: []
+  resources: []
+  use_fastmcp: true
+  async_handlers: true
+---
+# MCP Server: {{ server_name }}
+
+```python
+#!/usr/bin/env python3
+"""{{ server_name }} MCP Server - Auto-generated
+
+This server provides the following tools:
+{% for tool in tools %}
+- {{ tool.name }}: {{ tool.description }}
+{% endfor %}
+"""
+
+import json
+import logging
+import os
+from typing import Optional
+
+# Configure logging
+logging.basicConfig(
+    level=os.environ.get("LOG_LEVEL", "INFO"),
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger("{{ server_name }}")
+
+{% if use_fastmcp %}
+from mcp.server import FastMCP
+{% else %}
+from mcp.server import Server
+{% endif %}
+
+
+class {{ server_name | replace('-', '_') | pascalcase }}Server:
+    """{{ server_name }} MCP Server."""
+    
+    def __init__(self):
+        self.server_name = "{{ server_name }}"
+{% if use_fastmcp %}
+        self.server = FastMCP("{{ server_name }}")
+{% else %}
+        self.server = Server("{{ server_name }}")
+{% endif %}
+        self.setup_tools()
+{% if resources %}
+        self.setup_resources()
+{% endif %}
+        logger.info(f"Initialized {self.server_name}")
+    
+    def setup_tools(self):
+        """Register server tools."""
+{% for tool in tools %}
+        
+        @self.server.tool()
+        {% if async_handlers %}async {% endif %}def {{ tool.name }}({{ tool.params | default('') }}) -> str:
+            """{{ tool.description }}"""
+            logger.info(f"Executing {{ tool.name }}")
+            try:
+{% if tool.implementation %}
+                {{ tool.implementation | indent(16) }}
+{% else %}
+                result = {"status": "success", "tool": "{{ tool.name }}"}
+                return json.dumps(result)
+{% endif %}
+            except Exception as e:
+                logger.error(f"Error in {{ tool.name }}: {e}")
+                return json.dumps({"status": "error", "error": str(e)})
+{% endfor %}
+{% if resources %}
+    
+    def setup_resources(self):
+        """Register server resources."""
+{% for resource in resources %}
+        
+        @self.server.resource("{{ resource.uri }}")
+        {% if async_handlers %}async {% endif %}def {{ resource.name | snakecase }}_resource() -> str:
+            """{{ resource.description }}"""
+{% if resource.implementation %}
+            {{ resource.implementation | indent(12) }}
+{% else %}
+            return json.dumps({"resource": "{{ resource.name }}"})
+{% endif %}
+{% endfor %}
+{% endif %}
+
+
+# Create server instance
+server_instance = {{ server_name | replace('-', '_') | pascalcase }}Server()
+app = server_instance.server
+
+
+def main():
+    """Entry point."""
+    logger.info(f"Starting {{ server_name }}")
+    app.run()
+
+
+if __name__ == "__main__":
+    main()
+```
+
+## MCP Configuration
+
+Add to `.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "{{ server_name }}": {
+      "command": "uv",
+      "args": ["run", "--with", "mcp", "python3", "path/to/{{ server_name | snakecase }}_server.py"],
+      "env": {
+        "LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}
+```
+
+## Dependencies
+
+```
+mcp>=1.0.0
+pydantic>=2.0.0
+```

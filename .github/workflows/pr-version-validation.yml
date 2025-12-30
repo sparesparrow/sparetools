@@ -1,0 +1,231 @@
+name: PR Version Validation
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - '**/conanfile.py'
+      - 'VERSION'
+
+concurrency:
+  group: pr-version-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-version-increment:
+    name: Validate Version Increment
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version checking
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate version increments
+        run: |
+          echo "🔍 Validating version increments in PR..."
+
+          # Run version increment validation
+          if ! python3 scripts/check_version_increment.py --all; then
+            echo "::error::Version increment validation failed!"
+            echo "::error::Please increment version in conanfile.py for your changes"
+            echo ""
+            echo "💡 To fix this:"
+            echo "  1. Run: python3 scripts/bump_version.py patch"
+            echo "  2. Or manually increment version in conanfile.py"
+            echo "  3. Commit the version change"
+            exit 1
+          fi
+
+      - name: Check for version conflicts with main
+        run: |
+          echo "🔍 Checking for version conflicts with main branch..."
+
+          # Get current versions from main
+          git fetch origin main
+          git checkout origin/main -- VERSION 2>/dev/null || true
+
+          # Check conanfile versions against main
+          MAIN_VERSIONS=$(git show origin/main:VERSION 2>/dev/null || echo "")
+          CURRENT_VERSION=$(cat VERSION 2>/dev/null || echo "")
+
+          # Find all conanfile.py files and check versions
+          CONFLICTS=0
+          while IFS= read -r -d '' conanfile; do
+            if [[ -f "$conanfile" ]]; then
+              # Get version from current branch
+              CURRENT_CONAN_VER=$(python3 -c "
+              import re
+              with open('$conanfile', 'r') as f:
+                  content = f.read()
+              match = re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', content)
+              print(match.group(1) if match else '')
+              " 2>/dev/null || echo "")
+
+              # Get version from main branch
+              MAIN_CONAN_VER=$(git show "origin/main:$conanfile" 2>/dev/null | python3 -c "
+              import re
+              import sys
+              content = sys.stdin.read()
+              match = re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', content)
+              print(match.group(1) if match else '')
+              " 2>/dev/null || echo "")
+
+              if [[ -n "$CURRENT_CONAN_VER" && -n "$MAIN_CONAN_VER" && "$CURRENT_CONAN_VER" == "$MAIN_CONAN_VER" ]]; then
+                REL_PATH="${conanfile#./}"
+                echo "::error::Version conflict in $REL_PATH: version $CURRENT_CONAN_VER already exists in main"
+                CONFLICTS=$((CONFLICTS + 1))
+              fi
+            fi
+          done < <(find . -name "conanfile.py" -type f -print0)
+
+          if [[ $CONFLICTS -gt 0 ]]; then
+            echo "::error::Found $CONFLICTS version conflicts with main branch!"
+            echo "::error::Please increment version numbers to resolve conflicts."
+            exit 1
+          fi
+
+          echo "✅ No version conflicts found"
+
+      - name: Validate semantic versioning
+        run: |
+          echo "🔍 Validating semantic versioning format..."
+
+          while IFS= read -r -d '' conanfile; do
+            if [[ -f "$conanfile" ]]; then
+              VERSION=$(python3 -c "
+              import re
+              with open('$conanfile', 'r') as f:
+                  content = f.read()
+              match = re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', content)
+              print(match.group(1) if match else '')
+              " 2>/dev/null || echo "")
+
+              if [[ -n "$VERSION" ]]; then
+                # Validate semantic version format (X.Y.Z or X.Y.Z-prerelease)
+                if ! echo "$VERSION" | grep -E '^([0-9]+\.){2}[0-9]+(-[a-zA-Z0-9.-]+)?$'; then
+                  REL_PATH="${conanfile#./}"
+                  echo "::error::Invalid semantic version format in $REL_PATH: $VERSION"
+                  echo "::error::Version must follow format: MAJOR.MINOR.PATCH or MAJOR.MINOR.PATCH-prerelease"
+                  exit 1
+                fi
+              fi
+            fi
+          done < <(find . -name "conanfile.py" -type f -print0)
+
+          echo "✅ All versions follow semantic versioning format"
+
+  version-bump-suggestion:
+    name: Version Bump Suggestion
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze commit messages for version bump
+        run: |
+          echo "🤖 Analyzing commit messages for version bump suggestion..."
+
+          # Get commit messages in this PR
+          COMMITS=$(git log --oneline origin/${{ github.base_ref }}..HEAD 2>/dev/null || echo "")
+
+          if [[ -z "$COMMITS" ]]; then
+            echo "ℹ️  No new commits found in this PR"
+            exit 0
+          fi
+
+          # Analyze commit messages
+          HAS_BREAKING=0
+          HAS_FEATURE=0
+          HAS_FIX=0
+
+          while IFS= read -r commit; do
+            COMMIT_MSG=$(echo "$commit" | cut -d' ' -f2- | tr '[:upper:]' '[:lower:]')
+
+            if echo "$COMMIT_MSG" | grep -E '(breaking|break|major|incompatible)'; then
+              HAS_BREAKING=1
+            fi
+            if echo "$COMMIT_MSG" | grep -E '(feat|feature|add|new)'; then
+              HAS_FEATURE=1
+            fi
+            if echo "$COMMIT_MSG" | grep -E '(fix|bug|patch)'; then
+              HAS_FIX=1
+            fi
+          done <<< "$COMMITS"
+
+          # Suggest version bump type
+          if [[ $HAS_BREAKING -eq 1 ]]; then
+            SUGGESTION="major"
+            REASON="Breaking changes detected"
+          elif [[ $HAS_FEATURE -eq 1 ]]; then
+            SUGGESTION="minor"
+            REASON="New features detected"
+          elif [[ $HAS_FIX -eq 1 ]]; then
+            SUGGESTION="patch"
+            REASON="Bug fixes detected"
+          else
+            SUGGESTION="patch"
+            REASON="General changes"
+          fi
+
+          echo "📋 Version bump suggestion: **$SUGGESTION**"
+          echo "   Reason: $REASON"
+          echo ""
+          echo "💡 To apply the suggested bump:"
+          echo "   python3 scripts/bump_version.py $SUGGESTION"
+
+          # Add comment to PR with suggestion
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "VERSION_BUMP_SUGGESTION=$SUGGESTION" >> $GITHUB_ENV
+            echo "VERSION_BUMP_REASON=$REASON" >> $GITHUB_ENV
+          fi
+
+      - name: Comment on PR with version suggestion
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const suggestion = process.env.VERSION_BUMP_SUGGESTION;
+            const reason = process.env.VERSION_BUMP_REASON;
+
+            if (suggestion) {
+              const body = `## 📦 Version Bump Suggestion
+
+Based on the changes in this PR, I suggest a **${suggestion}** version bump.
+
+**Reason:** ${reason}
+
+### How to apply:
+\`\`\`bash
+# Option 1: Use the bump script
+python3 scripts/bump_version.py ${suggestion}
+
+# Option 2: Manual version increment
+# Edit conanfile.py and increment the version field
+\`\`\`
+
+### Version Increment Rules:
+- **MAJOR** (X.0.0): Breaking changes, incompatible API changes
+- **MINOR** (X.Y.0): New features, backward compatible
+- **PATCH** (X.Y.Z): Bug fixes, backward compatible
+
+*This suggestion is automated and can be overridden based on your judgment.*`;
+
+              github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }

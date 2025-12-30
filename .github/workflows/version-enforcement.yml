@@ -1,0 +1,188 @@
+name: Version Enforcement
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**/conanfile.py'
+      - 'VERSION'
+
+concurrency:
+  group: version-enforcement-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  enforce-version-progression:
+    name: Enforce Version Progression
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for version checking
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate version progression on main/develop
+        run: |
+          echo "🔍 Validating version progression on protected branch..."
+
+          # Get the previous commit
+          PREVIOUS_COMMIT=$(git rev-parse HEAD~1)
+
+          # Check if any conanfile.py was modified
+          MODIFIED_CONANFILES=$(git diff --name-only HEAD~1 | grep "conanfile\.py" || echo "")
+
+          if [[ -z "$MODIFIED_CONANFILES" ]]; then
+            echo "ℹ️  No conanfile.py files modified in this push"
+            exit 0
+          fi
+
+          echo "📦 Found modified conanfile.py files:"
+          echo "$MODIFIED_CONANFILES"
+
+          # Run version increment validation in strict mode for main/develop
+          if ! python3 scripts/check_version_increment.py --all; then
+            echo "::error::Version increment validation failed on protected branch!"
+            echo "::error::All changes to main/develop must include version increments."
+            echo ""
+            echo "💡 For protected branches, versions MUST be incremented with every change."
+            echo "   This ensures proper semantic versioning and prevents version conflicts."
+            exit 1
+          fi
+
+          echo "✅ Version progression validated"
+
+      - name: Create version tag for releases
+        if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'release:') || contains(github.event.head_commit.message, 'bump:')
+        run: |
+          echo "🏷️ Checking if version tag should be created..."
+
+          # Extract version from VERSION file
+          if [[ -f "VERSION" ]]; then
+            VERSION=$(cat VERSION | tr -d '\n')
+            TAG_NAME="v$VERSION"
+
+            # Check if tag already exists
+            if git tag -l | grep -q "^$TAG_NAME$"; then
+              echo "ℹ️  Tag $TAG_NAME already exists"
+            else
+              echo "🏷️ Creating version tag: $TAG_NAME"
+              git tag "$TAG_NAME"
+              git push origin "$TAG_NAME"
+              echo "✅ Tag $TAG_NAME created and pushed"
+            fi
+          fi
+
+      - name: Update version documentation
+        run: |
+          echo "📚 Updating version documentation..."
+
+          # Update docs with current versions
+          cat > docs/VERSION_HISTORY.md << EOF
+# Version History
+
+## Current Versions
+
+EOF
+
+          # Add current versions from conanfiles
+          echo "| Package | Version |" >> docs/VERSION_HISTORY.md
+          echo "|---------|---------|" >> docs/VERSION_HISTORY.md
+
+          find . -name "conanfile.py" -type f | while read -r conanfile; do
+            PACKAGE_NAME=$(basename "$(dirname "$conanfile")")
+            VERSION=$(python3 -c "
+import re
+with open('$conanfile', 'r') as f:
+    content = f.read()
+match = re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', content)
+print(match.group(1) if match else 'unknown')
+" 2>/dev/null || echo "unknown")
+
+            echo "| $PACKAGE_NAME | $VERSION |" >> docs/VERSION_HISTORY.md
+          done
+
+          # Commit documentation update if on main
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            git add docs/VERSION_HISTORY.md
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+            git commit -m "docs: update version history [skip ci]" || echo "No changes to commit"
+            git push || echo "Push failed - documentation update skipped"
+          fi
+
+  version-conflict-prevention:
+    name: Prevent Version Conflicts
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check for version conflicts across branches
+        run: |
+          echo "🔍 Checking for version conflicts across active branches..."
+
+          # Get all remote branches
+          REMOTE_BRANCHES=$(git branch -r | grep -v HEAD | sed 's|origin/||' || echo "")
+
+          CONFLICTS_FOUND=0
+
+          # Check each conanfile against other branches
+          while IFS= read -r -d '' conanfile; do
+            if [[ -f "$conanfile" ]]; then
+              CURRENT_VERSION=$(python3 -c "
+import re
+with open('$conanfile', 'r') as f:
+    content = f.read()
+match = re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', content)
+print(match.group(1) if match else '')
+" 2>/dev/null || echo "")
+
+              if [[ -n "$CURRENT_VERSION" ]]; then
+                REL_PATH="${conanfile#./}"
+
+                # Check against other branches
+                while IFS= read -r branch; do
+                  if [[ "$branch" != "${{ github.ref_name }}" ]]; then
+                    BRANCH_VERSION=$(git show "origin/$branch:$conanfile" 2>/dev/null | python3 -c "
+import re
+import sys
+content = sys.stdin.read()
+match = re.search(r'version\s*=\s*[\"\\']([^\"\\']+)[\"\\']', content)
+print(match.group(1) if match else '')
+" 2>/dev/null || echo "")
+
+                    if [[ "$BRANCH_VERSION" == "$CURRENT_VERSION" ]]; then
+                      echo "::warning::Version conflict detected!"
+                      echo "::warning::File: $REL_PATH"
+                      echo "::warning::Version: $CURRENT_VERSION"
+                      echo "::warning::Conflict with branch: $branch"
+                      CONFLICTS_FOUND=$((CONFLICTS_FOUND + 1))
+                    fi
+                  fi
+                done <<< "$REMOTE_BRANCHES"
+              fi
+            fi
+          done < <(find . -name "conanfile.py" -type f -print0)
+
+          if [[ $CONFLICTS_FOUND -gt 0 ]]; then
+            echo "::warning::Found $CONFLICTS_FOUND version conflicts across branches!"
+            echo "::warning::Consider coordinating version increments across branches."
+          else
+            echo "✅ No version conflicts found across branches"
+          fi

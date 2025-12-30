@@ -5,6 +5,8 @@ foundation:
   test-framework: 1.0.0
   test-harness: 2.0.3
   shared-dev-tools: 2.0.3
+  flatbuffers: 24.3.25
+  protocols: 1.0.0
 testing:
   gtest: 1.14.0
   gmock: 1.14.0
@@ -19,9 +21,10 @@ aerospace:
 
 mcp:
   mcp-prompts: 3.13.0
-  mcp-servers: 1.0.0
-  mcp-ecosystem: 1.0.0
-  mcp-project-orchestrator: 0.1.0
+  mcp-servers: 1.1.0
+  mcp-ecosystem: 1.1.0
+  mcp-core: 1.0.0
+  mcp-project-orchestrator: 0.2.0
 
 security:
   crypto-suite: 1.0.0
