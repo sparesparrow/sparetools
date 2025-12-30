@@ -47,30 +47,24 @@ conan create packages/consumers/esp32/sparetools-nucleus --version=2.0.0 --build
 
 # Build cybersecurity tools
 conan create packages/pentest/sparetools-pentest-toolkit --version=2.0.0 --build=missing
+
+# Build MIA project
+conan create mia-project --build=missing
+
+# Build ESP32 BPM detector
+conan create packages/consumers/esp32/sparetools-bpm-detector --build=missing
 ```
 
 ---
 
-## 📋 Repository Separation Notice
+## 📋 Multi-Domain Ecosystem
 
-**December 2025**: SpareTools has evolved into a comprehensive multi-domain package ecosystem spanning AI/ML, embedded systems, cybersecurity, aerospace, and enterprise applications. The original OpenSSL focus has been integrated as one of many consumer domains.
+**December 2025**: SpareTools provides a comprehensive multi-domain package ecosystem spanning AI/ML, embedded systems, cybersecurity, aerospace, and enterprise applications.
 
 ### Package Distribution
 - **Primary Registry**: Cloudsmith (sparesparrow-conan/sparetools)
-- **Legacy OpenSSL**: Available in [dedicated openssl-conan repository](https://github.com/sparesparrow/openssl-conan)
 - **Domain-Specific**: Specialized packages for each technology domain
-
-### Migration Guide
-For existing OpenSSL-focused users:
-```bash
-# Add primary SpareTools remote (includes all domains)
-conan remote add sparesparrow-conan \
-  https://dl.cloudsmith.io/public/sparesparrow-conan/sparetools/
-
-# For legacy OpenSSL-only usage
-conan remote add sparesparrow-openssl \
-  https://dl.cloudsmith.io/public/sparesparrow-conan/openssl-conan/
-```
+- **Cross-Platform**: Linux, macOS, Windows, Android, Embedded
 
 ---
 
@@ -106,10 +100,10 @@ sparetools-bootstrap --template=aerospace --name=my-avionics-project
 ```mermaid
 graph TD
     subgraph "Foundation Layer"
-        base[sparetools-base/2.0.0<br/>SECURITY & UTILITIES]
+        base[sparetools-base/2.0.3<br/>SECURITY & UTILITIES]
         cpython[sparetools-cpython/3.12.7<br/>PYTHON RUNTIME]
-        shared[sparetools-shared-dev-tools/2.0.0<br/>DEV TOOLS]
-        bootstrap[sparetools-bootstrap/2.0.0<br/>ORCHESTRATION]
+        shared[sparetools-shared-dev-tools/2.0.3<br/>DEV TOOLS]
+        bootstrap[sparetools-bootstrap/2.0.3<br/>ORCHESTRATION]
     end
 
     subgraph "Consumer Domains"
@@ -147,9 +141,10 @@ graph TD
 ### Package Categories
 
 **Foundation Layer:**
-- `sparetools-base`: Core utilities, security gates, zero-copy patterns
-- `sparetools-cpython`: Prebuilt Python 3.12.7 runtime environment
-- `sparetools-bootstrap`: Multi-domain project orchestration
+- `sparetools-base/2.0.3`: Core utilities, security gates, zero-copy patterns
+- `sparetools-cpython/3.12.7`: Prebuilt Python 3.12.7 runtime environment
+- `sparetools-bootstrap/2.0.3`: Multi-domain project orchestration
+- `sparetools-versioning/1.0.0`: Git-based versioning utilities
 
 **Consumer Domains:**
 - **AI/ML**: MCP orchestrator, prompt systems, AI assistants
@@ -165,7 +160,7 @@ graph TD
 
 ### Zero-Copy Deployment
 ```
-~/.conan2/p/openssl/   → 500 MB (single copy)
+~/.conan2/p/packages/  → 500 MB (single copy)
 _Build/packages/       → 50 KB (symlinks)
 workspace/lib/         → 50 KB (symlinks)
 ────────────────────────────────────────────
@@ -182,37 +177,270 @@ Savings:              ✅ 66% (1 GB saved)
 | macOS | Apple Clang | ✅ Stable |
 | Windows | MSVC 2022 | ⚠️ Experimental |
 
-### Security Integration
+### Component Relationships
 ```mermaid
-graph LR
-    A[Build] --> B[Trivy Scan]
-    B --> C[Syft SBOM]
-    C --> D[CodeQL]
-    D --> E{FIPS?}
-    E -->|Required| F[FIPS Validation]
-    E -->|Optional| G[Package]
-    F --> G
+graph TD
+    ORCHESTRATOR[ORCHESTRATOR<br/>Coordinates Workflow]
+    EXECUTOR[EXECUTOR<br/>Builds & Packages]
+    VALIDATOR[VALIDATOR<br/>Verifies & Tests]
+    
+    ORCHESTRATOR --> EXECUTOR
+    ORCHESTRATOR --> VALIDATOR
+    EXECUTOR --> VALIDATOR
+    
+    EXECUTOR --> BUILD[Build Artifacts]
+    EXECUTOR --> PACKAGE[Package Creation]
+    VALIDATOR --> SECURITY[Security Scan]
+    VALIDATOR --> TESTS[Run Tests]
+    VALIDATOR --> SBOM[Generate SBOM]
+    
+    style ORCHESTRATOR fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXECUTOR fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALIDATOR fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
 
-    style B fill:#E91E63,stroke:#880E4F,color:#fff
-    style C fill:#2196F3,stroke:#1565C0,color:#fff
-    style D fill:#FF9800,stroke:#E65100,color:#fff
-    style G fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+### Domain-Specific Architectures
+
+#### MIA (Modular Integration Architecture) Projects
+```mermaid
+graph TD
+    ORCH[MIA ORCHESTRATOR<br/>Project Coordination]
+    EXEC[MIA EXECUTOR<br/>Build & Deploy]
+    VALID[MIA VALIDATOR<br/>Integration Tests]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> PYTHON[Python Services]
+    EXEC --> CPP[C++ Components]
+    EXEC --> DOCKER[Docker Containers]
+    VALID --> UNIT[Unit Tests]
+    VALID --> INTEG[Integration Tests]
+    VALID --> E2E[End-to-End Tests]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
+
+#### ESP32 BPM Detector
+```mermaid
+graph TD
+    ORCH[ESP32 ORCHESTRATOR<br/>Firmware Pipeline]
+    EXEC[ESP32 EXECUTOR<br/>Compile & Flash]
+    VALID[ESP32 VALIDATOR<br/>Hardware Tests]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> PLATFORMIO[PlatformIO Build]
+    EXEC --> FLATBUFFERS[Schema Generation]
+    EXEC --> FLASH[Device Flashing]
+    VALID --> HOST[Host Unit Tests]
+    VALID --> HARDWARE[Hardware Tests]
+    VALID --> INTEGRATION[Integration Tests]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
+
+#### MCP Ecosystem
+```mermaid
+graph TD
+    ORCH[MCP ORCHESTRATOR<br/>AI Workflow Coordination]
+    EXEC[MCP EXECUTOR<br/>Server Deployment]
+    VALID[MCP VALIDATOR<br/>Protocol Validation]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> SERVERS[MCP Servers]
+    EXEC --> PROMPTS[Prompt Management]
+    EXEC --> TOOLS[Tool Integration]
+    VALID --> PROTOCOL[Protocol Tests]
+    VALID --> AI[AI Response Validation]
+    VALID --> SECURITY[Security Checks]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
+
+#### Python Projects
+```mermaid
+graph TD
+    ORCH[Python ORCHESTRATOR<br/>Environment Setup]
+    EXEC[Python EXECUTOR<br/>Build & Install]
+    VALID[Python VALIDATOR<br/>Quality Checks]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> VENV[Virtual Environment]
+    EXEC --> INSTALL[Package Install]
+    EXEC --> WHEEL[Wheel Building]
+    VALID --> PYTEST[Pytest Tests]
+    VALID --> LINT[Linting]
+    VALID --> TYPE[Type Checking]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
+
+#### C++ Projects
+```mermaid
+graph TD
+    ORCH[C++ ORCHESTRATOR<br/>Build Configuration]
+    EXEC[C++ EXECUTOR<br/>Compile & Link]
+    VALID[C++ VALIDATOR<br/>Static Analysis]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> CMAKE[CMake Configure]
+    EXEC --> COMPILE[Compilation]
+    EXEC --> LINK[Linking]
+    VALID --> CLANG[Clang-Tidy]
+    VALID --> CPPCHECK[Cppcheck]
+    VALID --> TESTS[Unit Tests]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
+
+#### Node.js Projects
+```mermaid
+graph TD
+    ORCH[Node.js ORCHESTRATOR<br/>Dependency Resolution]
+    EXEC[Node.js EXECUTOR<br/>Build & Bundle]
+    VALID[Node.js VALIDATOR<br/>Quality Assurance]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> NPM[NPM Install]
+    EXEC --> BUILD[Build Scripts]
+    EXEC --> BUNDLE[Bundling]
+    VALID --> JEST[Jest Tests]
+    VALID --> ESLINT[ESLint]
+    VALID --> TYPESCRIPT[TypeScript Check]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+```
+
+#### Docker Containers
+```mermaid
+graph TD
+    ORCH[Docker ORCHESTRATOR<br/>Container Orchestration]
+    EXEC[Docker EXECUTOR<br/>Build & Push]
+    VALID[Docker VALIDATOR<br/>Security & Compliance]
+    
+    ORCH --> EXEC
+    ORCH --> VALID
+    EXEC --> VALID
+    
+    EXEC --> BUILD[Image Build]
+    EXEC --> TAG[Image Tagging]
+    EXEC --> PUSH[Registry Push]
+    VALID --> TRIVY[Trivy Scan]
+    VALID --> SBOM[SBOM Generation]
+    VALID --> COMPLIANCE[Compliance Check]
+    
+    style ORCH fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style EXEC fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style VALID fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
 ```
 
 ---
 
 ## 📦 Package Overview
 
-### Foundation & Infrastructure (9 packages)
+```mermaid
+graph TD
+    subgraph "Foundation & Infrastructure"
+        base[sparetools-base/2.0.3<br/>CORE UTILITIES]
+        cpython[sparetools-cpython/3.12.7<br/>PYTHON RUNTIME]
+        bootstrap[sparetools-bootstrap/2.0.3<br/>ORCHESTRATION]
+        shared[sparetools-shared-dev-tools/2.0.3<br/>DEV TOOLS]
+        testharness[sparetools-test-harness/2.0.3<br/>TESTING]
+        recipe[sparetools-recipe-base/2.0.3<br/>RECIPES]
+        icd[sparetools-icd/2.0.0<br/>SCHEMAS]
+        versioning[sparetools-versioning/1.0.0<br/>VERSIONING]
+    end
+
+    subgraph "Consumer Domains"
+        mcp[sparetools-mcp-orchestrator<br/>AI ASSISTANTS]
+        mcp_servers[sparetools-mcp-servers<br/>MCP SERVERS]
+        prompt[sparetools-prompt-system<br/>PROMPT ENGINEERING]
+        nucleus[sparetools-nucleus<br/>EMBEDDED ESP32]
+        bpm[sparetools-bpm-detector<br/>IOT DEVICES]
+        hal[sparetools-hal-sunton<br/>HARDWARE]
+        aerospace[sparetools-aerospace<br/>AVIATION]
+        android[sparetools-cliphist-android<br/>MOBILE]
+        pentest[sparetools-pentest-toolkit<br/>PENETRATION TESTING]
+        crypto[sparetools-crypto-suite<br/>CRYPTOGRAPHY]
+        wifi[sparetools-wifi-sensing<br/>NETWORK ANALYSIS]
+        streaming[sparetools-streaming-solutions<br/>MEDIA STREAMING]
+        sdr[sparetools-sdr-tools<br/>SOFTWARE RADIO]
+        input[sparetools-input-backends<br/>HUMAN INTERFACE]
+        gamepad[sparetools-gamepad-*<br/>GAMEPADS]
+    end
+
+    subgraph "Specialized & Legacy"
+        bpm_schemas[sparetools-bpm-schemas<br/>PROTOCOL SCHEMAS]
+        protocols[sparetools-protocols<br/>FLATBUFFERS]
+        crypto_lib[sparetools-openssl<br/>CRYPTO LIBRARIES]
+        crypto_tools[sparetools-openssl-tools<br/>CRYPTO TOOLS]
+        py_tools[sparetools-py<br/>PYTHON UTILITIES]
+        proc_tools[sparetools-proc-tools<br/>PROCESS TOOLS]
+        fs_tools[sparetools-fs-tools<br/>FILESYSTEM]
+    end
+
+    base --> mcp
+    base --> nucleus
+    base --> aerospace
+    base --> android
+    base --> pentest
+    cpython --> mcp
+    cpython --> prompt
+    cpython --> py_tools
+    shared -->|All Consumers| mcp
+    versioning -->|All Packages| base
+    bootstrap -->|Orchestrates| mcp
+    bootstrap -->|Orchestrates| nucleus
+
+    style base fill:#FF9800,stroke:#E65100,color:#fff,stroke-width:3px
+    style cpython fill:#9C27B0,stroke:#6A1B9A,color:#fff,stroke-width:2px
+    style versioning fill:#00BCD4,stroke:#00838F,color:#fff,stroke-width:2px
+    style mcp fill:#2196F3,stroke:#1565C0,color:#fff,stroke-width:2px
+    style nucleus fill:#4CAF50,stroke:#2E7D32,color:#fff,stroke-width:2px
+    style aerospace fill:#FF5722,stroke:#D84315,color:#fff,stroke-width:2px
+    style pentest fill:#E91E63,stroke:#880E4F,color:#fff,stroke-width:2px
+    style crypto fill:#E91E63,stroke:#880E4F,color:#fff,stroke-width:2px
+```
+
+### Foundation & Infrastructure (8 packages)
 | Package | Version | Purpose |
 |---------|---------|---------|
-| **sparetools-base** | 2.0.0 | Core utilities, security gates, zero-copy patterns |
+| **sparetools-base** | 2.0.3 | Core utilities, security gates, zero-copy patterns |
 | **sparetools-cpython** | 3.12.7 | Prebuilt Python 3.12.7 runtime environment |
-| **sparetools-bootstrap** | 2.0.0 | Multi-domain project orchestration framework |
-| **sparetools-shared-dev-tools** | 2.0.0 | Development utilities and build helpers |
-| **sparetools-test-harness** | 2.0.0 | Testing infrastructure and frameworks |
-| **sparetools-recipe-base** | 2.0.0 | Base Conan recipes and templates |
+| **sparetools-bootstrap** | 2.0.3 | Multi-domain project orchestration framework |
+| **sparetools-shared-dev-tools** | 2.0.3 | Development utilities and build helpers |
+| **sparetools-test-harness** | 2.0.3 | Testing infrastructure and frameworks |
+| **sparetools-recipe-base** | 2.0.3 | Base Conan recipes and templates |
 | **sparetools-icd** | 2.0.0 | Interface control documents and schemas |
+| **sparetools-versioning** | 1.0.0 | Git-based versioning utilities |
 
 ### Consumer Domains (15+ packages)
 | Domain | Key Packages | Purpose |
@@ -229,8 +457,8 @@ graph LR
 ### Specialized & Legacy (10+ packages)
 | Category | Examples | Purpose |
 |----------|----------|---------|
-| **Schemas** | `sparetools-bpm-schemas`<br/>`sparesparrow-protocols` | Protocol definitions, data schemas |
-| **OpenSSL** | `sparetools-openssl`<br/>`sparetools-openssl-tools` | Cryptographic libraries (legacy domain) |
+| **Schemas** | `sparetools-bpm-schemas`<br/>`sparetools-protocols` | Protocol definitions, data schemas |
+| **Cryptography** | `sparetools-openssl`<br/>`sparetools-openssl-tools`<br/>`sparetools-crypto-suite` | Cryptographic libraries and security tools |
 | **Python Tools** | `sparetools-py`<br/>`sparetools-proc-tools`<br/>`sparetools-fs-tools` | Python utilities and system tools |
 
 → **Complete package reference:** [docs/PACKAGES.md](docs/PACKAGES.md)
@@ -243,22 +471,28 @@ graph LR
 
 ```bash
 # Build core infrastructure
-conan create packages/foundation/sparetools-base --version=2.0.0 --build=missing
+conan create packages/foundation/sparetools-base --version=2.0.3 --build=missing
 conan create packages/foundation/sparetools-cpython --version=3.12.7 --build=missing
 
 # Build development tools
-conan create packages/foundation/sparetools-shared-dev-tools --version=2.0.0 --build=missing
-conan create packages/foundation/sparetools-bootstrap --version=2.0.0 --build=missing
+conan create packages/foundation/sparetools-shared-dev-tools --version=2.0.3 --build=missing
+conan create packages/foundation/sparetools-bootstrap --version=2.0.3 --build=missing
+conan create packages/foundation/sparetools-versioning --version=1.0.0 --build=missing
 ```
 
 ### Building Consumer Packages
 
 ```bash
-# AI/ML ecosystem
+# AI/ML ecosystem (MCP)
 conan create packages/consumers/mcp/sparetools-mcp-orchestrator --version=2.0.3 --build=missing
+conan create packages/mcp/sparetools-mcp-ecosystem --version=1.1.0 --build=missing
 
-# Embedded systems
+# Embedded systems (ESP32)
 conan create packages/consumers/esp32/sparetools-nucleus --version=2.0.0 --build=missing
+conan create packages/consumers/esp32/sparetools-bpm-detector --version=2.0.0 --build=missing
+
+# MIA projects
+conan create mia-project --build=missing
 
 # Cybersecurity tools
 conan create packages/pentest/sparetools-pentest-toolkit --version=2.0.0 --build=missing
@@ -271,8 +505,7 @@ conan create packages/aerospace/sparetools-aerospace --version=2.0.0 --build=mis
 
 ```bash
 # Run integration test
-conan test packages/sparetools-openssl/test_package \
-  sparetools-openssl/3.3.2
+conan test test_package my-package/1.0.0
 
 # Run unit tests
 pytest test/unit/ -v
@@ -290,9 +523,9 @@ trivy fs --security-checks vuln --scanners vuln .
 # Generate SBOM for entire ecosystem
 syft packages . -o cyclonedx-json > sparetools-sbom.json
 
-# FIPS validation for cryptographic packages
-python3 -c "from sparetools_base.security.fips_validator import FIPSValidator; \
-  FIPSValidator().validate_packages(['sparetools-crypto-suite', 'sparetools-openssl'])"
+# Security validation for packages
+python3 -c "from sparetools_base.security import apply_security_gates; \
+  apply_security_gates(['sparetools-crypto-suite'])"
 
 # CodeQL security analysis
 codeql database create --language=python --source-root=. codeql-db
@@ -303,15 +536,19 @@ codeql database analyze codeql-db --format=sarif-latest --output=security-result
 
 ```bash
 # Build foundation layer first
-conan create packages/foundation/sparetools-base --version=2.0.0 --build=missing
+conan create packages/foundation/sparetools-base --version=2.0.3 --build=missing
 conan create packages/foundation/sparetools-cpython --version=3.12.7 --build=missing
 
 # Build and publish consumer domains
-for domain in mcp esp32 aerospace android wifi sdr security; do
+for domain in mcp esp32 aerospace android wifi sdr security streaming; do
   echo "Building $domain consumer packages..."
   # Build domain-specific packages
   conan create "packages/consumers/$domain/*" --version=2.0.0 --build=missing
 done
+
+# Build specialized packages
+conan create packages/consumers/esp32/sparetools-bpm-detector --version=2.0.0 --build=missing
+conan create mia-project --build=missing
 
 # Upload all packages to Cloudsmith (requires CLOUDSMITH_API_KEY)
 conan upload "sparetools-*/*" -r sparesparrow-conan --confirm --parallel=4
