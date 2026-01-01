@@ -1,0 +1,378 @@
+name: Upload Artifacts to Cloudsmith
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      artifact_type:
+        description: 'Type of artifacts to upload'
+        required: true
+        type: choice
+        options:
+          - all
+          - firmware
+          - tools
+          - mcp-servers
+          - dependencies
+        default: 'all'
+      version:
+        description: 'Version tag for artifacts'
+        required: false
+        type: string
+
+env:
+  CLOUDSMITH_ORG: sparesparrow-conan
+  CLOUDSMITH_REPO: sparetools
+
+jobs:
+  upload-firmware:
+    name: Upload Firmware Binaries
+    if: github.event.inputs.artifact_type == 'all' || github.event.inputs.artifact_type == 'firmware' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Set up PlatformIO
+        uses: platformio/platformio-action@v1
+        with:
+          platformio-core-version: latest
+
+      - name: Build ESP32 BPM Detector Firmware
+        working-directory: ${{ github.workspace }}/../embedded-systems/esp32-bpm-detector
+        run: |
+          pio run --environment esp32-s3-release
+          pio run --environment esp32dev-release
+
+      - name: Install Cloudsmith CLI
+        run: |
+          pip install cloudsmith-cli
+
+      - name: Authenticate with Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          cloudsmith whoami
+
+      - name: Package firmware artifacts
+        working-directory: ${{ github.workspace }}/../embedded-systems/esp32-bpm-detector
+        run: |
+          mkdir -p firmware-artifacts
+          
+          # ESP32-S3 firmware
+          if [ -f .pio/build/esp32-s3-release/firmware.bin ]; then
+            cp .pio/build/esp32-s3-release/firmware.bin firmware-artifacts/esp32-bpm-detector-esp32s3-${{ github.ref_name || github.event.inputs.version || 'latest' }}.bin
+            cp .pio/build/esp32-s3-release/bootloader.bin firmware-artifacts/esp32-bpm-detector-esp32s3-bootloader-${{ github.ref_name || github.event.inputs.version || 'latest' }}.bin
+            cp .pio/build/esp32-s3-release/partitions.bin firmware-artifacts/esp32-bpm-detector-esp32s3-partitions-${{ github.ref_name || github.event.inputs.version || 'latest' }}.bin
+            cp .pio/build/esp32-s3-release/firmware.elf firmware-artifacts/esp32-bpm-detector-esp32s3-${{ github.ref_name || github.event.inputs.version || 'latest' }}.elf
+          fi
+          
+          # ESP32 firmware
+          if [ -f .pio/build/esp32dev-release/firmware.bin ]; then
+            cp .pio/build/esp32dev-release/firmware.bin firmware-artifacts/esp32-bpm-detector-esp32-${{ github.ref_name || github.event.inputs.version || 'latest' }}.bin
+            cp .pio/build/esp32dev-release/bootloader.bin firmware-artifacts/esp32-bpm-detector-esp32-bootloader-${{ github.ref_name || github.event.inputs.version || 'latest' }}.bin
+            cp .pio/build/esp32dev-release/partitions.bin firmware-artifacts/esp32-bpm-detector-esp32-partitions-${{ github.ref_name || github.event.inputs.version || 'latest' }}.bin
+            cp .pio/build/esp32dev-release/firmware.elf firmware-artifacts/esp32-bpm-detector-esp32-${{ github.ref_name || github.event.inputs.version || 'latest' }}.elf
+          fi
+          
+          # Create manifest
+          cat > firmware-artifacts/manifest.json <<EOF
+          {
+            "version": "${{ github.ref_name || github.event.inputs.version || 'latest' }}",
+            "build_date": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "commit": "${{ github.sha }}",
+            "artifacts": [
+              $(ls -1 firmware-artifacts/*.bin firmware-artifacts/*.elf 2>/dev/null | sed 's|.*/|"|;s|$|",|' | sed '$ s/,$//' | sed 's|^|              |')
+            ]
+          }
+          EOF
+
+      - name: Upload firmware to Cloudsmith (Raw)
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        working-directory: ${{ github.workspace }}/../embedded-systems/esp32-bpm-detector
+        run: |
+          for file in firmware-artifacts/*.bin firmware-artifacts/*.elf; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file..."
+              cloudsmith upload raw ${{ env.CLOUDSMITH_ORG }}/${{ env.CLOUDSMITH_REPO }} "$file" \
+                --name "$(basename $file)" \
+                --version "${{ github.ref_name || github.event.inputs.version || 'latest' }}" \
+                --summary "ESP32 BPM Detector firmware binary" \
+                --description "Firmware binary for ESP32 BPM detector project"
+            fi
+          done
+
+  upload-tools:
+    name: Upload Development Tools
+    if: github.event.inputs.artifact_type == 'all' || github.event.inputs.artifact_type == 'tools' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Cloudsmith CLI
+        run: |
+          pip install cloudsmith-cli
+
+      - name: Build FlatBuffers compiler (flatc)
+        run: |
+          mkdir -p tools-artifacts
+          
+          # Check if flatc is available from Conan
+          if command -v flatc &> /dev/null; then
+            flatc --version > tools-artifacts/flatc-version.txt
+            which flatc > tools-artifacts/flatc-path.txt
+          else
+            echo "Building flatc from source..."
+            git clone --depth 1 --branch v24.3.25 https://github.com/google/flatbuffers.git flatbuffers-src
+            cd flatbuffers-src
+            cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release
+            make -j$(nproc)
+            cp flatc ../tools-artifacts/flatc
+            cd ..
+          fi
+
+      - name: Package Conan executable
+        run: |
+          # Install Conan
+          pip install conan==2.21.0
+          
+          # Create standalone Conan package
+          mkdir -p tools-artifacts/conan-standalone
+          python -m pip install --target tools-artifacts/conan-standalone conan==2.21.0
+          
+          # Create wrapper script
+          cat > tools-artifacts/conan-standalone/conan-wrapper.sh <<'EOF'
+          #!/bin/bash
+          export PYTHONPATH="$(dirname $0):$PYTHONPATH"
+          python3 -m conans.conan "$@"
+          EOF
+          chmod +x tools-artifacts/conan-standalone/conan-wrapper.sh
+          
+          # Create archive
+          tar -czf tools-artifacts/conan-2.21.0-standalone.tar.gz -C tools-artifacts/conan-standalone .
+
+      - name: Authenticate with Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          cloudsmith whoami
+
+      - name: Upload flatc to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          if [ -f tools-artifacts/flatc ]; then
+            cloudsmith upload raw ${{ env.CLOUDSMITH_ORG }}/${{ env.CLOUDSMITH_REPO }} tools-artifacts/flatc \
+              --name "flatc" \
+              --version "24.3.25" \
+              --summary "FlatBuffers compiler (flatc)" \
+              --description "Standalone FlatBuffers compiler executable"
+          fi
+
+      - name: Upload Conan to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          if [ -f tools-artifacts/conan-2.21.0-standalone.tar.gz ]; then
+            cloudsmith upload raw ${{ env.CLOUDSMITH_ORG }}/${{ env.CLOUDSMITH_REPO }} tools-artifacts/conan-2.21.0-standalone.tar.gz \
+              --name "conan-standalone" \
+              --version "2.21.0" \
+              --summary "Conan package manager (standalone)" \
+              --description "Standalone Conan package manager distribution"
+          fi
+
+  upload-mcp-servers:
+    name: Upload MCP Server Executables
+    if: github.event.inputs.artifact_type == 'all' || github.event.inputs.artifact_type == 'mcp-servers' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Cloudsmith CLI
+        run: |
+          pip install cloudsmith-cli
+
+      - name: Build MCP Prompts Server
+        working-directory: ${{ github.workspace }}/../ai-mcp-monorepo/packages/mcp-prompts
+        run: |
+          npm install -g pnpm
+          pnpm install --frozen-lockfile
+          pnpm run build
+          
+          # Package as standalone
+          mkdir -p dist-standalone
+          cp -r dist/* dist-standalone/
+          cp package.json dist-standalone/
+          cp -r node_modules dist-standalone/ 2>/dev/null || echo "Node modules not needed for standalone"
+          
+          # Create launcher script
+          cat > dist-standalone/mcp-prompts-server.sh <<'EOF'
+          #!/bin/bash
+          cd "$(dirname "$0")"
+          node dist/mcp-server-standalone.js "$@"
+          EOF
+          chmod +x dist-standalone/mcp-prompts-server.sh
+          
+          tar -czf ../mcp-prompts-server-standalone.tar.gz -C dist-standalone .
+
+      - name: Build Python MCP Servers
+        working-directory: ${{ github.workspace }}
+        run: |
+          mkdir -p mcp-servers-artifacts
+          
+          # Package ESP32 Serial Monitor MCP Server
+          if [ -d packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/esp32_serial_monitor ]; then
+            cd packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/esp32_serial_monitor
+            tar -czf ../../../../../../mcp-servers-artifacts/esp32-serial-monitor-mcp-server.tar.gz .
+            cd ../../../../../../..
+          fi
+          
+          # Package Conan Cloudsmith MCP Server
+          if [ -d packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/conan_cloudsmith ]; then
+            cd packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/conan_cloudsmith
+            tar -czf ../../../../../../mcp-servers-artifacts/conan-cloudsmith-mcp-server.tar.gz .
+            cd ../../../../../../..
+          fi
+          
+          # Package Android Dev Tools MCP Server
+          if [ -d packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/android_dev_tools ]; then
+            cd packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/android_dev_tools
+            tar -czf ../../../../../../mcp-servers-artifacts/android-dev-tools-mcp-server.tar.gz .
+            cd ../../../../../../..
+          fi
+
+      - name: Authenticate with Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          cloudsmith whoami
+
+      - name: Upload MCP servers to Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          VERSION="${{ github.ref_name || github.event.inputs.version || 'latest' }}"
+          
+          # Upload MCP Prompts Server
+          if [ -f ../mcp-prompts-server-standalone.tar.gz ]; then
+            cloudsmith upload raw ${{ env.CLOUDSMITH_ORG }}/${{ env.CLOUDSMITH_REPO }} ../mcp-prompts-server-standalone.tar.gz \
+              --name "mcp-prompts-server" \
+              --version "$VERSION" \
+              --summary "MCP Prompts Server (standalone)" \
+              --description "Standalone MCP Prompts server executable"
+          fi
+          
+          # Upload Python MCP Servers
+          for file in mcp-servers-artifacts/*.tar.gz; do
+            if [ -f "$file" ]; then
+              name=$(basename "$file" .tar.gz)
+              cloudsmith upload raw ${{ env.CLOUDSMITH_ORG }}/${{ env.CLOUDSMITH_REPO }} "$file" \
+                --name "$name" \
+                --version "$VERSION" \
+                --summary "MCP Server: $name" \
+                --description "MCP server executable package"
+            fi
+          done
+
+  upload-dependencies:
+    name: Upload Built Dependencies
+    if: github.event.inputs.artifact_type == 'all' || github.event.inputs.artifact_type == 'dependencies' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Conan
+        run: |
+          pip install conan==2.21.0
+
+      - name: Configure Conan remotes
+        run: |
+          conan profile detect --force
+          conan remote add sparesparrow-conan \
+            https://dl.cloudsmith.io/public/${{ env.CLOUDSMITH_ORG }}/${{ env.CLOUDSMITH_REPO }}/conan/ \
+            --force || true
+
+      - name: Build and export dependencies
+        run: |
+          mkdir -p dependencies-artifacts
+          
+          # Build key dependencies
+          conan create packages/foundation/sparetools-flatbuffers --version=24.3.26 --build=missing
+          conan create packages/foundation/sparetools-cpython --version=3.12.8 --build=missing
+          
+          # Export packages for upload
+          conan export packages/foundation/sparetools-flatbuffers --version=24.3.26
+          conan export packages/foundation/sparetools-cpython --version=3.12.8
+          
+          # Find and copy package files
+          find ~/.conan2 -name "*.tgz" -type f -exec cp {} dependencies-artifacts/ \;
+
+      - name: Authenticate with Cloudsmith
+        env:
+          CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+        run: |
+          conan remote login sparesparrow-conan spare-sparrow --password "$CLOUDSMITH_API_KEY"
+
+      - name: Upload dependencies to Cloudsmith
+        run: |
+          echo "📤 Uploading built dependencies to Cloudsmith..."
+          conan upload "sparetools-flatbuffers/24.3.26" -r sparesparrow-conan --confirm --retry 3
+          conan upload "sparetools-cpython/3.12.8" -r sparesparrow-conan --confirm --retry 3
+          echo "✅ Dependencies uploaded successfully"
+
+  create-release-summary:
+    name: Create Release Summary
+    needs: [upload-firmware, upload-tools, upload-mcp-servers, upload-dependencies]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate summary
+        run: |
+          echo "## 🎉 Artifacts Uploaded to Cloudsmith" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Firmware Binaries" >> $GITHUB_STEP_SUMMARY
+          echo "- ESP32-S3 firmware, bootloader, partitions, ELF" >> $GITHUB_STEP_SUMMARY
+          echo "- ESP32 firmware, bootloader, partitions, ELF" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Development Tools" >> $GITHUB_STEP_SUMMARY
+          echo "- FlatBuffers compiler (flatc)" >> $GITHUB_STEP_SUMMARY
+          echo "- Conan package manager (standalone)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### MCP Servers" >> $GITHUB_STEP_SUMMARY
+          echo "- MCP Prompts Server" >> $GITHUB_STEP_SUMMARY
+          echo "- ESP32 Serial Monitor MCP Server" >> $GITHUB_STEP_SUMMARY
+          echo "- Conan Cloudsmith MCP Server" >> $GITHUB_STEP_SUMMARY
+          echo "- Android Dev Tools MCP Server" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "- sparetools-flatbuffers/24.3.26" >> $GITHUB_STEP_SUMMARY
+          echo "- sparetools-cpython/3.12.8" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 View at: https://cloudsmith.io/~${{ env.CLOUDSMITH_ORG }}/repos/${{ env.CLOUDSMITH_REPO }}/packages/" >> $GITHUB_STEP_SUMMARY
