@@ -1,16 +1,20 @@
 from conan import ConanFile
-from conan.tools.files import copy, save
+from conan.tools.files import copy, save, load
+from conan.tools.scm import Git
 import os
+import subprocess
+import json
+import shutil
 
 
 class SpareToolsMCPPromptsConan(ConanFile):
     name = "sparetools-mcp-prompts"
-    version = "3.13.1"
+    version = "3.12.6"
     license = "MIT"
     author = "sparesparrow"
-    url = "https://github.com/sparesparrow/sparetools"
-    description = "MCP Prompts server for AI-assisted development workflows in SpareTools ecosystem"
-    topics = ("mcp", "prompts", "ai", "typescript", "server", "development", "automation")
+    url = "https://github.com/sparesparrow/mcp-prompts"
+    description = "MCP Prompts server for AI-assisted development workflows in SpareTools ecosystem. Aggregates prompts from mcp-prompts GitHub repo with SpareTools capabilities."
+    topics = ("mcp", "prompts", "ai", "typescript", "server", "development", "automation", "esp32", "embedded")
 
     # Use SpareTools foundation utilities
     python_requires = "sparetools-base/2.0.3"
@@ -18,6 +22,20 @@ class SpareToolsMCPPromptsConan(ConanFile):
     # Node.js application - no C/C++ compilation needed
     settings = None
     package_type = "application"
+
+    def source(self):
+        """Fetch mcp-prompts from GitHub repository"""
+        git = Git(self)
+        repo_url = "https://github.com/sparesparrow/mcp-prompts.git"
+        tag = f"v{self.version}"
+        
+        self.output.info(f"Cloning mcp-prompts repository (tag: {tag})...")
+        try:
+            git.clone(repo_url, target="mcp-prompts-src")
+            git.checkout(tag, cwd="mcp-prompts-src")
+            self.output.info(f"Successfully fetched mcp-prompts v{self.version}")
+        except Exception as e:
+            self.output.warn(f"Git clone failed: {e}. Using exports_sources if available.")
 
     exports_sources = (
         "package.json",
@@ -84,38 +102,47 @@ class SpareToolsMCPPromptsConan(ConanFile):
 
     def package(self):
         """Package the MCP Prompts application and all supporting files."""
+        # Determine source directory (cloned repo or exports_sources)
+        source_dir = os.path.join(self.source_folder, "mcp-prompts-src")
+        if not os.path.exists(source_dir):
+            source_dir = self.source_folder
+        
         # Core application files
-        copy(self, "package.json", dst=os.path.join(self.package_folder, "app"), src=self.source_folder)
-        copy(self, "package-lock.json", dst=os.path.join(self.package_folder, "app"), src=self.source_folder)
-        copy(self, "pnpm-lock.yaml", dst=os.path.join(self.package_folder, "app"), src=self.source_folder)
+        copy(self, "package.json", dst=os.path.join(self.package_folder, "app"), src=source_dir)
+        copy(self, "package-lock.json", dst=os.path.join(self.package_folder, "app"), src=source_dir)
+        copy(self, "pnpm-lock.yaml", dst=os.path.join(self.package_folder, "app"), src=source_dir)
 
         # TypeScript source and compiled output
-        copy(self, "src/**/*", dst=os.path.join(self.package_folder, "app"), src=self.source_folder)
-        copy(self, "dist/**/*", dst=os.path.join(self.package_folder, "app"), src=self.source_folder)
+        copy(self, "src/**/*", dst=os.path.join(self.package_folder, "app"), src=source_dir)
+        copy(self, "dist/**/*", dst=os.path.join(self.package_folder, "app"), src=source_dir)
 
         # Configuration files
-        copy(self, "*.config.*", dst=os.path.join(self.package_folder, "config"), src=self.source_folder)
-        copy(self, "tsconfig*.json", dst=os.path.join(self.package_folder, "config"), src=self.source_folder)
-        copy(self, ".env.example", dst=os.path.join(self.package_folder, "config"), src=self.source_folder)
+        copy(self, "*.config.*", dst=os.path.join(self.package_folder, "config"), src=source_dir)
+        copy(self, "tsconfig*.json", dst=os.path.join(self.package_folder, "config"), src=source_dir)
+        copy(self, ".env.example", dst=os.path.join(self.package_folder, "config"), src=source_dir)
 
         # Data and prompts
-        copy(self, "data/**/*", dst=os.path.join(self.package_folder, "data"), src=self.source_folder)
-        copy(self, "layers/**/*", dst=os.path.join(self.package_folder, "data"), src=self.source_folder)
+        copy(self, "data/**/*", dst=os.path.join(self.package_folder, "data"), src=source_dir)
+        if os.path.exists(os.path.join(source_dir, "layers")):
+            copy(self, "layers/**/*", dst=os.path.join(self.package_folder, "data"), src=source_dir)
 
         # Scripts and tools
-        copy(self, "scripts/**/*", dst=os.path.join(self.package_folder, "scripts"), src=self.source_folder)
+        copy(self, "scripts/**/*", dst=os.path.join(self.package_folder, "scripts"), src=source_dir)
 
         # Documentation
-        copy(self, "README.md", dst=os.path.join(self.package_folder, "docs"), src=self.source_folder)
-        copy(self, "docs/**/*", dst=os.path.join(self.package_folder, "docs"), src=self.source_folder)
-        copy(self, "*.md", dst=os.path.join(self.package_folder, "docs"), src=self.source_folder)
+        copy(self, "README.md", dst=os.path.join(self.package_folder, "docs"), src=source_dir)
+        if os.path.exists(os.path.join(source_dir, "docs")):
+            copy(self, "docs/**/*", dst=os.path.join(self.package_folder, "docs"), src=source_dir)
 
         # Docker and deployment files
-        copy(self, "Dockerfile*", dst=os.path.join(self.package_folder, "docker"), src=self.source_folder)
-        copy(self, "docker-compose*.yml", dst=os.path.join(self.package_folder, "docker"), src=self.source_folder)
+        if os.path.exists(os.path.join(source_dir, "Dockerfile")):
+            copy(self, "Dockerfile*", dst=os.path.join(self.package_folder, "docker"), src=source_dir)
+        if os.path.exists(os.path.join(source_dir, "docker-compose.yml")):
+            copy(self, "docker-compose*.yml", dst=os.path.join(self.package_folder, "docker"), src=source_dir)
 
         # Licenses and legal
-        copy(self, "LICENSE", dst=os.path.join(self.package_folder, "licenses"), src=self.source_folder)
+        if os.path.exists(os.path.join(source_dir, "LICENSE")):
+            copy(self, "LICENSE", dst=os.path.join(self.package_folder, "licenses"), src=source_dir)
 
         # Create launcher scripts
         bin_dir = os.path.join(self.package_folder, "bin")
