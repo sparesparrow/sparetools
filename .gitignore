@@ -28,6 +28,12 @@ dist/
 .idea/
 *.swp
 *.swo
+.directory
+
+# Node.js
+node_modules/
+package-lock.json
+pnpm-lock.yaml
 
 # CMake user-specific presets
 CMakeUserPresets.json
