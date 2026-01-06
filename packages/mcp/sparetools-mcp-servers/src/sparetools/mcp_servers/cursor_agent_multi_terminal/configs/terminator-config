@@ -1,0 +1,119 @@
+[global_config]
+  title_transmit_bg_color = "#2d5aa0"
+  focus = system
+  suppress_multiple_term_dialog = True
+[keybindings]
+  close_term = <Primary>w
+  close_window = <Primary>q
+  new_tab = <Primary>t
+  new_window = <Primary>i
+  paste = <Primary>v
+  split_horiz = <Primary>e
+  split_vert = <Primary>o
+  toggle_scrollbar = <Primary>s
+[profiles]
+  [[default]]
+    palette = "#1e1e2e:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#cdd6f4:#585b70:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#cdd6f4"
+    background_color = "#1e1e2e"
+    background_darkness = 0.95
+    background_type = transparent
+    cursor_color = "#cdd6f4"
+    foreground_color = "#cdd6f4"
+    show_titlebar = False
+    scrollback_lines = 10000
+    font = JetBrains Mono 11
+  [[agent_primary]]
+    palette = "#1e1e2e:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#cdd6f4:#585b70:#f38ba8:#a6e3a1:#f9e2af:#89b4fa:#f5c2e7:#94e2d5:#cdd6f4"
+    background_color = "#1e1e2e"
+    background_darkness = 0.95
+    background_type = transparent
+    cursor_color = "#89b4fa"
+    foreground_color = "#cdd6f4"
+    show_titlebar = False
+    scrollback_lines = 10000
+    font = JetBrains Mono 11
+    use_system_font = False
+  [[agent_secondary]]
+    palette = "#2a2a37:#ff6b6b:#51cf66:#ffd43b:#74c0fc:#da77f2:#4ecdc4:#ffffff:#495057:#ff6b6b:#51cf66:#ffd43b:#74c0fc:#da77f2:#4ecdc4:#ffffff"
+    background_color = "#2a2a37"
+    background_darkness = 0.95
+    background_type = transparent
+    cursor_color = "#74c0fc"
+    foreground_color = "#ffffff"
+    show_titlebar = False
+    scrollback_lines = 10000
+    font = JetBrains Mono 11
+    use_system_font = False
+  [[agent_research]]
+    palette = "#2d1b69:#ff6b9d:#00d4aa:#ffd93d:#6c5ce7:#fd79a8:#00cec9:#ffffff:#34495e:#ff6b9d:#00d4aa:#ffd93d:#6c5ce7:#fd79a8:#00cec9:#ffffff"
+    background_color = "#2d1b69"
+    background_darkness = 0.95
+    background_type = transparent
+    cursor_color = "#ffd93d"
+    foreground_color = "#ffffff"
+    show_titlebar = False
+    scrollback_lines = 10000
+    font = JetBrains Mono 11
+    use_system_font = False
+  [[agent_execution]]
+    palette = "#1a1a2e:#ff2e63:#08d9d6:#ffed4e:#ff9f43:#ff6b9d:#54a0ff:#ffffff:#2c3e50:#ff2e63:#08d9d6:#ffed4e:#ff9f43:#ff6b9d:#54a0ff:#ffffff"
+    background_color = "#1a1a2e"
+    background_darkness = 0.95
+    background_type = transparent
+    cursor_color = "#ffed4e"
+    foreground_color = "#ffffff"
+    show_titlebar = False
+    scrollback_lines = 10000
+    font = JetBrains Mono 11
+    use_system_font = False
+[layouts]
+  [[cursor_agent_multi]]
+    [[[child0]]]
+      type = Window
+      parent = ""
+      order = 0
+      position = 0:0
+      size = 1920:1080
+    [[[child1]]]
+      type = VPaned
+      parent = child0
+      order = 0
+      position = 0
+      ratio = 0.4
+    [[[child2]]]
+      type = HPaned
+      parent = child1
+      order = 0
+      position = 0
+      ratio = 0.5
+    [[[child3]]]
+      type = Terminal
+      parent = child2
+      order = 0
+      profile = agent_primary
+      command = ""
+    [[[child4]]]
+      type = Terminal
+      parent = child2
+      order = 1
+      profile = agent_secondary
+      command = ""
+    [[[child5]]]
+      type = HPaned
+      parent = child1
+      order = 1
+      position = 0
+      ratio = 0.5
+    [[[child6]]]
+      type = Terminal
+      parent = child5
+      order = 0
+      profile = agent_research
+      command = ""
+    [[[child7]]]
+      type = Terminal
+      parent = child5
+      order = 1
+      profile = agent_execution
+      command = ""
+[plugins]
