@@ -1,0 +1,37 @@
+{
+  "description": "Sony DualShock 4 Controller mappings for Cursor IDE",
+  "mappings": {
+    "CROSS": "KEY_ENTER",
+    "CIRCLE": "KEY_ESC",
+    "SQUARE": "KEY_LEFTCTRL+KEY_SPACE",
+    "TRIANGLE": "KEY_LEFTCTRL+KEY_P",
+    "L1": "KEY_LEFTALT+KEY_LEFT",
+    "R1": "KEY_LEFTALT+KEY_RIGHT",
+    "SHARE": "KEY_LEFTCTRL+KEY_W",
+    "OPTIONS": "KEY_LEFTCTRL+KEY_B",
+    "DPAD_UP": "KEY_UP",
+    "DPAD_DOWN": "KEY_DOWN",
+    "DPAD_LEFT": "KEY_LEFT",
+    "DPAD_RIGHT": "KEY_RIGHT",
+    "L2": "MOUSE_LEFT_CLICK",
+    "R2": "MOUSE_RIGHT_CLICK"
+  },
+  "analog_mappings": {
+    "LEFT_X": "MOUSE_MOVE_X",
+    "LEFT_Y": "MOUSE_MOVE_Y",
+    "RIGHT_X": "KEY_LEFT",
+    "RIGHT_Y": "KEY_UP"
+  },
+  "special_mappings": {
+    "L3": "KEY_LEFTCTRL+KEY_L",
+    "R3": "KEY_LEFTALT+KEY_F12",
+    "L2+CROSS": "KEY_LEFTCTRL+KEY_S",
+    "R2+CROSS": "KEY_LEFTCTRL+KEY_O",
+    "SQUARE+TRIANGLE": "KEY_LEFTCTRL+KEY_SHIFT+KEY_P"
+  },
+  "sensitivity": {
+    "mouse_speed": 2.5,
+    "scroll_speed": 0.8,
+    "analog_threshold": 0.1
+  }
+}

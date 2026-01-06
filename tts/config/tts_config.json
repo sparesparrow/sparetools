@@ -1,0 +1,25 @@
+{
+  "elevenlabs": {
+    "api_key": "your_elevenlabs_api_key_here",
+    "model": "eleven_monolingual_v1",
+    "voice_id": "21m00Tcm4TlvDq8ikWAM"
+  },
+  "pyttsx3": {
+    "rate": 180,
+    "volume": 0.8,
+    "voice": "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\TTS_MS_EN-US_ZIRA_11.0"
+  },
+  "espeak-ng": {
+    "voice": "en-us",
+    "speed": 150,
+    "pitch": 50,
+    "volume": 80
+  },
+  "gtts": {
+    "lang": "en",
+    "slow": false
+  },
+  "festival": {
+    "voice": "kal_diphone"
+  }
+}

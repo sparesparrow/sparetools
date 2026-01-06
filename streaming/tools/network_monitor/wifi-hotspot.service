@@ -1,0 +1,14 @@
+[Unit]
+Description=WiFi Hotspot Service
+After=network.target
+Wants=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/home/sparrow/network_monitor/setup_wifi_hotspot.sh
+ExecStop=/home/sparrow/network_monitor/setup_wifi_hotspot.sh --stop
+User=root
+
+[Install]
+WantedBy=multi-user.target

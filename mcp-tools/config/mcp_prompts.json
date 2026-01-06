@@ -1,0 +1,147 @@
+{
+  "prompts": {
+    "mcp-code-generator": {
+      "content": "# Code Generation Request\n\n## Requirements\n{{ code_requirements }}\n\n## Specifications\n- **Language**: {{ language }}\n- **Framework**: {{ framework }}\n- **Complexity Level**: {{ complexity }}\n- **Style Guide**: {{ style_guide }}\n{% if include_tests %}- **Include Tests**: Yes{% endif %}\n{% if include_docs %}- **Include Documentation**: Yes{% endif %}\n\n## Generated Code\n\nPlease generate {{ language }} code that meets the above requirements.\n\n{% if language == \"Python\" %}Follow {{ style_guide }} guidelines and ensure the code is:\n- Well-documented with docstrings\n- Follows proper naming conventions\n- Includes type hints where appropriate{% elif language == \"JavaScript\" %}Follow modern JavaScript best practices:\n- Use ES6+ features\n- Include JSDoc comments\n- Follow consistent formatting{% elif language == \"Java\" %}Follow Java best practices:\n- Use proper package structure\n- Include comprehensive JavaDoc\n- Follow naming conventions{% endif %}\n\n{% if include_tests %}## Test Requirements\nPlease also include unit tests for the generated code using appropriate testing frameworks for {{ language }}.{% endif %}\n\n{% if include_docs %}## Documentation Requirements\nPlease include:\n- API documentation\n- Usage examples\n- Installation/setup instructions{% endif %}",
+      "metadata": {
+        "description": "Generate code based on requirements and specifications",
+        "category": "code_generation",
+        "variables": {
+          "code_requirements": "Create a basic function",
+          "language": "Python",
+          "framework": "None",
+          "complexity": "simple",
+          "include_tests": false,
+          "include_docs": false,
+          "style_guide": "PEP 8"
+        }
+      },
+      "created_at": "2024-01-01",
+      "updated_at": "2024-01-01"
+    },
+    "mcp-analysis-prompt": {
+      "content": "# {{ analysis_type | title }} Analysis Request\n\n## Analysis Target\n{{ target_code }}\n\n## Context\n- **System Context**: {{ context }}\n- **Urgency Level**: {{ urgency }}\n- **Focus Areas**: {{ focus_areas | join(\", \") }}\n\n## Analysis Requirements\n\nPlease perform a comprehensive {{ analysis_type }} analysis focusing on the following areas:\n\n{% for area in focus_areas %}### {{ area | title }}\n- Identify potential issues\n- Assess current implementation\n- Provide specific recommendations\n{% endfor %}\n\n## Specific Questions\n1. What are the main strengths of this code?\n2. What are the critical issues that need immediate attention?\n3. How can the code be improved for better {{ focus_areas[0] }}?\n4. What are the potential risks and how can they be mitigated?\n\n{% if include_recommendations %}## Expected Deliverables\n- Detailed analysis report\n- Prioritized list of issues\n- Specific improvement recommendations\n- Code examples for fixes\n- Implementation timeline suggestions{% endif %}\n\n## Additional Context\nPlease consider the {{ urgency }} urgency level when prioritizing recommendations and provide actionable insights that can be implemented effectively.",
+      "metadata": {
+        "description": "Generate analysis prompts for code review, debugging, or system analysis",
+        "category": "analysis",
+        "variables": {
+          "analysis_type": "code_review",
+          "target_code": "Code to analyze",
+          "focus_areas": [
+            "performance",
+            "security",
+            "maintainability"
+          ],
+          "context": "Production system",
+          "urgency": "medium",
+          "include_recommendations": true
+        }
+      },
+      "created_at": "2024-01-01",
+      "updated_at": "2024-01-01"
+    },
+    "mcp-documentation-prompt": {
+      "content": "# {{ doc_type | title }} Generation Request\n\n## Project Information\n- **Project Name**: {{ project_name }}\n- **Documentation Type**: {{ doc_type }}\n- **Target Audience**: {{ target_audience }}\n- **Scope**: {{ scope }}\n- **Format**: {{ format }}\n\n## Documentation Requirements\n\nPlease generate comprehensive {{ doc_type }} for {{ project_name }} that is suitable for {{ target_audience }}.\n\n### Content Structure\n1. **Overview**: High-level description and purpose\n2. **Getting Started**: Setup and installation instructions\n3. **Core Concepts**: Key concepts and terminology\n4. **Detailed Documentation**: Comprehensive coverage of all features\n5. **API Reference**: Complete API documentation (if applicable)\n6. **Examples**: Practical usage examples\n7. **Troubleshooting**: Common issues and solutions\n\n### Writing Guidelines\n- Use clear, concise language appropriate for {{ target_audience }}\n- Include practical examples and use cases\n- Structure content logically with proper headings\n- Use consistent formatting and terminology\n- Include cross-references where helpful\n\n{% if include_examples %}### Example Requirements\nPlease include:\n- Basic usage examples\n- Advanced use cases\n- Code snippets with explanations\n- Real-world scenarios{% endif %}\n\n{% if include_diagrams %}### Visual Elements\nPlease suggest:\n- Architecture diagrams\n- Flow charts\n- Sequence diagrams\n- Screenshots or mockups (where applicable){% endif %}\n\n## Additional Considerations\n- Ensure the documentation is maintainable and easy to update\n- Include version information and change logs\n- Consider different skill levels within the {{ target_audience }} audience\n- Make the documentation searchable and navigable",
+      "metadata": {
+        "description": "Generate documentation prompts for technical writing and documentation",
+        "category": "documentation",
+        "variables": {
+          "doc_type": "API documentation",
+          "project_name": "My Project",
+          "target_audience": "developers",
+          "scope": "complete system",
+          "format": "markdown",
+          "include_examples": true,
+          "include_diagrams": false
+        }
+      },
+      "created_at": "2024-01-01",
+      "updated_at": "2024-01-01"
+    },
+    "mcp-testing-prompt": {
+      "content": "# {{ test_type | title }} Generation Request\n\n## Testing Target\n{{ code_to_test }}\n\n## Test Specifications\n- **Test Type**: {{ test_type }}\n- **Language**: {{ language }}\n- **Testing Framework**: {{ testing_framework }}\n- **Coverage Target**: {{ coverage_target }}%\n- **Include Edge Cases**: {{ include_edge_cases }}\n- **Include Performance Tests**: {{ include_performance_tests }}\n\n## Test Generation Requirements\n\nPlease generate comprehensive {{ test_type }} for the specified code using {{ testing_framework }}.\n\n### Test Structure\n1. **Setup**: Test environment and data preparation\n2. **Test Cases**: Individual test scenarios\n3. **Assertions**: Expected outcomes and validations\n4. **Cleanup**: Test cleanup and teardown\n5. **Documentation**: Test descriptions and comments\n\n### Test Categories\n- **Happy Path Tests**: Normal operation scenarios\n- **Edge Cases**: Boundary conditions and limits\n- **Error Handling**: Invalid inputs and error conditions\n- **Integration Tests**: Component interactions\n{% if include_performance_tests %}- **Performance Tests**: Load and stress testing{% endif %}\n\n### Quality Requirements\n- Achieve {{ coverage_target }}% code coverage\n- Use descriptive test names and documentation\n- Follow {{ testing_framework }} best practices\n- Include proper setup and teardown\n- Use appropriate assertions and matchers\n\n{% if include_edge_cases %}### Edge Case Considerations\nPlease include tests for:\n- Null/undefined inputs\n- Empty collections\n- Boundary values\n- Invalid data types\n- Network failures (if applicable)\n- Resource constraints{% endif %}\n\n## Expected Deliverables\n- Complete test suite implementation\n- Test configuration files\n- Coverage report setup\n- Test documentation\n- CI/CD integration suggestions",
+      "metadata": {
+        "description": "Generate testing prompts for test case generation and quality assurance",
+        "category": "testing",
+        "variables": {
+          "test_type": "unit tests",
+          "code_to_test": "Function or component to test",
+          "testing_framework": "pytest",
+          "language": "Python",
+          "coverage_target": 90,
+          "include_edge_cases": true,
+          "include_performance_tests": false
+        }
+      },
+      "created_at": "2024-01-01",
+      "updated_at": "2024-01-01"
+    },
+    "mcp-debugging-prompt": {
+      "content": "# Debugging Request\n\n## Issue Description\n{{ issue_description }}\n\n## Error Information\n- **Error Message**: {{ error_message }}\n- **Environment**: {{ environment }}\n- **Language**: {{ language }}\n- **Urgency**: {{ urgency }}\n\n## Debugging Requirements\n\nPlease help debug this issue by providing a systematic approach to identify and resolve the problem.\n\n### Initial Analysis\n1. **Symptom Analysis**: What exactly is happening?\n2. **Error Classification**: What type of error is this?\n3. **Impact Assessment**: How critical is this issue?\n4. **Scope Definition**: What components are affected?\n\n### Investigation Steps\n1. **Log Analysis**: Review relevant logs and error messages\n2. **Code Review**: Examine the code for obvious issues\n3. **Environment Check**: Verify system and dependency status\n4. **Reproduction**: Steps to reproduce the issue consistently\n\n{% if include_logs %}### Log Analysis\nPlease analyze the following logs and identify:\n- Error patterns and frequency\n- Timeline of events leading to the error\n- System state at the time of error\n- Any warning signs or precursors{% endif %}\n\n### Debugging Strategy\n1. **Isolation**: Narrow down the problematic area\n2. **Hypothesis Formation**: Develop theories about the root cause\n3. **Testing**: Create tests to validate hypotheses\n4. **Verification**: Confirm the fix resolves the issue\n\n{% if include_solutions %}### Solution Requirements\nPlease provide:\n- Root cause analysis\n- Step-by-step fix instructions\n- Prevention strategies\n- Testing recommendations\n- Monitoring suggestions{% endif %}\n\n## Additional Context\n- **Urgency Level**: {{ urgency }} - prioritize accordingly\n- **Environment**: {{ environment }} - consider environment-specific factors\n- **Language**: {{ language }} - use appropriate debugging tools and techniques\n\n## Expected Deliverables\n- Clear problem identification\n- Systematic debugging approach\n- Specific fix recommendations\n- Prevention measures\n- Testing and validation steps",
+      "metadata": {
+        "description": "Generate debugging prompts for troubleshooting and issue resolution",
+        "category": "debugging",
+        "variables": {
+          "issue_description": "Description of the problem",
+          "error_message": "Error message or symptoms",
+          "environment": "development",
+          "language": "Python",
+          "urgency": "high",
+          "include_logs": true,
+          "include_solutions": true
+        }
+      },
+      "created_at": "2024-01-01",
+      "updated_at": "2024-01-01"
+    },
+    "mcp-architecture-prompt": {
+      "content": "# {{ system_type | title }} Architecture Design Request\n\n## System Overview\n- **System Type**: {{ system_type }}\n- **Scale**: {{ scale }}\n- **Technology Stack**: {{ technology_stack }}\n- **Constraints**: {{ constraints }}\n\n## Requirements\n{{ requirements }}\n\n## Architecture Design Requirements\n\nPlease design a comprehensive architecture for this {{ system_type }} that addresses the specified requirements and constraints.\n\n### Design Considerations\n1. **Scalability**: How will the system handle growth?\n2. **Performance**: What are the performance requirements?\n3. **Reliability**: How will the system ensure uptime and data integrity?\n4. **Security**: What security measures are needed?\n5. **Maintainability**: How will the system be maintained and updated?\n\n### Architecture Components\n- **Frontend**: User interface and client-side logic\n- **Backend**: Server-side logic and API design\n- **Database**: Data storage and management\n- **Infrastructure**: Deployment and hosting considerations\n- **Integration**: External services and APIs\n\n{% if include_diagrams %}### Visual Documentation\nPlease include:\n- High-level system architecture diagram\n- Component interaction diagrams\n- Data flow diagrams\n- Deployment architecture\n- Security architecture overview{% endif %}\n\n{% if include_security %}### Security Considerations\n- Authentication and authorization\n- Data encryption and protection\n- Network security\n- Input validation and sanitization\n- Security monitoring and logging{% endif %}\n\n### Technology Recommendations\nBased on the specified stack ({{ technology_stack }}), please provide:\n- Specific technology choices and rationale\n- Integration patterns and best practices\n- Performance optimization strategies\n- Monitoring and observability tools\n\n## Deliverables\n- Complete architecture design document\n- Technology stack justification\n- Implementation roadmap\n- Risk assessment and mitigation strategies\n- Scalability and performance considerations",
+      "metadata": {
+        "description": "Generate architecture design prompts for system design and planning",
+        "category": "architecture",
+        "variables": {
+          "system_type": "web application",
+          "requirements": "Basic CRUD operations",
+          "scale": "medium",
+          "technology_stack": "Python, React, PostgreSQL",
+          "constraints": "Budget and time limitations",
+          "include_diagrams": true,
+          "include_security": true
+        }
+      },
+      "created_at": "2024-01-01",
+      "updated_at": "2024-01-01"
+    }
+  },
+  "categories": {
+    "code_generation": {
+      "description": "Templates for generating code and development tasks",
+      "count": 1
+    },
+    "analysis": {
+      "description": "Templates for code analysis and review tasks",
+      "count": 1
+    },
+    "documentation": {
+      "description": "Templates for documentation and technical writing",
+      "count": 1
+    },
+    "testing": {
+      "description": "Templates for testing and quality assurance",
+      "count": 1
+    },
+    "debugging": {
+      "description": "Templates for debugging and troubleshooting",
+      "count": 1
+    },
+    "architecture": {
+      "description": "Templates for system design and architecture",
+      "count": 1
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "2024-01-01",
+    "total_prompts": 6,
+    "total_categories": 6
+  }
+}

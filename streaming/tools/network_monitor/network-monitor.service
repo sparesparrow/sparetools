@@ -1,0 +1,18 @@
+[Unit]
+Description=Enhanced Network Monitor - Gonzo Journalism Edition
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User=sparrow
+WorkingDirectory=/home/sparrow/network_monitor
+ExecStart=/home/sparrow/network_monitor/enhanced_network_monitor.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+[Install]
+WantedBy=multi-user.target
