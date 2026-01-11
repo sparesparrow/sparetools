@@ -1,0 +1,50 @@
+---
+template_name: "class-template"
+description: "Class diagram template for object-oriented design"
+variables:
+  title: "Class Structure"
+  classes:
+    - name: "UserService"
+      methods: ["login()", "logout()", "getProfile()"]
+      attributes: ["-username: String", "-password: String"]
+      visibility: "public"
+    - name: "Database"
+      methods: ["connect()", "query()", "disconnect()"]
+      attributes: ["-connection: Connection", "-host: String"]
+      visibility: "public"
+  relationships:
+    - from: "UserService"
+      to: "Database"
+      type: "uses"
+      label: "1..1"
+---
+
+classDiagram
+    %% Title: {{title}}
+    
+    %% Classes
+    {% for class in classes %}
+    class {{class.name}} {
+        {% for attr in class.attributes %}
+        {{attr}}
+        {% endfor %}
+        {% for method in class.methods %}
+        +{{method}}
+        {% endfor %}
+    }
+    {% endfor %}
+    
+    %% Relationships
+    {% for rel in relationships %}
+    {% if rel.type == "uses" %}
+    {{rel.from}} ..> {{rel.to}} : {{rel.label}}
+    {% elif rel.type == "inherits" %}
+    {{rel.from}} --|> {{rel.to}}
+    {% elif rel.type == "implements" %}
+    {{rel.from}} ..|> {{rel.to}}
+    {% elif rel.type == "composition" %}
+    {{rel.from}} *-- {{rel.to}}
+    {% elif rel.type == "aggregation" %}
+    {{rel.from}} o-- {{rel.to}}
+    {% endif %}
+    {% endfor %}

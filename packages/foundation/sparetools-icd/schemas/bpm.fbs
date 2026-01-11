@@ -1,0 +1,51 @@
+// BPM Detector Interface Control Document
+// FlatBuffers schema for BPM (Beats Per Minute) detector communication
+
+namespace sparetools.bpm;
+
+table BPMData {
+    bpm: float;
+    confidence: float;
+    signal_level: float;
+    status: string;
+    timestamp: uint64;
+}
+
+table BPMSettings {
+    min_bpm: int;
+    max_bpm: int;
+    sample_rate: int;
+    fft_size: int;
+    version: string;
+}
+
+table BPMHealth {
+    status: string;
+    uptime: uint64;
+    heap_free: uint64;
+}
+
+enum BPMStatus: byte {
+    DETECTING = 0,
+    LOW_SIGNAL = 1,
+    LOW_CONFIDENCE = 2,
+    ERROR = 3,
+    INITIALIZING = 4,
+    BUFFERING = 5
+}
+
+// Union for all BPM messages
+union BPMMessage {
+    BPMData,
+    BPMSettings,
+    BPMHealth
+}
+
+table BPMEnvelope {
+    message_type: BPMMessage;
+    message_id: uint64;    // Unique message ID
+    source: string;        // Source component (e.g., "bpm-detector", "esp32-firmware")
+}
+
+// Root table for BPM ICD
+root_type BPMEnvelope;

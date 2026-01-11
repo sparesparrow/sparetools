@@ -1,0 +1,43 @@
+---
+template_name: "sequence-template"
+description: "Sequence diagram template for showing interactions between actors"
+variables:
+  title: "System Interaction"
+  actors: ["User", "System", "Database"]
+  interactions:
+    - from: "User"
+      to: "System"
+      message: "Request"
+      type: "solid"
+    - from: "System"
+      to: "Database"
+      message: "Query"
+      type: "solid"
+    - from: "Database"
+      to: "System"
+      message: "Response"
+      type: "dashed"
+    - from: "System"
+      to: "User"
+      message: "Result"
+      type: "solid"
+---
+
+sequenceDiagram
+    %% Title: {{title}}
+    
+    %% Actors
+    {% for actor in actors %}
+    participant {{actor | replace(' ', '_') | upper}} as {{actor}}
+    {% endfor %}
+    
+    %% Interactions
+    {% for interaction in interactions %}
+    {% if interaction.type == "solid" %}
+    {{interaction.from | replace(' ', '_') | upper}}->>+{{interaction.to | replace(' ', '_') | upper}}: {{interaction.message}}
+    {% elif interaction.type == "dashed" %}
+    {{interaction.from | replace(' ', '_') | upper}}-->>-{{interaction.to | replace(' ', '_') | upper}}: {{interaction.message}}
+    {% elif interaction.type == "note" %}
+    Note over {{interaction.from | replace(' ', '_') | upper}},{{interaction.to | replace(' ', '_') | upper}}: {{interaction.message}}
+    {% endif %}
+    {% endfor %}

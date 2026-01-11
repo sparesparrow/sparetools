@@ -1,0 +1,52 @@
+---
+template_name: "state-template"
+description: "State diagram template for showing system states and transitions"
+variables:
+  title: "System States"
+  states: ["Idle", "Processing", "Error", "Complete"]
+  transitions:
+    - from: "Idle"
+      to: "Processing"
+      trigger: "start"
+      condition: "valid_input"
+    - from: "Processing"
+      to: "Complete"
+      trigger: "success"
+      condition: "no_errors"
+    - from: "Processing"
+      to: "Error"
+      trigger: "error"
+      condition: "error_occurred"
+    - from: "Error"
+      to: "Idle"
+      trigger: "reset"
+      condition: "manual_reset"
+    - from: "Complete"
+      to: "Idle"
+      trigger: "reset"
+      condition: "auto_reset"
+---
+
+stateDiagram-v2
+    %% Title: {{title}}
+    
+    [*] --> {{states[0]}}
+    
+    {% for state in states %}
+    state {{state}} {
+        {% if state == "Processing" %}
+        [*] --> Validating
+        Validating --> Processing
+        Processing --> [*]
+        {% elif state == "Error" %}
+        [*] --> Logging
+        Logging --> [*]
+        {% endif %}
+    }
+    {% endfor %}
+    
+    {% for transition in transitions %}
+    {{transition.from}} --> {{transition.to}} : {{transition.trigger}}<br/>[{{transition.condition}}]
+    {% endfor %}
+    
+    {{states[-1]}} --> [*]

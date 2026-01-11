@@ -1,0 +1,15 @@
+[Unit]
+Description=SDR Device Monitoring Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/sparrow/sdr_monitor.sh
+Restart=always
+RestartSec=5
+User=sparrow
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

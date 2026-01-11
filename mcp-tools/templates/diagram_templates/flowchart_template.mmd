@@ -1,0 +1,41 @@
+---
+template_name: "flowchart-template"
+description: "Basic flowchart template with customizable steps and connections"
+variables:
+  title: "Process Flow"
+  steps: ["Start", "Process", "Decision", "End"]
+  connections:
+    - from: "Start"
+      to: "Process"
+      label: ""
+    - from: "Process"
+      to: "Decision"
+      label: ""
+    - from: "Decision"
+      to: "End"
+      label: "Yes"
+    - from: "Decision"
+      to: "Process"
+      label: "No"
+---
+
+graph TD
+    %% Title: {{title}}
+    
+    %% Steps
+    {% for step in steps %}
+    {{step | replace(' ', '_') | upper}}["{{step}}"]
+    {% endfor %}
+    
+    %% Connections
+    {% for conn in connections %}
+    {{conn.from | replace(' ', '_') | upper}} -->|"{{conn.label}}"| {{conn.to | replace(' ', '_') | upper}}
+    {% endfor %}
+    
+    %% Styling
+    classDef startEnd fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef process fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    
+    class {{steps[0] | replace(' ', '_') | upper}},{{steps[-1] | replace(' ', '_') | upper}} startEnd
+    class {{steps[1:-1] | map('replace', ' ', '_') | map('upper') | join(',')}} process

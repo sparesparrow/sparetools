@@ -1,0 +1,31 @@
+---
+template_name: "gantt-template"
+description: "Gantt chart template for project timeline visualization"
+variables:
+  title: "Project Timeline"
+  tasks:
+    - name: "Planning"
+      start: "2024-01-01"
+      end: "2024-01-07"
+      status: "done"
+    - name: "Development"
+      start: "2024-01-08"
+      end: "2024-01-21"
+      status: "active"
+    - name: "Testing"
+      start: "2024-01-22"
+      end: "2024-01-28"
+      status: "pending"
+    - name: "Deployment"
+      start: "2024-01-29"
+      end: "2024-01-31"
+      status: "pending"
+---
+
+gantt
+    title {{title}}
+    dateFormat  YYYY-MM-DD
+    section Phase 1
+    {% for task in tasks %}
+    {{task.name}}    :{{task.status}}, {{task.start}}, {{task.end}}
+    {% endfor %}

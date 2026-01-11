@@ -1,0 +1,92 @@
+graph TB
+    %% Mermaid Diagram Generator System Architecture
+    
+    subgraph "User Interfaces"
+        CLI[Command Line Interface]
+        WEB[Web Interface]
+        API[Python API]
+    end
+    
+    subgraph "Core System"
+        DG[DiagramGenerator Class]
+        TM[Template Manager]
+        EX[Export Engine]
+    end
+    
+    subgraph "Templates"
+        FT[Flowchart Template]
+        ST[Sequence Template]
+        CT[Class Template]
+        STATET[State Template]
+        GT[Gantt Template]
+        PT[Pie Template]
+        MT[Mind Map Template]
+    end
+    
+    subgraph "Configuration"
+        CFG[diagram_configs.json]
+        EXAMP[Example Configurations]
+    end
+    
+    subgraph "Output Formats"
+        SVG[SVG Export]
+        PNG[PNG Export]
+        PDF[PDF Export]
+        RAW[Raw Mermaid Code]
+    end
+    
+    subgraph "External Tools"
+        MCLI[Mermaid CLI]
+        JINJA[Jinja2 Engine]
+    end
+    
+    %% User interactions
+    CLI --> DG
+    WEB --> DG
+    API --> DG
+    
+    %% Core system flow
+    DG --> TM
+    DG --> EX
+    TM --> JINJA
+    EX --> MCLI
+    
+    %% Template connections
+    TM --> FT
+    TM --> ST
+    TM --> CT
+    TM --> STATET
+    TM --> GT
+    TM --> PT
+    TM --> MT
+    
+    %% Configuration
+    CFG --> EXAMP
+    EXAMP --> DG
+    
+    %% Output generation
+    EX --> SVG
+    EX --> PNG
+    EX --> PDF
+    EX --> RAW
+    
+    %% External dependencies
+    MCLI --> SVG
+    MCLI --> PNG
+    MCLI --> PDF
+    JINJA --> RAW
+    
+    %% Styling
+    classDef interface fill:#e1f5fe,stroke:#01579b,stroke-width:2px
+    classDef core fill:#f3e5f5,stroke:#4a148c,stroke-width:2px
+    classDef template fill:#fff3e0,stroke:#e65100,stroke-width:2px
+    classDef config fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef output fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef external fill:#f1f8e9,stroke:#558b2f,stroke-width:2px
+    
+    class CLI,WEB,API interface
+    class DG,TM,EX core
+    class FT,ST,CT,STATET,GT,PT,MT template
+    class CFG,EXAMP config
+    class SVG,PNG,PDF,RAW output
+    class MCLI,JINJA external

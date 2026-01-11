@@ -1,0 +1,41 @@
+GOOGLE CAST WEB INTERFACE TEST URLs
+=====================================
+
+Based on packet analysis, Android device at 192.168.200.84 is querying for Cast devices.
+
+CAST DEVICE IDs DISCOVERED:
+- 674A0243
+- 233637DE
+- 8E6C866D
+
+TEST THESE URLs IN WEB BROWSER:
+
+1. Cast Setup Pages:
+   http://192.168.200.44:8008/setup      (Hisense TV)
+   http://192.168.200.84:8008/setup      (Android device)
+   https://192.168.200.44:8443/setup     (Secure TV setup)
+   https://192.168.200.84:8443/setup     (Secure Android setup)
+
+2. Cast Receiver Status:
+   http://192.168.200.44:8008/receiver/status
+   http://192.168.200.84:8008/receiver/status
+
+3. Specific Cast Apps (by device ID):
+   http://192.168.200.44:8008/apps/674A0243
+   http://192.168.200.44:8008/apps/233637DE
+   http://192.168.200.44:8008/apps/8E6C866D
+
+4. YouTube Cast Receiver:
+   http://192.168.200.44:8008/apps/YouTube
+   http://192.168.200.44:8008/receiver/YouTube
+
+5. Alternative Ports:
+   http://192.168.200.44:9090/setup
+   http://192.168.200.84:9090/setup
+
+TESTING INSTRUCTIONS:
+1. Open each URL in a web browser
+2. Note which ones load (even if they show errors)
+3. Check browser developer tools (F12) for network requests
+4. Look for Cast-specific API calls or WebSocket connections
+5. Try accessing during active casting from YouTube app
