@@ -8,7 +8,7 @@ dependencies:
     - sparetools-bootstrap/2.0.0
     - sparetools-test-harness/2.0.0
   schemas:
-    - sparesparrow-protocols/1.0.0
+    - sparetools-protocols/1.0.1
   utilities:
     - sparetools-shared-dev-tools/2.0.0
   hardware:

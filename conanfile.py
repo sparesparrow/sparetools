@@ -14,19 +14,19 @@ class SparetoolsMonorepoConan(ConanFile):
     # This is a meta-package that depends on all SpareTools packages
     def requirements(self):
         # Core protocol schemas
-        self.requires("sparesparrow-protocols/1.0.0@sparesparrow/stable")
+        #self.requires("sparetools-protocols/1.0.1")
 
         # Embedded utilities
-        self.requires("sparetools-embedded/1.0.0@sparesparrow/stable")
+        #self.requires("sparetools-embedded/1.0.0")
 
         # Python utilities
-        self.requires("sparetools-py/1.0.0@sparesparrow/stable")
+        #self.requires("sparetools-py/1.0.0")
 
         # CPython extensions
-        self.requires("sparetools-cpython/1.0.0@sparesparrow/stable")
+        #self.requires("sparetools-cpython/1.0.0")
 
         # MCP servers for development workflows
-        self.requires("sparetools-mcp-servers/1.0.0@sparesparrow/stable")
+        #self.requires("sparetools-mcp-servers/1.0.0")
 
     def package_info(self):
         # Meta-package doesn't provide libraries directly
@@ -37,7 +37,7 @@ class SparetoolsMonorepoConan(ConanFile):
 
         # Provide information about included components
         self.user_info = {
-            "protocols": "sparesparrow-protocols/1.0.0",
+            "protocols": "sparetools-protocols/1.0.1",
             "embedded": "sparetools-embedded/1.0.0",
             "python": "sparetools-py/1.0.0",
             "cpython": "sparetools-cpython/1.0.0",

@@ -2,6 +2,7 @@ import os
 import sys
 from conan import ConanFile
 from conan.tools.files import copy
+from conan.tools.scm import Git
 
 class SpareToolsOpenSSLToolsConan(ConanFile):
     """OpenSSL build tools, profiles, and utilities for SpareTools ecosystem."""
@@ -11,14 +12,24 @@ class SpareToolsOpenSSLToolsConan(ConanFile):
     python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     name = "sparetools-openssl-tools"
+    version = '1.0.0'
+    license = "Apache-2.0"
+    url = "https://github.com/sparesparrow/openssl-tools"
+    description = "OpenSSL build tools, profiles, and utilities for SpareTools ecosystem"
+    topics = ("openssl", "build-tools", "profiles", "cryptography")
 
-    # Source files to export
-    exports_sources = (
-        "src/*",
-        "profiles/*",
-        "scripts/*",
-        "docs/*",
-    )
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream OpenSSL Tools repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/openssl-tools.git", target="upstream")
+
+    def layout(self):
+        """Set source folder to upstream repository"""
+        from conan.tools.layout import basic_layout
+        basic_layout(self, src_folder="upstream")
 
     def package(self):
         """Package OpenSSL tools and utilities."""

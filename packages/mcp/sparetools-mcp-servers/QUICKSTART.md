@@ -28,6 +28,15 @@ Add to `~/.cursor/mcp.json`:
 ```json
 {
   "mcpServers": {
+    "sparetools-mcp-static-analysis": {
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.static_analysis.static_analysis_mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/sparetools-mcp-servers/src",
+        "STATIC_ANALYSIS_MODE": "development",
+        "MCP_PROMPTS_SERVER_URL": "http://localhost:3000"
+      }
+    },
     "sparetools-esp32": {
       "command": "sparetools-mcp-esp32"
     },
@@ -49,6 +58,18 @@ Add to `~/.cursor/mcp.json`:
 ```
 
 ## 🎯 Quick Tests
+
+### Enhanced Static Analysis (NEW!)
+```bash
+# Discover available tools
+cursor-agent --print "use discover_tools tool"
+
+# Get project recommendations
+cursor-agent --print "use get_recommendations tool with project_path /path/to/project"
+
+# Run static analysis
+cursor-agent --print "use analyze_static tool with analyzer cppcheck and target_path /src"
+```
 
 ### ESP32 Serial Monitor
 ```bash

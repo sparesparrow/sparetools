@@ -4,6 +4,8 @@ import os
 
 
 class {{class_name}}TestPackage(ConanFile):
+    name = 'mia-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
 
     def requirements(self):

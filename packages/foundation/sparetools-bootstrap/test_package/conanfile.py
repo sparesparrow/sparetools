@@ -8,6 +8,8 @@ class SparetoolsBootstrapTestConan(ConanFile):
     Since python_requires are recipe-level dependencies (not packages),
     we validate that they load correctly and can be referenced.
     """
+    name = 'bootstrap-test'
+    version = '1.0.0'
     test_type = "explicit"
     python_requires = "sparetools-bootstrap/[>=2.0.0]", "sparetools-base/[>=2.0.0]"
 

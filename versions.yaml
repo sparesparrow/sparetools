@@ -1,6 +1,7 @@
 foundation:
-  base: 2.0.3
+  base: 2.0.4
   cpython: 3.12.7
+  cpy-base: 1.0.0
   bootstrap: 2.0.3
   test-framework: 1.0.0
   test-harness: 2.0.3
@@ -10,6 +11,7 @@ foundation:
 testing:
   gtest: 1.14.0
   gmock: 1.14.0
+  cpy-hil: 1.0.0
 embedded:
   lvgl: 8.3.11
   openssl: 3.3.2

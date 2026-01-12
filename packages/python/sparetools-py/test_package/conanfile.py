@@ -2,6 +2,8 @@ import os
 from conan import ConanFile
 
 class SparetoolsPyTestConan(ConanFile):
+    name = 'cpy-base-test'
+    version = '1.0.0'
 
     def requirements(self):
         self.requires(self.tested_reference_str)

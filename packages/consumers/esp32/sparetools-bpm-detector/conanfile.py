@@ -2,6 +2,7 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.layout import basic_layout
 from conan.tools.files import copy
+from conan.tools.scm import Git
 import os
 
 # Import SpareTools version management
@@ -16,7 +17,7 @@ except ImportError:
         "gtest": "1.14.0",
         "shared-dev-tools": "2.0.0",
         "bootstrap": "2.0.0",
-        "protocols": "1.0.0"
+        "sparetools-protocols": "1.0.1"
     }
 
 
@@ -57,11 +58,16 @@ class SpareToolsBpmDetectorConan(ConanFile):
         "target_board": "esp32s3",
     }
 
-    # Sources are located in the same place as this recipe
-    exports_sources = "CMakeLists.txt", "src/*", "include/*", "test/*", "scripts/*", "platformio.ini"
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream ESP32 BPM Detector repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/esp32-bpm-detector.git", target="upstream")
 
     def layout(self):
-        basic_layout(self, src_folder=".")
+        basic_layout(self, src_folder="upstream")
 
     def build_requirements(self):
         # ESP32 consumer foundation packages - use dynamic versions
@@ -73,13 +79,13 @@ class SpareToolsBpmDetectorConan(ConanFile):
 
     def requirements(self):
         # Consolidated protocol schemas from SpareTools foundation
-        self.requires(f"sparetools-protocols/1.0.0")
+        self.requires(f"sparetools-protocols/1.0.1")
 
         # Testing framework for host-based C++ unit tests - use dynamic version
         self.requires(f"gtest/{versions['gtest']}")
 
         # ESP32 firmware package (from existing consumer)
-        self.requires("sparetools-hal-sunton/1.0.0@sparetools/stable")
+        self.requires("sparetools-hal-sunton/1.0.0")
 
         # Audio processing dependencies (if available)
         # self.requires("sparetools-dsp/1.0.0")  # Future package

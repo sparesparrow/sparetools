@@ -1,0 +1,64 @@
+{
+  "name": "C++ Project Analysis Workflow",
+  "description": "Comprehensive analysis workflow for C++ projects including static analysis, memory checking, and testing",
+  "steps": [
+    {
+      "step_id": "static_analysis",
+      "tool_name": "cppcheck",
+      "target_path": ".",
+      "arguments": {
+        "enable_checks": ["all"],
+        "output_format": "xml",
+        "include_paths": ["include", "src"],
+        "defines": ["NDEBUG"]
+      },
+      "timeout": 600
+    },
+    {
+      "step_id": "memory_analysis",
+      "tool_name": "valgrind",
+      "target_path": "./build/app",
+      "arguments": {
+        "tool": "memcheck",
+        "leak_check": true,
+        "track_origins": true,
+        "log_file": "valgrind_results.txt"
+      },
+      "dependencies": ["static_analysis"],
+      "condition": "result.success",
+      "timeout": 1800
+    },
+    {
+      "step_id": "unit_tests",
+      "tool_name": "gtest",
+      "target_path": "./build/tests",
+      "arguments": {
+        "output_format": "xml",
+        "filter": "*UnitTest*"
+      },
+      "dependencies": ["static_analysis"],
+      "timeout": 300
+    },
+    {
+      "step_id": "performance_analysis",
+      "tool_name": "valgrind",
+      "target_path": "./build/app",
+      "arguments": {
+        "tool": "callgrind",
+        "callgrind_out_file": "callgrind_results.out"
+      },
+      "dependencies": ["memory_analysis"],
+      "condition": "result.issues.length < 10",
+      "timeout": 1200
+    }
+  ],
+  "metadata": {
+    "project_type": "cpp",
+    "estimated_duration": 2700,
+    "quality_gates": {
+      "max_static_issues": 50,
+      "max_memory_leaks": 0,
+      "min_test_coverage": 80
+    }
+  }
+}

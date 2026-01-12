@@ -19,6 +19,7 @@ import threading
 import time
 import uuid
 import xml.etree.ElementTree as ET
+from typing import Optional
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -31,6 +32,20 @@ try:
     MCP_AVAILABLE = True
 except ImportError:
     MCP_AVAILABLE = False
+
+# Import enhanced tool system
+try:
+    from .tool_adapters import (
+        BaseToolAdapter, ToolCapabilities, ToolResult,
+        CppcheckAdapter, ClangTidyAdapter, ValgrindAdapter,
+        GdbAdapter, StraceAdapter, PytestAdapter, GtestAdapter,
+        JestAdapter, DockerAdapter
+    )
+    from .mcp_client import MCPPromptsClient, InterpretationEngine, InterpretationContext
+    from .workflow_manager import WorkflowManager, WorkflowSession, WorkflowStatus
+    ENHANCED_TOOLS_AVAILABLE = True
+except ImportError:
+    ENHANCED_TOOLS_AVAILABLE = False
 
 # Configuration
 SESSION_TIMEOUT_MINUTES = 120
@@ -914,8 +929,881 @@ def create_server():
             "status": "stopped",
             "message": "Analysis session stopped"
         }, indent=2)
-    
+
+    # Enhanced tools (Phase 2)
+    if ENHANCED_TOOLS_AVAILABLE:
+        # Tool registry for enhanced adapters
+        tool_registry = {
+            'cppcheck': CppcheckAdapter(),
+            'clang-tidy': ClangTidyAdapter(),
+            'valgrind': ValgrindAdapter(),
+            'gdb': GdbAdapter(),
+            'strace': StraceAdapter(),
+            'pytest': PytestAdapter(),
+            'gtest': GtestAdapter(),
+            'jest': JestAdapter(),
+            'docker': DockerAdapter(),
+        }
+
+        # MCP-Prompts integration
+        prompts_client = MCPPromptsClient()
+        interpretation_engine = InterpretationEngine(prompts_client)
+
+        # Workflow manager for multi-tool orchestration
+        workflow_manager = WorkflowManager(tool_registry)
+
+        @mcp.tool()
+        def discover_tools() -> str:
+            """Comprehensive tool discovery - scan system for available analysis tools"""
+            discovered_tools = []
+
+            for tool_name, adapter in tool_registry.items():
+                available, version = adapter.is_available()
+                capabilities = adapter.get_capabilities()
+
+                status = {
+                    'name': tool_name,
+                    'available': available,
+                    'version': version,
+                    'category': capabilities.category.value,
+                    'supported_languages': capabilities.supported_languages,
+                    'description': capabilities.metadata.get('description', ''),
+                }
+                discovered_tools.append(status)
+
+            return json.dumps({
+                'total_tools': len(discovered_tools),
+                'available_tools': len([t for t in discovered_tools if t['available']]),
+                'tools': discovered_tools
+            }, indent=2)
+
+        @mcp.tool()
+        def analyze_static(analyzer: str, target_path: str, **kwargs) -> str:
+            """Unified static analysis dispatcher - run analysis with specified tool"""
+            if analyzer not in tool_registry:
+                return json.dumps({
+                    'error': f'Unknown analyzer: {analyzer}',
+                    'available_analyzers': list(tool_registry.keys())
+                }, indent=2)
+
+            adapter = tool_registry[analyzer]
+
+            # Validate target
+            valid, error_msg = adapter.validate_target(target_path)
+            if not valid:
+                return json.dumps({'error': error_msg}, indent=2)
+
+            try:
+                # Run analysis
+                result = adapter.execute_sync(target_path, **kwargs)
+
+                # Store result for learning
+                asyncio.create_task(
+                    prompts_client.store_analysis_result(
+                        analyzer, result, {'target_path': target_path, **kwargs}
+                    )
+                )
+
+                return json.dumps({
+                    'tool_name': result.tool_name,
+                    'success': result.success,
+                    'issues_found': len(result.issues),
+                    'execution_time': result.execution_time,
+                    'result': result.to_dict()
+                }, indent=2, default=str)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Analysis failed: {str(e)}',
+                    'tool': analyzer,
+                    'target': target_path
+                }, indent=2)
+
+        @mcp.tool()
+        def configure_tool(tool_name: str, project_type: str, language: Optional[str] = None) -> str:
+            """Tool configuration management - get project-specific tool settings"""
+            if tool_name not in tool_registry:
+                return json.dumps({
+                    'error': f'Unknown tool: {tool_name}',
+                    'available_tools': list(tool_registry.keys())
+                }, indent=2)
+
+            try:
+                # Get configuration template from MCP-Prompts
+                config = prompts_client.get_configuration_template_sync(
+                    tool_name, project_type, language
+                )
+
+                if config:
+                    return json.dumps({
+                        'tool': tool_name,
+                        'project_type': project_type,
+                        'language': language,
+                        'configuration': config
+                    }, indent=2)
+                else:
+                    # Fallback to basic configuration
+                    adapter = tool_registry[tool_name]
+                    basic_config = adapter.get_default_config()
+                    return json.dumps({
+                        'tool': tool_name,
+                        'project_type': project_type,
+                        'language': language,
+                        'configuration': basic_config,
+                        'note': 'Using default configuration (MCP-Prompts unavailable)'
+                    }, indent=2)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Configuration failed: {str(e)}',
+                    'tool': tool_name
+                }, indent=2)
+
+        @mcp.tool()
+        def get_recommendations(project_path: str) -> str:
+            """AI-powered workflow suggestions - analyze project and recommend tools"""
+            try:
+                # Basic project analysis
+                project_context = analyze_project_context(project_path)
+
+                # Get workflow recommendations from MCP-Prompts
+                workflows = prompts_client.get_workflow_recommendations_sync(project_context)
+
+                if workflows:
+                    return json.dumps({
+                        'project_analysis': project_context,
+                        'recommended_workflows': workflows
+                    }, indent=2)
+                else:
+                    # Fallback recommendations
+                    fallback_workflows = generate_fallback_recommendations(project_context)
+                    return json.dumps({
+                        'project_analysis': project_context,
+                        'recommended_workflows': fallback_workflows,
+                        'note': 'Using fallback recommendations (MCP-Prompts unavailable)'
+                    }, indent=2)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Recommendation generation failed: {str(e)}',
+                    'project_path': project_path
+                    }, indent=2)
+
+        # Workflow orchestration tools
+        @mcp.tool()
+        def create_workflow(name: str, steps: str, description: Optional[str] = None) -> str:
+            """Define multi-step analysis workflows with tool chaining and dependencies"""
+            try:
+                # Parse steps JSON
+                steps_data = json.loads(steps)
+
+                # Validate steps
+                for step in steps_data:
+                    if 'tool_name' not in step or 'target_path' not in step:
+                        return json.dumps({
+                            'error': 'Each step must have tool_name and target_path',
+                            'step': step
+                        }, indent=2)
+
+                    if step['tool_name'] not in tool_registry:
+                        return json.dumps({
+                            'error': f'Unknown tool: {step["tool_name"]}',
+                            'available_tools': list(tool_registry.keys())
+                        }, indent=2)
+
+                # Create workflow
+                workflow = workflow_manager.create_workflow(name, steps_data, description)
+
+                return json.dumps({
+                    'workflow_id': workflow.workflow_id,
+                    'name': workflow.name,
+                    'description': workflow.description,
+                    'steps_count': len(workflow.steps),
+                    'status': workflow.status.value,
+                    'created_at': workflow.created_at.isoformat()
+                }, indent=2)
+
+            except json.JSONDecodeError as e:
+                return json.dumps({
+                    'error': f'Invalid steps JSON: {str(e)}'
+                }, indent=2)
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Workflow creation failed: {str(e)}'
+                }, indent=2)
+
+        @mcp.tool()
+        def execute_workflow(workflow_id: str) -> str:
+            """Run predefined analysis sequences with dependency management"""
+            workflow = workflow_manager.get_workflow(workflow_id)
+            if not workflow:
+                return json.dumps({
+                    'error': f'Workflow {workflow_id} not found'
+                }, indent=2)
+
+            if workflow.status != WorkflowStatus.CREATED:
+                return json.dumps({
+                    'error': f'Workflow is {workflow.status.value}, cannot start',
+                    'status': workflow.status.value
+                }, indent=2)
+
+            # Start workflow execution
+            success = workflow_manager.start_workflow(workflow_id)
+
+            if success:
+                return json.dumps({
+                    'workflow_id': workflow_id,
+                    'status': 'started',
+                    'message': f'Workflow "{workflow.name}" execution started',
+                    'steps_count': len(workflow.steps)
+                }, indent=2)
+            else:
+                return json.dumps({
+                    'error': 'Failed to start workflow execution'
+                }, indent=2)
+
+        @mcp.tool()
+        def workflow_status(workflow_id: str) -> str:
+            """Track progress of complex analysis workflows"""
+            workflow = workflow_manager.get_workflow(workflow_id)
+            if not workflow:
+                return json.dumps({
+                    'error': f'Workflow {workflow_id} not found'
+                }, indent=2)
+
+            # Get step details
+            steps_status = []
+            for step in workflow.steps:
+                step_info = {
+                    'step_id': step.step_id,
+                    'tool_name': step.tool_name,
+                    'target_path': str(step.target_path),
+                    'status': step.status.value,
+                    'start_time': step.start_time.isoformat() if step.start_time else None,
+                    'end_time': step.end_time.isoformat() if step.end_time else None,
+                }
+                if step.result:
+                    step_info['issues_found'] = len(step.result.issues)
+                    step_info['success'] = step.result.success
+                if step.error_message:
+                    step_info['error'] = step.error_message
+                steps_status.append(step_info)
+
+            execution_time = workflow.get_execution_time()
+
+            return json.dumps({
+                'workflow_id': workflow.workflow_id,
+                'name': workflow.name,
+                'description': workflow.description,
+                'status': workflow.status.value,
+                'progress': workflow.progress,
+                'current_step': workflow.current_step,
+                'created_at': workflow.created_at.isoformat(),
+                'started_at': workflow.started_at.isoformat() if workflow.started_at else None,
+                'completed_at': workflow.completed_at.isoformat() if workflow.completed_at else None,
+                'execution_time_seconds': execution_time.total_seconds() if execution_time else None,
+                'total_steps': len(workflow.steps),
+                'completed_steps': len([s for s in workflow.steps if s.status == 'completed']),
+                'failed_steps': len([s for s in workflow.steps if s.status == 'failed']),
+                'steps': steps_status,
+                'error_message': workflow.error_message
+            }, indent=2, default=str)
+
+        @mcp.tool()
+        def list_workflows() -> str:
+            """List all available workflows"""
+            workflows = workflow_manager.list_workflows()
+
+            workflow_list = []
+            for workflow in workflows:
+                workflow_list.append({
+                    'workflow_id': workflow.workflow_id,
+                    'name': workflow.name,
+                    'description': workflow.description,
+                    'status': workflow.status.value,
+                    'progress': workflow.progress,
+                    'steps_count': len(workflow.steps),
+                    'created_at': workflow.created_at.isoformat(),
+                    'execution_time_seconds': workflow.get_execution_time().total_seconds() if workflow.get_execution_time() else None
+                })
+
+            return json.dumps({
+                'total_workflows': len(workflows),
+                'workflows': workflow_list
+            }, indent=2, default=str)
+
+        @mcp.tool()
+        def cancel_workflow(workflow_id: str) -> str:
+            """Cancel a running workflow"""
+            success = workflow_manager.cancel_workflow(workflow_id)
+
+            if success:
+                return json.dumps({
+                    'workflow_id': workflow_id,
+                    'status': 'cancelled',
+                    'message': 'Workflow execution cancelled'
+                }, indent=2)
+            else:
+                return json.dumps({
+                    'error': f'Failed to cancel workflow {workflow_id}'
+                }, indent=2)
+
+        # Testing framework integration
+        @mcp.tool()
+        def run_test_suite(test_framework: str, target_path: str, **kwargs) -> str:
+            """Unified test execution supporting pytest, gtest, jest, etc."""
+            if test_framework not in tool_registry:
+                return json.dumps({
+                    'error': f'Unknown test framework: {test_framework}',
+                    'available_frameworks': [name for name, adapter in tool_registry.items()
+                                           if adapter.tool_category.value == 'testing']
+                }, indent=2)
+
+            adapter = tool_registry[test_framework]
+
+            # Validate target
+            valid, error_msg = adapter.validate_target(target_path)
+            if not valid:
+                return json.dumps({'error': error_msg}, indent=2)
+
+            try:
+                # Run test suite
+                result = adapter.execute_sync(target_path, **kwargs)
+
+                # Enhanced result analysis for testing
+                test_metrics = {}
+                if hasattr(result, 'metrics') and result.metrics:
+                    test_metrics = result.metrics
+
+                # Categorize test results
+                passed = test_metrics.get('passed_tests', 0) + test_metrics.get('passed', 0)
+                failed = test_metrics.get('failed_tests', 0) + test_metrics.get('failed', 0)
+                skipped = test_metrics.get('skipped_tests', 0) + test_metrics.get('skipped', 0)
+                total = test_metrics.get('total_tests', 0) + test_metrics.get('total', 0)
+
+                # Calculate success rate
+                success_rate = (passed / total * 100) if total > 0 else 0
+
+                return json.dumps({
+                    'test_framework': test_framework,
+                    'target_path': target_path,
+                    'success': result.success,
+                    'execution_time': result.execution_time,
+                    'test_results': {
+                        'total': total,
+                        'passed': passed,
+                        'failed': failed,
+                        'skipped': skipped,
+                        'success_rate': success_rate
+                    },
+                    'issues': [issue.__dict__ for issue in result.issues],
+                    'raw_output': result.raw_output,
+                    'session_id': result.session_id
+                }, indent=2, default=str)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Test execution failed: {str(e)}',
+                    'framework': test_framework,
+                    'target': target_path
+                }, indent=2)
+
+        # Result interpretation and reporting
+        @mcp.tool()
+        def analyze_results_with_context(session_ids: str, project_context: Optional[str] = None) -> str:
+            """Use MCP-prompts for intelligent interpretation of analysis results"""
+            try:
+                # Parse session IDs
+                session_id_list = json.loads(session_ids) if isinstance(session_ids, str) else session_ids
+
+                # Get results from sessions
+                results = []
+                for session_id in session_id_list:
+                    session = session_manager.get_session(session_id)
+                    if session and session.status == "completed":
+                        analysis = analyze_results(session)
+                        if analysis and 'error' not in analysis:
+                            result = ToolResult(
+                                tool_name=session.tool,
+                                success=True,
+                                issues=[],  # Would need to reconstruct from analysis
+                                metrics=analysis.get('analysis', {}).get('metrics', {}),
+                                session_id=session_id
+                            )
+                            results.append(result)
+
+                if not results:
+                    return json.dumps({
+                        'error': 'No valid completed sessions found',
+                        'requested_sessions': session_id_list
+                    }, indent=2)
+
+                # Parse project context
+                context_dict = {}
+                if project_context:
+                    try:
+                        context_dict = json.loads(project_context)
+                    except json.JSONDecodeError:
+                        context_dict = {'description': project_context}
+
+                # Create interpretation context
+                interp_context = InterpretationContext(
+                    project_type=context_dict.get('project_type', 'unknown'),
+                    language=context_dict.get('language'),
+                    framework=context_dict.get('framework'),
+                    severity_threshold=context_dict.get('severity_threshold', 'medium'),
+                    include_suggestions=True,
+                    domain_context=context_dict
+                )
+
+                # Get intelligent interpretation
+                interpretation = interpretation_engine.interpret_results_sync(
+                    results[0].tool_name, results, interp_context
+                )
+
+                return json.dumps({
+                    'interpretation': {
+                        'summary': interpretation.summary,
+                        'key_findings': interpretation.key_findings,
+                        'recommendations': interpretation.recommendations,
+                        'risk_assessment': interpretation.risk_assessment,
+                        'contextual_insights': interpretation.contextual_insights,
+                        'next_steps': interpretation.next_steps
+                    },
+                    'metadata': interpretation.metadata,
+                    'analyzed_sessions': len(results)
+                }, indent=2)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Interpretation failed: {str(e)}',
+                    'session_ids': session_ids
+                }, indent=2)
+
+        @mcp.tool()
+        def generate_report(session_ids: str, format: str = "markdown", include_recommendations: bool = True) -> str:
+            """Create comprehensive analysis reports in multiple formats"""
+            try:
+                # Parse session IDs
+                session_id_list = json.loads(session_ids) if isinstance(session_ids, str) else session_ids
+
+                # Collect all session data
+                report_data = {
+                    'sessions': [],
+                    'summary': {
+                        'total_sessions': 0,
+                        'successful_sessions': 0,
+                        'failed_sessions': 0,
+                        'total_issues': 0,
+                        'tools_used': set()
+                    },
+                    'generated_at': datetime.now().isoformat(),
+                    'format': format
+                }
+
+                for session_id in session_id_list:
+                    session = session_manager.get_session(session_id)
+                    if session:
+                        session_data = {
+                            'session_id': session.session_id,
+                            'tool': session.tool,
+                            'target': session.target_path,
+                            'status': session.status,
+                            'start_time': session.start_time.isoformat() if session.start_time else None,
+                            'duration': session.duration_seconds,
+                            'exit_code': session.exit_code,
+                            'error': session.error_message
+                        }
+
+                        if session.status == "completed":
+                            analysis = analyze_results(session)
+                            if analysis and 'error' not in analysis:
+                                session_data['analysis'] = analysis
+                                report_data['summary']['total_issues'] += analysis.get('total_issues', 0)
+
+                        report_data['sessions'].append(session_data)
+                        report_data['summary']['total_sessions'] += 1
+                        report_data['summary']['tools_used'].add(session.tool)
+
+                        if session.status == "completed" and session.exit_code == 0:
+                            report_data['summary']['successful_sessions'] += 1
+                        elif session.status == "failed":
+                            report_data['summary']['failed_sessions'] += 1
+
+                # Convert set to list for JSON serialization
+                report_data['summary']['tools_used'] = list(report_data['summary']['tools_used'])
+
+                # Generate formatted report
+                if format.lower() == "markdown":
+                    report = generate_markdown_report(report_data, include_recommendations)
+                elif format.lower() == "json":
+                    report = json.dumps(report_data, indent=2, default=str)
+                elif format.lower() == "html":
+                    report = generate_html_report(report_data, include_recommendations)
+                else:
+                    report = json.dumps(report_data, indent=2, default=str)
+
+                return json.dumps({
+                    'report': report,
+                    'format': format,
+                    'summary': report_data['summary']
+                }, indent=2, default=str)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Report generation failed: {str(e)}',
+                    'session_ids': session_ids
+                }, indent=2)
+
+        @mcp.tool()
+        def compare_results(base_session_ids: str, compare_session_ids: str, comparison_type: str = "trends") -> str:
+            """Show trends and differences across multiple analysis runs"""
+            try:
+                # Parse session ID lists
+                base_ids = json.loads(base_session_ids) if isinstance(base_session_ids, str) else base_session_ids
+                compare_ids = json.loads(compare_session_ids) if isinstance(compare_session_ids, str) else compare_session_ids
+
+                # Collect data from both sets
+                def collect_session_data(session_ids):
+                    data = {}
+                    for session_id in session_ids:
+                        session = session_manager.get_session(session_id)
+                        if session and session.status == "completed":
+                            analysis = analyze_results(session)
+                            if analysis and 'error' not in analysis:
+                                data[session_id] = {
+                                    'tool': session.tool,
+                                    'target': session.target_path,
+                                    'analysis': analysis,
+                                    'timestamp': session.start_time
+                                }
+                    return data
+
+                base_data = collect_session_data(base_ids)
+                compare_data = collect_session_data(compare_ids)
+
+                if not base_data and not compare_data:
+                    return json.dumps({
+                        'error': 'No valid session data found for comparison'
+                    }, indent=2)
+
+                # Perform comparison based on type
+                if comparison_type == "trends":
+                    comparison = compare_trends(base_data, compare_data)
+                elif comparison_type == "differences":
+                    comparison = compare_differences(base_data, compare_data)
+                elif comparison_type == "improvements":
+                    comparison = compare_improvements(base_data, compare_data)
+                else:
+                    comparison = {'error': f'Unknown comparison type: {comparison_type}'}
+
+                return json.dumps({
+                    'comparison_type': comparison_type,
+                    'base_sessions': len(base_data),
+                    'compare_sessions': len(compare_data),
+                    'comparison': comparison
+                }, indent=2, default=str)
+
+            except Exception as e:
+                return json.dumps({
+                    'error': f'Comparison failed: {str(e)}',
+                    'base_session_ids': base_session_ids,
+                    'compare_session_ids': compare_session_ids
+                }, indent=2)
+
     return mcp
+
+
+def analyze_project_context(project_path: str) -> Dict[str, Any]:
+    """Analyze project structure to determine context for recommendations"""
+    from pathlib import Path
+
+    path = Path(project_path)
+    if not path.exists():
+        return {'error': 'Project path does not exist'}
+
+    context = {
+        'project_path': str(project_path),
+        'languages': [],
+        'build_systems': [],
+        'frameworks': [],
+        'size': {'files': 0, 'lines': 0},
+        'has_tests': False,
+        'has_docker': False,
+    }
+
+    # Detect languages and frameworks
+    if (path / 'package.json').exists():
+        context['languages'].append('javascript')
+        context['build_systems'].append('npm')
+        try:
+            with open(path / 'package.json') as f:
+                package_data = json.load(f)
+                if 'dependencies' in package_data:
+                    deps = package_data['dependencies']
+                    if 'react' in deps:
+                        context['frameworks'].append('react')
+                    if 'jest' in deps:
+                        context['has_tests'] = True
+        except:
+            pass
+
+    if (path / 'requirements.txt').exists() or (path / 'pyproject.toml').exists():
+        context['languages'].append('python')
+        context['build_systems'].append('pip')
+
+    if (path / 'CMakeLists.txt').exists() or (path / 'Makefile').exists():
+        context['languages'].append('c++')
+        context['build_systems'].append('make')
+
+    if (path / 'Dockerfile').exists():
+        context['has_docker'] = True
+
+    # Count files and estimate size
+    try:
+        total_files = 0
+        total_lines = 0
+        for file_path in path.rglob('*'):
+            if file_path.is_file() and not file_path.name.startswith('.'):
+                total_files += 1
+                try:
+                    with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                        total_lines += sum(1 for _ in f)
+                except:
+                    pass
+        context['size'] = {'files': total_files, 'lines': total_lines}
+    except:
+        pass
+
+    return context
+
+
+def generate_fallback_recommendations(project_context: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Generate basic workflow recommendations when MCP-Prompts is unavailable"""
+    recommendations = []
+
+    languages = project_context.get('languages', [])
+    has_tests = project_context.get('has_tests', False)
+    has_docker = project_context.get('has_docker', False)
+
+    if 'javascript' in languages:
+        recommendations.append({
+            'name': 'JavaScript Analysis Workflow',
+            'description': 'Static analysis and testing for JavaScript projects',
+            'tools': ['jest', 'eslint'],
+            'priority': 'high' if has_tests else 'medium'
+        })
+
+    if 'python' in languages:
+        recommendations.append({
+            'name': 'Python Analysis Workflow',
+            'description': 'Code quality and testing analysis for Python projects',
+            'tools': ['pytest', 'pylint'],
+            'priority': 'high'
+        })
+
+    if 'c++' in languages:
+        recommendations.append({
+            'name': 'C++ Analysis Workflow',
+            'description': 'Static analysis and memory checking for C++ projects',
+            'tools': ['cppcheck', 'clang-tidy', 'valgrind'],
+            'priority': 'high'
+        })
+
+    if has_docker:
+        recommendations.append({
+            'name': 'Container Security Analysis',
+            'description': 'Security scanning and analysis for containerized applications',
+            'tools': ['docker'],
+            'priority': 'medium'
+        })
+
+    return recommendations
+
+
+def generate_markdown_report(report_data: Dict[str, Any], include_recommendations: bool) -> str:
+    """Generate a markdown formatted report"""
+    lines = []
+
+    # Header
+    lines.append("# Static Analysis Report")
+    lines.append(f"Generated at: {report_data['generated_at']}")
+    lines.append("")
+
+    # Summary
+    summary = report_data['summary']
+    lines.append("## Summary")
+    lines.append(f"- **Total Sessions**: {summary['total_sessions']}")
+    lines.append(f"- **Successful**: {summary['successful_sessions']}")
+    lines.append(f"- **Failed**: {summary['failed_sessions']}")
+    lines.append(f"- **Total Issues**: {summary['total_issues']}")
+    lines.append(f"- **Tools Used**: {', '.join(summary['tools_used'])}")
+    lines.append("")
+
+    # Session Details
+    lines.append("## Session Details")
+    lines.append("")
+
+    for session in report_data['sessions']:
+        lines.append(f"### {session['tool']} - {session['target']}")
+        lines.append(f"- **Status**: {session['status']}")
+        lines.append(f"- **Session ID**: {session['session_id']}")
+
+        if session.get('start_time'):
+            lines.append(f"- **Start Time**: {session['start_time']}")
+
+        if session.get('duration'):
+            lines.append(f"- **Duration**: {session['duration']:.2f}s")
+
+        if session.get('error'):
+            lines.append(f"- **Error**: {session['error']}")
+
+        if 'analysis' in session:
+            analysis = session['analysis']
+            lines.append(f"- **Issues Found**: {analysis.get('total_issues', 0)}")
+
+            # Show top issues
+            if 'details' in analysis:
+                details = analysis['details']
+                for severity in ['errors', 'warnings']:
+                    if severity in details and details[severity]:
+                        lines.append(f"  - **{severity.title()}**: {len(details[severity])}")
+                        # Show first few
+                        for issue in details[severity][:3]:
+                            lines.append(f"    - {issue.get('file', 'unknown')}:{issue.get('line', '?')} - {issue.get('message', '')[:100]}")
+
+        lines.append("")
+
+    if include_recommendations:
+        lines.append("## Recommendations")
+        lines.append("")
+        lines.append("### General Recommendations")
+        lines.append("- Review all issues by severity (critical/high first)")
+        lines.append("- Address root causes rather than symptoms")
+        lines.append("- Consider automated fixes where available")
+        lines.append("- Schedule regular analysis to track improvements")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def generate_html_report(report_data: Dict[str, Any], include_recommendations: bool) -> str:
+    """Generate an HTML formatted report"""
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Static Analysis Report</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 20px; }}
+            .summary {{ background: #f0f0f0; padding: 10px; border-radius: 5px; }}
+            .session {{ margin: 10px 0; padding: 10px; border: 1px solid #ddd; }}
+            .success {{ border-color: #4CAF50; }}
+            .failed {{ border-color: #f44336; }}
+            .issues {{ color: #ff9800; }}
+        </style>
+    </head>
+    <body>
+        <h1>Static Analysis Report</h1>
+        <p>Generated at: {report_data['generated_at']}</p>
+
+        <div class="summary">
+            <h2>Summary</h2>
+            <ul>
+                <li>Total Sessions: {report_data['summary']['total_sessions']}</li>
+                <li>Successful: {report_data['summary']['successful_sessions']}</li>
+                <li>Failed: {report_data['summary']['failed_sessions']}</li>
+                <li>Total Issues: {report_data['summary']['total_issues']}</li>
+                <li>Tools Used: {', '.join(report_data['summary']['tools_used'])}</li>
+            </ul>
+        </div>
+
+        <h2>Session Details</h2>
+    """
+
+    for session in report_data['sessions']:
+        status_class = "success" if session['status'] == "completed" else "failed"
+        html += f"""
+        <div class="session {status_class}">
+            <h3>{session['tool']} - {session['target']}</h3>
+            <p><strong>Status:</strong> {session['status']}</p>
+            <p><strong>Session ID:</strong> {session['session_id']}</p>
+        """
+
+        if session.get('start_time'):
+            html += f"<p><strong>Start Time:</strong> {session['start_time']}</p>"
+
+        if session.get('duration'):
+            html += f"<p><strong>Duration:</strong> {session['duration']:.2f}s</p>"
+
+        if session.get('error'):
+            html += f"<p><strong>Error:</strong> {session['error']}</p>"
+
+        if 'analysis' in session:
+            analysis = session['analysis']
+            issues = analysis.get('total_issues', 0)
+            html += f"<p class='issues'><strong>Issues Found:</strong> {issues}</p>"
+
+        html += "</div>"
+
+    html += """
+    </body>
+    </html>
+    """
+
+    return html
+
+
+def compare_trends(base_data: Dict[str, Any], compare_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Compare trends between two sets of analysis results"""
+    # Simple trend analysis
+    base_issues = sum(data['analysis'].get('total_issues', 0) for data in base_data.values())
+    compare_issues = sum(data['analysis'].get('total_issues', 0) for data in compare_data.values())
+
+    trend = "improving" if compare_issues < base_issues else "worsening" if compare_issues > base_issues else "stable"
+
+    return {
+        'trend': trend,
+        'base_total_issues': base_issues,
+        'compare_total_issues': compare_issues,
+        'change': compare_issues - base_issues,
+        'change_percent': ((compare_issues - base_issues) / base_issues * 100) if base_issues > 0 else 0
+    }
+
+
+def compare_differences(base_data: Dict[str, Any], compare_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Compare differences between analysis runs"""
+    differences = {
+        'new_issues': [],
+        'resolved_issues': [],
+        'persistent_issues': [],
+        'changed_issues': []
+    }
+
+    # This is a simplified comparison - real implementation would need more sophisticated
+    # issue matching and tracking
+    return differences
+
+
+def compare_improvements(base_data: Dict[str, Any], compare_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Analyze improvements between analysis runs"""
+    improvements = {
+        'issues_resolved': 0,
+        'success_rate_improved': False,
+        'performance_improved': False,
+        'recommendations': []
+    }
+
+    # Calculate improvements
+    base_success = sum(1 for data in base_data.values() if data['analysis'].get('success', False))
+    compare_success = sum(1 for data in compare_data.values() if data['analysis'].get('success', False))
+
+    if len(compare_data) > 0 and len(base_data) > 0:
+        base_rate = base_success / len(base_data)
+        compare_rate = compare_success / len(compare_data)
+        improvements['success_rate_improved'] = compare_rate > base_rate
+
+    return improvements
 
 
 def main():

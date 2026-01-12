@@ -1,6 +1,7 @@
 import os
 from conan import ConanFile
 from conan.tools.files import copy
+from conan.tools.scm import Git
 
 
 class SpareToolsMiaConan(ConanFile):
@@ -41,12 +42,18 @@ class SpareToolsMiaConan(ConanFile):
         "paho-mqtt/1.6.1",  # For NucleusESP32 MQTT option
     )
 
-    # Source files to export
-    exports_sources = (
-        "src/*",
-        "scripts/*",
-        "docs/*",
-    )
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream MIA repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/mia.git", target="upstream")
+
+    def layout(self):
+        """Set source folder to upstream repository"""
+        from conan.tools.layout import basic_layout
+        basic_layout(self, src_folder="upstream")
 
     def package(self):
         """Package MIA components."""

@@ -1,156 +1,184 @@
 {
-  "timestamp": 1767021703.927202,
-  "total_packages": 23,
+  "timestamp": 1767196961.618746,
+  "total_packages": 27,
   "successful_builds": 14,
-  "failed_builds": 9,
-  "total_build_time": 2580.0465977191925,
+  "failed_builds": 13,
+  "total_build_time": 2917.2279114723206,
   "results": [
     {
       "name": "sparetools-recipe-base",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "status": "success",
-      "duration": 1.8385064601898193
+      "duration": 3.1505045890808105
     },
     {
       "name": "sparetools-base",
-      "version": "2.0.3",
-      "status": "success",
-      "duration": 3.542372703552246
+      "version": "os.environ.get('CONAN_BUILD_VERSION', '2.0.3')",
+      "status": "failed",
+      "duration": 1.491919994354248,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-base', '--version', \"os.environ.get('CONAN_BUILD_VERSION', '2.0.3')\", '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-cpython",
-      "version": "3.12.7",
+      "version": "3.12.8",
       "status": "success",
-      "duration": 2507.324906349182
+      "duration": 2745.234941959381
     },
     {
       "name": "sparetools-test-harness",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "status": "success",
-      "duration": 1.355376958847046
+      "duration": 7.079702615737915
     },
     {
       "name": "sparetools-shared-dev-tools",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "status": "success",
-      "duration": 1.2846343517303467
+      "duration": 6.293253660202026
     },
     {
       "name": "sparetools-bootstrap",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "status": "success",
-      "duration": 1.366044044494629
+      "duration": 6.653068780899048
+    },
+    {
+      "name": "sparetools-versioning",
+      "version": "os.environ.get('CONAN_BUILD_VERSION', '1.0.0')",
+      "status": "failed",
+      "duration": 2.3937618732452393,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-versioning', '--version', \"os.environ.get('CONAN_BUILD_VERSION', '1.0.0')\", '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-icd",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "status": "success",
-      "duration": 1.211874008178711
+      "duration": 4.9441978931427
     },
     {
       "name": "sparetools-test-framework",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "success",
-      "duration": 1.3174705505371094
+      "duration": 5.7443225383758545
     },
     {
       "name": "sparetools-voice-fsm",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "failed",
-      "duration": 1.3621175289154053,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-voice-fsm', '--version', '1.0.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 3.531205177307129,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-voice-fsm', '--version', '1.0.1', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-schema-tests",
+      "version": "1.0.1",
+      "status": "failed",
+      "duration": 10.198419570922852,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-schema-tests', '--version', '1.0.1', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+    },
+    {
+      "name": "sparetools-flatbuffers",
+      "version": "24.3.26",
+      "status": "success",
+      "duration": 8.241073369979858
+    },
+    {
+      "name": "sparetools-protocols",
+      "version": "1.0.1",
+      "status": "success",
+      "duration": 11.998342037200928
     },
     {
       "name": "sparetools-obd-sim",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "status": "success",
-      "duration": 1.296764612197876
+      "duration": 4.569192409515381
     },
     {
       "name": "sparetools-cliphist-android",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "failed",
-      "duration": 1.2518045902252197,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-cliphist-android', '--version', '1.0.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 3.0746562480926514,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-cliphist-android', '--version', '1.0.1', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-openssl",
-      "version": "3.3.2",
+      "version": "3.3.3",
       "status": "failed",
-      "duration": 4.805136442184448,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 26.539166688919067,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl', '--version', '3.3.3', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-openssl-tools",
-      "version": "2.0.0",
-      "status": "success",
-      "duration": 1.2018120288848877
+      "version": null,
+      "status": "failed",
+      "duration": 0.0006260871887207031,
+      "error": "expected str, bytes or os.PathLike object, not NoneType"
     },
     {
       "name": "sparetools-mia",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "status": "success",
-      "duration": 1.2622263431549072
+      "duration": 9.493306875228882
     },
     {
       "name": "sparetools-mcp-orchestrator",
-      "version": "2.0.3",
+      "version": "2.0.4",
       "status": "success",
-      "duration": 1.247504711151123
+      "duration": 3.0911061763763428
     },
     {
       "name": "sparetools-tinymcp",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "status": "success",
-      "duration": 1.4101159572601318
+      "duration": 2.836456060409546
     },
     {
       "name": "sparetools-mcpserver-cpp",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "status": "failed",
-      "duration": 1.3921465873718262,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-mcpserver-cpp', '--version', '2.0.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 3.802778720855713,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-mcpserver-cpp', '--version', '2.0.1', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-nucleus",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "status": "failed",
-      "duration": 5.014092445373535,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-nucleus', '--version', '0.1.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 2.643256664276123,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-nucleus', '--version', '0.1.1', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-bpm-detector",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "status": "failed",
-      "duration": 11.819139003753662,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-bpm-detector', '--version', '0.1.0', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 12.705773830413818,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-bpm-detector', '--version', '0.1.1', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-openssl-hybrid",
-      "version": "3.3.2",
+      "version": "3.3.3",
       "status": "failed",
-      "duration": 2.3036248683929443,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-hybrid', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 2.6947734355926514,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-hybrid', '--version', '3.3.3', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-openssl-cmake",
-      "version": "3.3.2",
+      "version": "3.3.3",
       "status": "failed",
-      "duration": 13.061394691467285,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-cmake', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 13.049723625183105,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-cmake', '--version', '3.3.3', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     },
     {
       "name": "sparetools-openssl-tools-mini",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "status": "success",
-      "duration": 1.3182077407836914
+      "duration": 2.1134095191955566
     },
     {
       "name": "sparetools-openssl-autotools",
-      "version": "3.3.2",
+      "version": "3.3.3",
       "status": "failed",
-      "duration": 12.059324741363525,
-      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-autotools', '--version', '3.3.2', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
+      "duration": 13.658971071243286,
+      "error": "Command '['conan', 'create', '.', '--name', 'sparetools-openssl-autotools', '--version', '3.3.3', '--user', 'sparetools', '--channel', 'stable']' returned non-zero exit status 1."
     }
   ]
 }

@@ -1,0 +1,199 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mcp-transport-telegram
+  namespace: mia-system
+  labels:
+    app: mcp-transport-telegram
+    component: messaging
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mcp-transport-telegram
+  template:
+    metadata:
+      labels:
+        app: mcp-transport-telegram
+        component: messaging
+    spec:
+      containers:
+      - name: mcp-transport-telegram
+        image: mcp-transport-telegram:latest
+        imagePullPolicy: Always
+
+        # Environment variables from ConfigMap and Secret
+        env:
+        - name: TELEGRAM_API_ID
+          valueFrom:
+            secretKeyRef:
+              name: telegram-credentials
+              key: api-id
+        - name: TELEGRAM_API_HASH
+          valueFrom:
+            secretKeyRef:
+              name: telegram-credentials
+              key: api-hash
+        - name: TELEGRAM_BOT_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: telegram-credentials
+              key: bot-token
+        - name: TELEGRAM_PHONE
+          valueFrom:
+            secretKeyRef:
+              name: telegram-credentials
+              key: phone
+              optional: true
+        - name: TELEGRAM_SESSION_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: telegram-config
+              key: session-name
+        - name: TELEGRAM_POLLING_INTERVAL
+          valueFrom:
+            configMapKeyRef:
+              name: telegram-config
+              key: polling-interval
+        - name: TELEGRAM_MAX_MESSAGE_AGE
+          valueFrom:
+            configMapKeyRef:
+              name: telegram-config
+              key: max-message-age
+        - name: TELEGRAM_RATE_LIMIT_PER_MINUTE
+          valueFrom:
+            configMapKeyRef:
+              name: telegram-config
+              key: rate-limit-per-minute
+
+        # Resource limits
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+
+        # Volume mounts
+        volumeMounts:
+        - name: telegram-data
+          mountPath: /app/data
+        - name: telegram-logs
+          mountPath: /app/logs
+
+        # Health check
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - import sys; sys.exit(0)
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - import sys; sys.exit(0)
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+
+      # Volumes
+      volumes:
+      - name: telegram-data
+        emptyDir: {}
+      - name: telegram-logs
+        emptyDir: {}
+
+      # Security context
+      securityContext:
+        fsGroup: 1000
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: telegram-config
+  namespace: mia-system
+data:
+  session-name: "mia_telegram_session"
+  polling-interval: "30"
+  max-message-age: "3600"
+  rate-limit-per-minute: "30"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: telegram-credentials
+  namespace: mia-system
+type: Opaque
+data:
+  # Base64 encoded values - replace with actual credentials
+  api-id: "MTIzNDU2"  # echo -n "123456" | base64
+  api-hash: "YWJjZGVmMTIzNDU2"  # echo -n "abcdef123456" | base64
+  bot-token: "Ym90X3Rva2VuXzEyMw=="  # echo -n "bot_token_123" | base64
+  phone: ""  # Optional: echo -n "+1234567890" | base64
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcp-transport-telegram
+  namespace: mia-system
+  labels:
+    app: mcp-transport-telegram
+spec:
+  selector:
+    app: mcp-transport-telegram
+  ports:
+  - name: health
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mcp-transport-telegram-netpol
+  namespace: mia-system
+spec:
+  podSelector:
+    matchLabels:
+      app: mcp-transport-telegram
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: mia-core-orchestrator
+    ports:
+    - protocol: TCP
+      port: 8080
+  egress:
+  - to: []
+    ports:
+    - protocol: TCP
+      port: 443  # HTTPS for Telegram API
+    - protocol: TCP
+      port: 80   # HTTP fallback

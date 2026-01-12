@@ -75,7 +75,7 @@ publish_conan_package "packages/foundation/sparetools-bootstrap" "sparetools-boo
 publish_conan_package "packages/foundation/sparetools-cpython" "sparetools-cpython" "3.12.7"
 publish_conan_package "packages/foundation/sparetools-shared-dev-tools" "sparetools-shared-dev-tools" "2.0.3"
 publish_conan_package "packages/foundation/sparetools-test-harness" "sparetools-test-harness" "2.0.3"
-publish_conan_package "packages/schemas" "sparesparrow-protocols" "1.0.0"
+publish_conan_package "packages/schemas" "sparetools-protocols" "1.0.0"
 publish_conan_package "packages/python/sparetools-py" "sparetools-py" "1.0.0"
 
 # Publish the fixed embedded packages
@@ -91,7 +91,7 @@ echo ""
 echo "🎉 Package publishing process complete!"
 echo ""
 echo "🔍 Verify uploads:"
-echo "cloudsmith list packages sparesparrow-conan/sparetools --query='sparetools-base OR sparetools-bootstrap OR sparetools-cpython OR sparetools-shared-dev-tools OR sparetools-test-harness OR sparesparrow-protocols OR sparetools-py OR sparetools-lvgl OR sparetools-mcp-prompts OR sparetools-mcp-servers OR sparetools-mcp-ecosystem OR sparetools-mcp-project-orchestrator'"
+echo "cloudsmith list packages sparesparrow-conan/sparetools --query='sparetools-base OR sparetools-bootstrap OR sparetools-cpython OR sparetools-shared-dev-tools OR sparetools-test-harness OR sparetools-protocols OR sparetools-py OR sparetools-lvgl OR sparetools-mcp-prompts OR sparetools-mcp-servers OR sparetools-mcp-ecosystem OR sparetools-mcp-project-orchestrator'"
 echo ""
 echo "🌐 View packages at: https://cloudsmith.io/~sparesparrow-conan/repos/sparetools/packages/"
 echo ""

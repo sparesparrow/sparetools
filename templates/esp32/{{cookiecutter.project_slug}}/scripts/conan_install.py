@@ -70,7 +70,7 @@ def main():
     if success:
         print("✅ Dependencies ready for PlatformIO build")
         print("📦 Using SpareTools ecosystem packages:")
-        print("   - sparesparrow-protocols/1.0.0")
+        print("   - sparetools-protocols/1.0.1")
         {% if cookiecutter.schema_component != 'none' %}
         print("   - Schema component: {{cookiecutter.schema_component}}")
         {% endif %}
@@ -83,6 +83,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 

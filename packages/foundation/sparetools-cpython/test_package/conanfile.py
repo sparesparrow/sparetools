@@ -4,6 +4,8 @@ import os
 
 
 class SparetoolsCPythonTestConan(ConanFile):
+    name = 'cpython-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
     test_type = "explicit"
 

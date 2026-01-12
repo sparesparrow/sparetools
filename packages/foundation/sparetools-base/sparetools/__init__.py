@@ -6,6 +6,7 @@ logging, and security utilities for the SpareTools ecosystem.
 """
 
 from . import fs, proc, net, git, conan, logging, security, scm, gui
+from .conan.template import SpareToolsBaseTemplate
 
 __version__ = "2.0.0"
 
@@ -19,4 +20,5 @@ __all__ = [
     "security",
     "scm",
     "gui",
+    "SpareToolsBaseTemplate",  # Conan recipe base class
 ]

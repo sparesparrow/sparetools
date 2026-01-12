@@ -286,7 +286,7 @@ class PackageBuilder:
 
             # Upload schema packages
             self.run_command([
-                "conan", "upload", "sparesparrow-protocols/*", "-r", remote, "--confirm", "--retry", "3", "--retry-wait", "5"
+                "conan", "upload", "sparetools-protocols/*", "-r", remote, "--confirm", "--retry", "3", "--retry-wait", "5"
             ], check=False)
 
             logger.info(f"✅ Successfully uploaded packages to {remote}")

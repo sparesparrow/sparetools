@@ -1,7 +1,7 @@
 [requires]
-sparesparrow-protocols/1.0.0
+sparetools-protocols/1.0.1
 {% if cookiecutter.schema_component != 'none' %}
-sparesparrow-protocols/1.0.0@sparesparrow/stable:{{cookiecutter.schema_component}}
+sparetools-protocols/1.0.1@sparesparrow/stable:{{cookiecutter.schema_component}}
 {% endif %}
 
 [generators]

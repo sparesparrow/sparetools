@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp-transport-telegram"
+version = "0.1.0"
+description = "MCP Transport for Telegram messaging integration"
+authors = [
+    {name = "Sparrow AI Tech", email = "contact@sparrowaitech.com"}
+]
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "mcp>=1.0.0",
+    "telethon>=1.35.0",
+    "pydantic>=2.0.0",
+    "asyncio-compat>=1.0.0",
+    "aiofiles>=23.0.0"
+]
+optional-dependencies = {
+    "webhook" = ["fastapi>=0.100.0", "uvicorn>=0.20.0"],
+    "config" = ["pydantic-settings>=2.0.0"],
+    "dev" = ["pytest>=7.0.0", "pytest-asyncio>=0.21.0", "pytest-mock>=3.10.0"]
+}
+
+[project.scripts]
+mcp-transport-telegram = "mcp_transport_telegram:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

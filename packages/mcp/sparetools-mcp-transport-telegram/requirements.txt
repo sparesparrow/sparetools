@@ -1,0 +1,16 @@
+# Core Dependencies
+mcp>=1.0.0
+telethon>=1.35.0
+pydantic>=2.0.0
+asyncio-compat>=1.0.0
+aiofiles>=23.0.0
+
+# Optional Dependencies
+fastapi>=0.100.0
+uvicorn>=0.20.0
+pydantic-settings>=2.0.0
+
+# Development
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0

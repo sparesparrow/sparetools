@@ -8,6 +8,8 @@ class SparetoolsSharedDevToolsTestConan(ConanFile):
     Since python_requires are recipe-level dependencies (not packages),
     we validate that they load correctly and can be referenced.
     """
+    name = 'cpy-base-test'
+    version = '1.0.0'
     test_type = "explicit"
     python_requires = "sparetools-shared-dev-tools/[>=2.0.0]"
 

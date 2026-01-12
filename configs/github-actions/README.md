@@ -9,7 +9,7 @@ This directory contains reusable GitHub Actions workflows that can be called fro
 Reusable workflow for building ESP32 firmware projects with SpareTools integration.
 
 **Inputs:**
-- `conan_packages`: Comma-separated list of Conan packages (default: `sparesparrow-protocols/1.0.0,sparetools-embedded/1.0.0`)
+- `conan_packages`: Comma-separated list of Conan packages (default: `sparetools-protocols/1.0.1,sparetools-embedded/1.0.0`)
 - `board_type`: ESP32 board type (default: `esp32dev`)
 - `environment`: PlatformIO environment name (default: `esp32dev`)
 - `run_tests`: Whether to run unit tests (default: `true`)
@@ -32,7 +32,7 @@ jobs:
   build:
     uses: sparesparrow/sparetools/.github/workflows/esp32-build-reusable.yml@main
     with:
-      conan_packages: "sparesparrow-protocols/1.0.0,sparetools-embedded/1.0.0"
+      conan_packages: "sparetools-protocols/1.0.1,sparetools-embedded/1.0.0"
       board_type: "esp32-s3-devkitc-1"
       environment: "esp32-s3-devkitc-1"
     secrets:
@@ -64,7 +64,7 @@ jobs:
   build:
     uses: sparesparrow/sparetools/.github/workflows/android-build-reusable.yml@main
     with:
-      conan_packages: "sparesparrow-protocols/1.0.0,sparetools-embedded/1.0.0"
+      conan_packages: "sparetools-protocols/1.0.1,sparetools-embedded/1.0.0"
       android_api_level: "29"
     secrets:
       CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
@@ -192,6 +192,7 @@ When adding new workflows:
 - **Workflow Issues**: [SpareTools Issues](https://github.com/sparesparrow/sparetools/issues)
 - **Documentation**: [SpareTools Wiki](https://github.com/sparesparrow/sparetools/wiki)
 - **Conan**: [Conan Documentation](https://docs.conan.io/)
+
 
 
 

@@ -34,7 +34,7 @@ class SparetoolsSchemaTestsConan(ConanFile):
 
     def requirements(self):
         # Protocol schemas to test
-        self.requires("sparetools-protocols/1.0.0")
+        self.requires("sparetools-protocols/1.0.1")
         # FlatBuffers runtime
         self.requires("flatbuffers/24.3.25")
         # Testing framework

@@ -6,7 +6,7 @@ on:
       conan_packages:
         description: 'Conan packages to install (comma-separated)'
         required: false
-        default: 'sparetools-protocols/1.0.0,sparetools-embedded/1.0.0'
+        default: 'sparetools-protocols/1.0.1,sparetools-embedded/1.0.0'
         type: string
       android_api_level:
         description: 'Android API level'
@@ -100,7 +100,7 @@ jobs:
             echo "flatc found, generating code..."
 
             # Find and generate code from protocol schemas
-            if conan info sparetools-protocols/1.0.0 &> /dev/null; then
+            if conan info sparetools-protocols/1.0.1 &> /dev/null; then
                 # Get schema directory from installed package
                 SCHEMA_DIR=$(find ~/.conan2 -name "sparetools-protocols" -type d | head -1)
                 if [ -d "$SCHEMA_DIR/schemas" ]; then
@@ -156,6 +156,7 @@ jobs:
         path: |
           app/build/reports/tests/testDebugUnitTest/
           app/build/test-results/testDebugUnitTest/
+
 
 
 

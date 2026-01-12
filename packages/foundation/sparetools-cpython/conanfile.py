@@ -9,14 +9,14 @@ class CPythonToolConan(ConanFile):
     """CPython 3.12.7 built directly to Conan cache - Zero-copy architecture"""
     
     name = "sparetools-cpython"
-    version = "3.12.8"
+    version = "3.12.7"
     package_type = "application"
     description = "Prebuilt CPython 3.12.7 with OpenSSL support for DevOps"
     license = "Python-2.0"
     url = "https://github.com/sparesparrow/sparetools"
 
     # Use SpareTools base utilities
-    python_requires = "sparetools-base/2.0.3"
+    python_requires = "sparetools-base/2.0.4"
     python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     settings = "os", "arch", "compiler", "build_type"

@@ -30,7 +30,7 @@ class SyncValidator:
             "esp32-bpm-detector": {
                 "path": Path("../../embedded-systems/esp32-bpm-detector"),
                 "consumer_package": "sparetools-bpm-detector/0.1.0",
-                "expected_protocols": ["sparesparrow-protocols/1.0.0"],
+                "expected_protocols": ["sparetools-protocols/1.0.1"],
                 "type": "esp32"
             },
             "nucleus-esp32": {
@@ -42,7 +42,7 @@ class SyncValidator:
             "mia": {
                 "path": Path("../../portfolio/mia"),
                 "consumer_package": "sparetools-mia/2.0.0",
-                "expected_protocols": ["sparesparrow-protocols/1.0.0", "sparetools-embedded/1.0.0"],
+                "expected_protocols": ["sparetools-protocols/1.0.1", "sparetools-embedded/1.0.0"],
                 "type": "mia"
             },
             "bpm-schemas": {

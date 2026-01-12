@@ -231,7 +231,7 @@ tests = [
 
 ## Dependencies
 
-- `sparetools-protocols/1.0.0`: Schema definitions
+- `sparetools-protocols/1.0.1`: Schema definitions
 - `flatbuffers/24.3.25`: Runtime library
 - `gtest/1.14.0`: C++ testing framework
 - `sparetools-flatbuffers/24.3.25`: Compiler tools

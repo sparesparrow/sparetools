@@ -3,40 +3,40 @@
 ## ✅ Packages Successfully Built
 
 ### Foundation Packages (6)
-- ✅ `sparetools-recipe-base/2.0.3@sparetools/stable`
-- ✅ `sparetools-base/2.0.3@sparetools/stable`
-- ✅ `sparetools-cpython/3.12.7@sparetools/stable` ⚠️ (see note below)
-- ✅ `sparetools-test-harness/2.0.3@sparetools/stable`
-- ✅ `sparetools-shared-dev-tools/2.0.3@sparetools/stable`
-- ✅ `sparetools-bootstrap/2.0.3@sparetools/stable`
+- ✅ `sparetools-recipe-base/2.0.3`
+- ✅ `sparetools-base/2.0.3`
+- ✅ `sparetools-cpython/3.12.7` ⚠️ (see note below)
+- ✅ `sparetools-test-harness/2.0.3`
+- ✅ `sparetools-shared-dev-tools/2.0.3`
+- ✅ `sparetools-bootstrap/2.0.3`
 
 ### Embedded Packages (2)
-- ✅ `sparetools-hal-sunton/1.0.0@sparetools/stable`
-- ✅ `sparetools-embedded/1.0.0@sparetools/stable`
+- ✅ `sparetools-hal-sunton/1.0.0`
+- ✅ `sparetools-embedded/1.0.0`
 
 ### Schema Packages (1)
-- ✅ `sparesparrow-protocols/1.0.0@sparetools/stable`
+- ✅ `sparetools-protocols/1.0.1`
 
 ### Consumer Packages (13)
-- ✅ `sparetools-obd-sim/2.0.3@sparetools/stable`
-- ✅ `sparetools-cliphist-android/1.0.0@sparetools/stable`
-- ✅ `sparetools-openssl/3.3.2@sparetools/stable`
-- ✅ `sparetools-openssl-tools/2.0.0@sparetools/stable`
-- ✅ `sparetools-mia/2.0.0@sparetools/stable`
-- ✅ `sparetools-mcp-orchestrator/2.0.3@sparetools/stable`
-- ✅ `sparetools-tinymcp/2.0.0@sparetools/stable`
-- ✅ `sparetools-mcpserver-cpp/2.0.0@sparetools/stable`
-- ✅ `sparetools-bpm-detector/0.1.0@sparetools/stable`
-- ✅ `sparetools-nucleus/0.1.0@sparetools/stable`
-- ✅ `sparetools-icd/2.0.0@sparetools/stable`
-- ✅ `sparetools-voice-fsm/1.0.0@sparetools/stable`
+- ✅ `sparetools-obd-sim/2.0.3`
+- ✅ `sparetools-cliphist-android/1.0.0`
+- ✅ `sparetools-openssl/3.3.2`
+- ✅ `sparetools-openssl-tools/2.0.0`
+- ✅ `sparetools-mia/2.0.0`
+- ✅ `sparetools-mcp-orchestrator/2.0.3`
+- ✅ `sparetools-tinymcp/2.0.0`
+- ✅ `sparetools-mcpserver-cpp/2.0.0`
+- ✅ `sparetools-bpm-detector/0.1.0`
+- ✅ `sparetools-nucleus/0.1.0`
+- ✅ `sparetools-icd/2.0.0`
+- ✅ `sparetools-voice-fsm/1.0.0`
 
 **Total: 22 packages ready for upload**
 
 ## About sparetools-cpython/3.12.7
 
 ### Current Implementation
-- **Package Name**: `sparetools-cpython/3.12.7@sparetools/stable`
+- **Package Name**: `sparetools-cpython/3.12.7`
 - **Location**: `packages/foundation/sparetools-cpython/`
 - **Build Time**: 5-30 minutes (compiles Python from source)
 - **Features**: 
@@ -135,8 +135,8 @@ export CLOUDSMITH_API_KEY=your_key
 conan remote login sparesparrow-conan sparesparrow --password "$CLOUDSMITH_API_KEY"
 
 # Upload
-conan upload "sparetools-*/*@sparetools/stable" -r sparesparrow-conan --confirm --retry 3
-conan upload "sparesparrow-protocols/*@sparetools/stable" -r sparesparrow-conan --confirm
+conan upload "sparetools-*/*" -r sparesparrow-conan --confirm --retry 3
+conan upload "sparetools-protocols/*" -r sparesparrow-conan --confirm
 ```
 
 #### GitHub Packages
@@ -145,8 +145,8 @@ conan upload "sparesparrow-protocols/*@sparetools/stable" -r sparesparrow-conan 
 conan remote login github-packages <username> --password "$GITHUB_TOKEN"
 
 # Upload
-conan upload "sparetools-*/*@sparetools/stable" -r github-packages --confirm --retry 3
-conan upload "sparesparrow-protocols/*@sparetools/stable" -r github-packages --confirm
+conan upload "sparetools-*/*" -r github-packages --confirm --retry 3
+conan upload "sparetools-protocols/*" -r github-packages --confirm
 ```
 
 ## Verification

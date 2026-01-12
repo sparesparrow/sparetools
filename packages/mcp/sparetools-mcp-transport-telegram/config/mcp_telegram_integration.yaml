@@ -1,0 +1,59 @@
+# MIA Integration Configuration Template
+# This file should be placed in MIA's config directory
+
+mcp_telegram_integration:
+  enabled: true
+
+  # MCP server command to run
+  server_command: ["python", "-m", "mcp_transport_telegram"]
+
+  # Capabilities provided by the Telegram transport
+  capabilities:
+    - messaging
+    - media
+    - contacts
+
+  # Tool routing configuration
+  routing:
+    # Route Telegram messages to specific MIA prompts/workflows
+    message_routing:
+      default_prompt: "general_assistant"
+      media_prompt: "media_analysis"
+
+    # Chat-specific routing rules
+    chat_routing:
+      - chat_id: 123456789
+        prompt: "customer_support"
+      - username: "@support_bot"
+        prompt: "technical_support"
+
+  # Context preservation settings
+  context:
+    preserve_chat_history: true
+    max_context_age_hours: 24
+    user_session_timeout_minutes: 60
+
+  # Rate limiting per chat
+  rate_limits:
+    messages_per_minute_per_chat: 10
+    media_downloads_per_hour: 50
+
+  # Security settings
+  security:
+    allowed_chat_ids: []  # Empty = allow all, or specify allowed chat IDs
+    blocked_users: []
+    require_verification: false
+
+  # Monitoring and logging
+  monitoring:
+    enable_metrics: true
+    log_message_content: false  # Set to true for debugging only
+    alert_on_errors: true
+
+# Environment variables required for MIA integration
+environment:
+  TELEGRAM_API_ID: "your_api_id"
+  TELEGRAM_API_HASH: "your_api_hash"
+  TELEGRAM_BOT_TOKEN: "your_bot_token"  # Optional
+  TELEGRAM_PHONE: "your_phone"  # Optional
+  TELEGRAM_SESSION_NAME: "mia_telegram_session"

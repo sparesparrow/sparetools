@@ -100,7 +100,7 @@ class SpareToolsSync:
                 for pkg_name, version in packages.items():
                     if pkg_name in ["base", "cpython", "bootstrap", "test-harness", "shared-dev-tools"]:
                         versions_dict += f'        "{pkg_name}": "{version}",\n'
-                    elif pkg_name == "sparesparrow-protocols":
+                    elif pkg_name == "sparetools-protocols":
                         versions_dict += f'        "protocols": "{version}",\n'
         versions_dict += "    }"
 
@@ -137,8 +137,8 @@ class SpareToolsSync:
 
             # Update protocol version
             updated_content = content.replace(
-                'sparesparrow-protocols/1.0.0',
-                f'sparesparrow-protocols/{self.versions["protocols"]["sparesparrow-protocols"]}'
+                'sparetools-protocols/1.0.1',
+                f'sparetools-protocols/{self.versions["protocols"]["sparetools-protocols"]}'
             )
 
             with open(bpm_conanfile, 'w') as f:

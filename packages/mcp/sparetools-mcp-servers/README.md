@@ -4,8 +4,9 @@ A comprehensive collection of MCP (Model Context Protocol) servers for developme
 
 ## 🚀 Overview
 
-This package provides four specialized MCP servers designed to enhance development workflows:
+This package provides five specialized MCP servers designed to enhance development workflows:
 
+- **Enhanced Static Analysis**: Comprehensive development tooling with MCP-Prompts integration
 - **ESP32 Serial Monitor**: Monitor and interact with ESP32 devices
 - **Android Dev Tools**: Build, deploy, and debug Android applications
 - **Conan & Cloudsmith**: Package management and artifact publishing
@@ -34,6 +35,120 @@ conan install sparetools-mcp-servers/1.0.0@sparesparrow/stable
 ```
 
 ## 🛠️ Usage
+
+### Enhanced Static Analysis Server
+
+The Enhanced Static Analysis MCP server provides a comprehensive development tooling oracle that integrates with MCP-Prompts for intelligent analysis interpretation.
+
+#### Features
+
+- **Tool Adapters**: Unified interface for 10+ development tools (Cppcheck, Clang-Tidy, Valgrind, GDB, pytest, etc.)
+- **Workflow Orchestration**: Multi-tool analysis sequences with dependency management
+- **MCP-Prompts Integration**: AI-powered result interpretation and recommendations
+- **Context-Aware Analysis**: Project-specific configurations and quality gates
+- **Comprehensive Reporting**: Multiple output formats (JSON, Markdown, HTML)
+
+#### MCP Configuration
+
+Add to your Cursor MCP configuration (`~/.cursor/mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "sparetools-mcp-static-analysis": {
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.static_analysis.static_analysis_mcp_server"],
+      "env": {
+        "PYTHONPATH": "/path/to/sparetools-mcp-servers/src",
+        "STATIC_ANALYSIS_MODE": "development",
+        "MCP_PROMPTS_SERVER_URL": "http://localhost:3000",
+        "STATIC_ANALYSIS_CONFIG_FILE": "/path/to/config/default_config.yaml"
+      }
+    }
+  }
+}
+```
+
+#### Available Tools
+
+The server provides the following MCP tools:
+
+**Discovery & Management:**
+- `discover_tools` - Comprehensive tool discovery and capabilities
+- `analyze_static` - Unified static analysis dispatcher
+- `configure_tool` - Tool configuration management
+- `get_recommendations` - AI-powered workflow suggestions
+
+**Testing Framework Integration:**
+- `run_test_suite` - Unified test execution (pytest, gtest, jest)
+
+**Workflow Orchestration:**
+- `create_workflow` - Define multi-step analysis workflows
+- `execute_workflow` - Run predefined analysis sequences
+- `workflow_status` - Track progress of complex analyses
+- `list_workflows` - List all available workflows
+- `cancel_workflow` - Cancel running workflows
+
+**Result Interpretation:**
+- `analyze_results_with_context` - AI-powered result interpretation
+- `generate_report` - Create comprehensive analysis reports
+- `compare_results` - Compare trends across analysis runs
+
+**Legacy Tools:**
+- `list_available_tools` - List available analysis tools
+- `check_tool_status` - Check tool installation status
+- `install_analysis_tool` - Install analysis tools
+- `run_cppcheck`, `run_valgrind`, `run_gdb`, etc. - Individual tool runners
+- `get_analysis_progress` - Check analysis progress
+- `analyze_analysis_results` - Analyze completed results
+
+#### Example Usage
+
+```python
+# Discover available tools
+discover_tools()
+
+# Run comprehensive analysis
+analyze_static("cppcheck", "/path/to/project")
+
+# Create and execute workflow
+create_workflow("cpp_analysis", [
+    {"tool_name": "cppcheck", "target_path": "/src", "arguments": {"enable_checks": ["all"]}},
+    {"tool_name": "valgrind", "target_path": "./build/app", "arguments": {"leak_check": True}}
+])
+execute_workflow("cpp_analysis")
+
+# Generate intelligent reports
+analyze_results_with_context(["session_id_1", "session_id_2"], {"project_type": "cpp"})
+generate_report(["session_id_1"], "markdown")
+```
+
+#### Configuration
+
+The server supports comprehensive YAML configuration:
+
+```yaml
+# default_config.yaml
+server:
+  name: "sparetools-mcp-static-analysis"
+  timeouts:
+    analysis: 3600
+  limits:
+    max_concurrent_sessions: 5
+
+mcp_prompts:
+  enabled: true
+  server_url: "http://localhost:3000"
+
+tool_registry:
+  tools:
+    cppcheck:
+      enabled: true
+      timeout: 600
+    pytest:
+      enabled: true
+      timeout: 600
+```
 
 ### MCP Server Configuration
 
@@ -269,7 +384,7 @@ This package is licensed under the Apache License 2.0. See the LICENSE file for 
 
 - **sparetools-py**: Python utilities and test harness
 - **sparetools-embedded**: Embedded development tools
-- **sparesparrow-protocols**: Protocol buffer schemas
+- **sparetools-protocols**: Protocol buffer schemas
 - **sparetools-monorepo**: Meta-package including all SpareTools components
 
 ## 📞 Support

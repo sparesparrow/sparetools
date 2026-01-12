@@ -2,7 +2,7 @@
 
 ## Current Implementation
 
-**Package Name**: `sparetools-cpython/3.12.7@sparetools/stable`
+**Package Name**: `sparetools-cpython/3.12.7`
 
 **Location**: `packages/foundation/sparetools-cpython/conanfile.py`
 
@@ -89,7 +89,7 @@ If build time becomes an issue, consider:
 
 ## Current Status
 
-✅ **Package Built**: `sparetools-cpython/3.12.7@sparetools/stable`
+✅ **Package Built**: `sparetools-cpython/3.12.7`
 ✅ **Ready for Upload**: Yes
 ✅ **Dependencies Updated**: All packages reference correct version
 

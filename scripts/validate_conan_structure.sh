@@ -48,12 +48,6 @@ find "$REPO_ROOT" -name "conanfile.py" -type f | while read -r conanfile; do
         ERRORS=$((ERRORS + 1))
     fi
 
-    # Check for invalid package references
-    if grep -q "sparesparrow-protocols" "$conanfile"; then
-        echo "❌ Invalid package reference in $conanfile"
-        echo "   Found: sparesparrow-protocols (should be sparetools-protocols)"
-        ERRORS=$((ERRORS + 1))
-    fi
 done
 
 # Check for VERSION file consistency

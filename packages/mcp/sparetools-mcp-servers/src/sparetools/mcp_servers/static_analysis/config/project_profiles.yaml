@@ -1,0 +1,314 @@
+# Project Type Profiles
+# Defines analysis configurations and tool recommendations for different project types
+
+# Web Application Profile
+web:
+  name: "Web Application"
+  description: "Frontend and full-stack web applications"
+  languages: ["javascript", "typescript", "html", "css"]
+
+  # Primary tools to run
+  primary_tools:
+    - jest
+    - eslint
+    - docker
+
+  # Secondary tools (conditional)
+  secondary_tools:
+    - cppcheck  # For native addons
+    - valgrind  # For Node.js native modules
+
+  # Configuration overrides
+  config:
+    severity_threshold: "high"
+    include_suggestions: true
+    max_issues_per_tool: 200
+
+  # File patterns to analyze
+  include_patterns:
+    - "*.js"
+    - "*.jsx"
+    - "*.ts"
+    - "*.tsx"
+    - "*.vue"
+    - "*.svelte"
+    - "Dockerfile*"
+
+  exclude_patterns:
+    - "node_modules/**"
+    - "dist/**"
+    - "build/**"
+    - "*.min.js"
+
+  # Quality gates
+  quality_gates:
+    test_coverage_min: 80
+    eslint_errors_max: 0
+    security_vulnerabilities_max: 0
+
+# Python Application Profile
+python:
+  name: "Python Application"
+  description: "Python applications, libraries, and services"
+  languages: ["python"]
+
+  primary_tools:
+    - pytest
+    - pylint
+    - docker
+
+  secondary_tools:
+    - valgrind  # For C extensions
+
+  config:
+    severity_threshold: "medium"
+    include_suggestions: true
+    max_issues_per_tool: 150
+
+  include_patterns:
+    - "*.py"
+    - "Dockerfile*"
+    - "requirements*.txt"
+    - "pyproject.toml"
+    - "setup.py"
+
+  exclude_patterns:
+    - "__pycache__/**"
+    - "*.pyc"
+    - "venv/**"
+    - ".venv/**"
+    - "dist/**"
+    - "build/**"
+
+  quality_gates:
+    test_coverage_min: 85
+    pylint_score_min: 8.0
+    security_issues_max: 0
+
+# C/C++ Application Profile
+cpp:
+  name: "C/C++ Application"
+  description: "Native C/C++ applications and libraries"
+  languages: ["c", "c++"]
+
+  primary_tools:
+    - cppcheck
+    - clang_tidy
+    - valgrind
+    - gtest
+
+  secondary_tools:
+    - gdb
+    - strace
+
+  config:
+    severity_threshold: "high"
+    include_suggestions: true
+    max_issues_per_tool: 100
+
+  include_patterns:
+    - "*.c"
+    - "*.cpp"
+    - "*.cc"
+    - "*.cxx"
+    - "*.h"
+    - "*.hpp"
+    - "*.hxx"
+    - "CMakeLists.txt"
+    - "Makefile*"
+    - "Dockerfile*"
+
+  exclude_patterns:
+    - "build/**"
+    - "cmake-build-*/**"
+    - "third_party/**"
+    - "*.generated.*"
+
+  quality_gates:
+    compilation_errors: 0
+    memory_leaks_max: 0
+    test_failure_rate_max: 5
+
+# Library Profile
+library:
+  name: "Software Library"
+  description: "Reusable software libraries and SDKs"
+  languages: ["any"]  # Language-agnostic
+
+  primary_tools:
+    - docker  # For cross-platform testing
+
+  config:
+    severity_threshold: "high"
+    include_suggestions: true
+    max_issues_per_tool: 50
+    strict_mode: true
+
+  quality_gates:
+    api_breaking_changes: 0
+    backward_compatibility: 100
+    documentation_coverage_min: 90
+
+# Embedded/IoT Profile
+embedded:
+  name: "Embedded/IoT System"
+  description: "Embedded systems and IoT applications"
+  languages: ["c", "c++"]
+
+  primary_tools:
+    - cppcheck
+    - clang_tidy
+
+  secondary_tools:
+    - valgrind  # Limited for embedded
+    - strace
+
+  config:
+    severity_threshold: "high"
+    include_suggestions: true
+    max_issues_per_tool: 75
+    resource_constrained: true
+
+  include_patterns:
+    - "*.c"
+    - "*.cpp"
+    - "*.h"
+    - "CMakeLists.txt"
+    - "Makefile*"
+
+  exclude_patterns:
+    - "test/**"
+    - "examples/**"
+    - "tools/**"
+
+  quality_gates:
+    code_size_max_kb: 64
+    static_memory_max_kb: 8
+    stack_usage_max_kb: 4
+
+# Game Development Profile
+game:
+  name: "Game Development"
+  description: "Video games and game engines"
+  languages: ["c++", "c#", "javascript"]
+
+  primary_tools:
+    - cppcheck
+    - clang_tidy
+    - valgrind
+
+  secondary_tools:
+    - gtest
+    - jest
+
+  config:
+    severity_threshold: "medium"
+    include_suggestions: true
+    max_issues_per_tool: 300
+    performance_critical: true
+
+  include_patterns:
+    - "*.cpp"
+    - "*.h"
+    - "*.cs"
+    - "*.js"
+
+  exclude_patterns:
+    - "assets/**"
+    - "third_party/**"
+    - "generated/**"
+
+  quality_gates:
+    frame_rate_min_fps: 30
+    memory_usage_max_mb: 512
+    load_time_max_seconds: 10
+
+# Data Science/ML Profile
+data_science:
+  name: "Data Science/ML"
+  description: "Data science, machine learning, and AI projects"
+  languages: ["python", "r", "julia"]
+
+  primary_tools:
+    - pytest
+
+  secondary_tools:
+    - docker
+
+  config:
+    severity_threshold: "medium"
+    include_suggestions: true
+    max_issues_per_tool: 100
+
+  include_patterns:
+    - "*.py"
+    - "*.ipynb"
+    - "*.r"
+    - "*.jl"
+    - "requirements*.txt"
+    - "Dockerfile*"
+
+  exclude_patterns:
+    - "data/**"
+    - "models/**"
+    - ".ipynb_checkpoints/**"
+    - "__pycache__/**"
+
+  quality_gates:
+    test_coverage_min: 70
+    reproducibility_score_min: 90
+
+# Mobile App Profile
+mobile:
+  name: "Mobile Application"
+  description: "iOS and Android mobile applications"
+  languages: ["swift", "kotlin", "java", "javascript"]
+
+  primary_tools:
+    - jest  # For React Native
+    - docker
+
+  config:
+    severity_threshold: "high"
+    include_suggestions: true
+    max_issues_per_tool: 150
+
+  include_patterns:
+    - "*.swift"
+    - "*.kt"
+    - "*.java"
+    - "*.js"
+    - "*.tsx"
+    - "Dockerfile*"
+    - "Podfile"
+    - "build.gradle*"
+
+  exclude_patterns:
+    - "node_modules/**"
+    - "Pods/**"
+    - "build/**"
+    - "*.generated.*"
+
+  quality_gates:
+    app_size_max_mb: 100
+    startup_time_max_seconds: 3
+    battery_impact_max_percent: 5
+
+# Default Profile (fallback)
+default:
+  name: "Generic Project"
+  description: "Default configuration for unknown project types"
+  languages: ["any"]
+
+  primary_tools: []
+  secondary_tools: []
+
+  config:
+    severity_threshold: "medium"
+    include_suggestions: true
+    max_issues_per_tool: 100
+
+  include_patterns: ["*"]
+  exclude_patterns: []
+
+  quality_gates: {}

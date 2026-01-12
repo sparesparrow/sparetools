@@ -12,6 +12,19 @@
       "env": {
         "NODE_ENV": "production"
       }
+    },
+    "sparetools-mcp-static-analysis": {
+      "command": "python",
+      "args": [
+        "-m",
+        "sparetools.mcp_servers.static_analysis.static_analysis_mcp_server"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/sparrow/projects/dev-tools/sparetools/packages/mcp/sparetools-mcp-servers/src",
+        "STATIC_ANALYSIS_MODE": "development",
+        "MCP_PROMPTS_SERVER_URL": "http://localhost:3000",
+        "STATIC_ANALYSIS_CONFIG_FILE": "/home/sparrow/projects/dev-tools/sparetools/packages/mcp/sparetools-mcp-servers/src/sparetools/mcp_servers/static_analysis/config/default_config.yaml"
+      }
     }
   }
 }

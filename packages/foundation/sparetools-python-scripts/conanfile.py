@@ -4,11 +4,14 @@ import os
 
 class SparetoolsPythonScriptsConan(ConanFile):
     name = "sparetools-python-scripts"
-    version = "1.0.0"
+    version = "1.1.0"
     license = "Apache-2.0"
     description = "Runtime Python utility modules for SpareTools projects"
     author = "SpareTools Team"
     topics = ("utilities", "python", "conan", "tools")
+
+    # Use SpareTools base utilities
+    python_requires = "sparetools-base/2.0.4"
 
     # This is an APPLICATION package (not python-require)
     package_type = "application"

@@ -46,6 +46,9 @@ upload_package "sparetools-mia/2.0.0"
 echo
 echo "=== Uploading Python Tool Packages ==="
 
+# MCP packages
+upload_package "sparetools-mcp-transport-telegram/1.0.0"
+
 # Python tools (if built)
 # upload_package "sparetools-fs-tools/*"
 # upload_package "sparetools-proc-tools/*"

@@ -80,6 +80,16 @@ SYNC_VALIDATION_REPORT.json
 *_REPORT.json
 *_VALIDATION_REPORT.json
 
+# Consumer package cloned upstream repositories
+packages/consumers/esp32/sparetools-bpm-detector/upstream/
+packages/consumers/esp32/sparetools-nucleus/upstream/
+packages/consumers/esp32/sparetools-esp32-bpm-prompts/upstream/
+packages/consumers/mia/sparetools-mia/upstream/
+packages/consumers/android/sparetools-cliphist-android/upstream/
+packages/consumers/mcp/sparetools-mcpserver-cpp/upstream/
+packages/consumers/mcp/sparetools-mcp-orchestrator/upstream/
+packages/consumers/openssl/sparetools-openssl-tools/upstream/
+
 # Temporary build scripts and configs
 build_and_upload_all.sh
 build_packages_skip_cpython.sh
@@ -100,15 +110,11 @@ turbo.json
 
 
 
+ 
+.env.conan.example
+packages/wifi/sparetools-wifi-sensing/research/repositories/wigle/.env.sample
 
+packages/wifi/sparetools-wifi-sensing/cpy/**/*
+packages/wifi/sparetools-wifi-sensing/research/repositories/flipper_zero/**/*
+packages/wifi/sparetools-wifi-sensing/research/repositories/wigle/wigle-wifi/**/*
 
-
-
-
-
-
-
-
-
-
-packages/aerospace

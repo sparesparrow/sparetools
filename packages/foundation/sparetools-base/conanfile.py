@@ -21,7 +21,7 @@ def _load_versions():
             pass
     # Fallback to hardcoded versions if file not found or parsing fails
     return {
-        "cpython": "3.12.8",
+        "cpython": "3.12.7",
         "python-scripts": "1.0.0",
         "test-harness": "2.0.0",
         "gtest": "1.14.0",
@@ -39,9 +39,8 @@ class SpareToolsVersions:
 
     # Convenience accessors for common packages
     SPARETOOLS_BASE = "2.0.4"
-    SPARETOOLS_CPYTHON = versions.get("cpython", "3.12.8")
-    SPARETOOLS_PYTHON_SCRIPTS = versions.get("python-scripts", "1.0.0")
-    SPARETOOLS_OPENSSL = versions.get("openssl", "3.3.2")
+    SPARETOOLS_CPYTHON = versions.get("cpython", "3.12.7")
+    SPARETOOLS_PYTHON_SCRIPTS = versions.get("python-scripts", "1.1.0")
 
 
 class SpareToolsSecurityMixin:
@@ -74,11 +73,22 @@ class SpareToolsSecurityMixin:
         self.output.info("✅ SBOM generated (placeholder)")
 
 
+class SpareToolsMcpMixin:
+  
+class SpareToolsConanMixin:
+  
+class SpareToolsEmbeddedMixin:
+  
+class SpareToolsAndroidMixin:
+  
+class SpareToolsTestMixin:
+
 class SpareToolsBaseConan(ConanFile, SpareToolsSecurityMixin):
     name = "sparetools-base"
     # Use CONAN_BUILD_VERSION from environment (set by git-to-conan collector)
     # Fallback to static version for local development
-    version = os.environ.get('CONAN_BUILD_VERSION', '2.0.4')
+
+    version = '2.0.4'
     package_type = "python-require"
     description = "Recipe helpers for SpareTools Conan packages"
     license = "Apache-2.0"

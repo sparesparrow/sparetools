@@ -71,7 +71,7 @@ Generated from SpareTools ESP32 firmware template.
 
 This project uses the SpareTools ecosystem:
 
-- **sparesparrow-protocols/1.0.0**: FlatBuffers protocol schemas
+- **sparetools-protocols/1.0.1**: FlatBuffers protocol schemas
 {% if cookiecutter.schema_component != 'none' %}
 - **Schema component**: {{cookiecutter.schema_component|upper}} protocol definitions
 {% endif %}
@@ -148,6 +148,7 @@ This project is part of the SpareTools ecosystem. Key benefits:
 ---
 
 *Generated from SpareTools template on {{cookiecutter.__today__}}*
+
 
 
 

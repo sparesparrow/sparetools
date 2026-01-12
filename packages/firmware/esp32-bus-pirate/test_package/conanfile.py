@@ -5,6 +5,8 @@ from conans import ConanFile
 
 
 class Esp32BusPirateTestConan(ConanFile):
+    name = 'esp32-bus-pirate-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
 
     def build_requirements(self):
@@ -53,6 +55,7 @@ class Esp32BusPirateTestConan(ConanFile):
             self.output.info(f"Board configuration: {self.deps_user_info['esp32-bus-pirate'].board}")
 
         self.output.success("ESP32-Bus-Pirate package validation completed successfully!")
+
 
 
 

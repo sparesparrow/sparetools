@@ -70,7 +70,7 @@ Add to your `conanfile.py`:
 ```python
 def requirements(self):
     # Include protocol schemas and generated headers
-    self.requires("sparetools-protocols/1.0.0")
+    self.requires("sparetools-protocols/1.0.1")
 
 def build_requirements(self):
     # Include FlatBuffers compiler for code generation

@@ -2,6 +2,7 @@ import os
 import sys
 from conan import ConanFile
 from conan.tools.files import copy
+from conan.tools.scm import Git
 
 
 class SpareToolsMcpOrchestratorConan(ConanFile):
@@ -15,7 +16,7 @@ class SpareToolsMcpOrchestratorConan(ConanFile):
     package_type = "python-require"
     description = "MCP orchestrator with FastMCP integration, project orchestration, and AI-powered development tools"
     license = "Apache-2.0"
-    url = "https://github.com/sparesparrow/sparetools"
+    url = "https://github.com/sparesparrow/mcp-project-orchestrator"
     topics = ("mcp", "ai", "orchestration", "fastmcp", "development-tools")
 
     # Declare consumer context
@@ -28,12 +29,18 @@ class SpareToolsMcpOrchestratorConan(ConanFile):
         # "sparetools-openssl/3.3.2",
     )
 
-    # Source files to export
-    exports_sources = (
-        "src/*",
-        "scripts/*",
-        "docs/*",
-    )
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream MCP Orchestrator repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/mcp-project-orchestrator.git", target="upstream")
+
+    def layout(self):
+        """Set source folder to upstream repository"""
+        from conan.tools.layout import basic_layout
+        basic_layout(self, src_folder="upstream")
 
     def package(self):
         """Package MCP orchestrator components."""
