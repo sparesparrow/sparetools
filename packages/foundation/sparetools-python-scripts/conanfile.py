@@ -4,7 +4,7 @@ import os
 
 class SparetoolsPythonScriptsConan(ConanFile):
     name = "sparetools-python-scripts"
-    version = "1.0.0"
+    version = "1.1.0"
     license = "Apache-2.0"
     description = "Runtime Python utility modules for SpareTools projects"
     author = "SpareTools Team"
