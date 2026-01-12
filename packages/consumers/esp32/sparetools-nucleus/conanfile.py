@@ -2,6 +2,7 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.layout import basic_layout
 from conan.tools.files import copy
+from conan.tools.scm import Git
 import os
 
 # Import SpareTools version management
@@ -56,11 +57,16 @@ class SpareToolsNucleusConan(ConanFile):
         "target_board": "esp32s3",
     }
 
-    # Sources are located in the same place as this recipe
-    exports_sources = "CMakeLists.txt", "src/*", "include/*", "test/*", "test_harness/*", "platformio.ini"
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream NucleusESP32 repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/NucleusESP32.git", target="upstream")
 
     def layout(self):
-        basic_layout(self, src_folder=".")
+        basic_layout(self, src_folder="upstream")
 
     def build_requirements(self):
         # ESP32 consumer foundation packages - use dynamic versions
