@@ -1,6 +1,6 @@
 foundation:
-  base: 2.0.3
-  cpython: 3.12.7
+  base: 2.0.4
+  cpython: 3.12.8
   bootstrap: 2.0.3
   test-framework: 1.0.0
   test-harness: 2.0.3
