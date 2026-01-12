@@ -1,5 +1,5 @@
 foundation:
-  base: 2.0.3
+  base: 2.0.4
   cpython: 3.12.7
   cpy-base: 1.0.0
   bootstrap: 2.0.3

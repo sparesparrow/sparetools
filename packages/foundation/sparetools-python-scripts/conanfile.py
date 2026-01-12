@@ -10,6 +10,9 @@ class SparetoolsPythonScriptsConan(ConanFile):
     author = "SpareTools Team"
     topics = ("utilities", "python", "conan", "tools")
 
+    # Use SpareTools base utilities
+    python_requires = "sparetools-base/2.0.4"
+
     # This is an APPLICATION package (not python-require)
     package_type = "application"
 
