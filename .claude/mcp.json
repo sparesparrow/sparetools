@@ -1,0 +1,70 @@
+{
+  "mcpServers": {
+    "mcp-prompts": {
+      "command": "npx",
+      "args": ["-y", "@sparesparrow/mcp-prompts", "start"],
+      "env": {
+        "MODE": "mcp",
+        "STORAGE_TYPE": "file",
+        "LOG_LEVEL": "debug",
+        "PROMPTS_DIR": "/home/sparrow/mcp/data/prompts"
+      }
+    },
+    "mcp-prompts-postgres": {
+      "command": "npx",
+      "args": ["-y", "@sparesparrow/mcp-prompts", "start"],
+      "env": {
+        "MODE": "mcp",
+        "STORAGE_TYPE": "postgres",
+        "POSTGRES_URL": "postgresql://postgres:postgres@localhost:5432/mcp_prompts",
+        "POSTGRES_HOST": "localhost",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_DATABASE": "mcp_prompts",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "postgres",
+        "LOG_LEVEL": "info",
+        "NODE_OPTIONS": "--no-warnings"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://postgres:postgres@localhost:5432/mcp_prompts"
+      ],
+      "env": {
+        "POSTGRES_URL": "postgresql://postgres:postgres@localhost:5432/mcp_prompts"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/sparrow"
+      ],
+      "env": {}
+    },
+    "server-memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {
+        "MEMORY_FILE_PATH": "${workspaceRoot}/memory.json"
+      }
+    }
+  }
+}

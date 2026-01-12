@@ -3,6 +3,7 @@ import sys
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, cmake_layout
 from conan.tools.files import copy
+from conan.tools.scm import Git
 
 # Import base class from shared scripts
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../scripts'))
@@ -15,7 +16,7 @@ class SpareToolsClipHistAndroidConan(ConsumerPackageConan):
     package_type = "application"
     description = "ClipHist Android consumer application for SpareTools ecosystem"
     license = "Apache-2.0"
-    url = "https://github.com/sparesparrow/sparetools"
+    url = "https://github.com/sparesparrow/cliphist-android"
     topics = ("android", "clipboard", "encryption", "security")
 
     # Declare consumer context
@@ -34,18 +35,17 @@ class SpareToolsClipHistAndroidConan(ConsumerPackageConan):
         "android-sdk/34"
     )
 
-    # Source files to export
-    exports_sources = (
-        "CMakeLists.txt",
-        "app/**",
-        "build.gradle.kts",
-        "settings.gradle.kts",
-        "gradle/**",
-        "src/**"
-    )
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream ClipHist Android repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/cliphist-android.git", target="upstream")
 
     def layout(self):
-        cmake_layout(self)
+        from conan.tools.layout import basic_layout
+        basic_layout(self, src_folder="upstream")
 
     def generate(self):
         # Generate CMake toolchain for Android
@@ -60,13 +60,13 @@ class SpareToolsClipHistAndroidConan(ConsumerPackageConan):
         deps.generate()
 
     def build(self):
-        # Use Gradle to build Android APK
+        # Use Gradle to build Android APK from upstream directory
         if self.conf.get("tools.android:gradle_command", default="gradle", check_type=str):
             gradle_cmd = self.conf.get("tools.android:gradle_command")
         else:
             gradle_cmd = "gradle"
 
-        self.run(f"{gradle_cmd} assembleDebug")
+        self.run(f"{gradle_cmd} assembleDebug", cwd=os.path.join(self.source_folder))
 
     def package(self):
         # Package the built APK and related files

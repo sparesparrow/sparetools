@@ -3,6 +3,7 @@ import sys
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.files import copy
+from conan.tools.scm import Git
 
 class SpareToolsMcpServerCppConan(ConanFile):
     """MCP Server C++ - High-performance MCP server implementation in C++."""
@@ -15,7 +16,7 @@ class SpareToolsMcpServerCppConan(ConanFile):
     package_type = "library"
     description = "High-performance MCP (Model Context Protocol) server implementation in C++"
     license = "Apache-2.0"
-    url = "https://github.com/sparesparrow/sparetools"
+    url = "https://github.com/sparesparrow/MCPServer.cpp"
     topics = ("mcp", "cpp", "server", "high-performance", "json-rpc")
 
     # Declare consumer context
@@ -39,12 +40,13 @@ class SpareToolsMcpServerCppConan(ConanFile):
         "fPIC": True,
     }
 
-    # Source and export configuration
-    exports_sources = (
-        "src/*",
-        "include/*",
-        "CMakeLists.txt",
-    )
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream MCPServer.cpp repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/MCPServer.cpp.git", target="upstream")
 
     def configure(self):
         """Apply C++-specific configuration."""
@@ -56,8 +58,8 @@ class SpareToolsMcpServerCppConan(ConanFile):
 
     def layout(self):
         """Set up build layout."""
-        from conan.tools.cmake import cmake_layout
-        cmake_layout(self)
+        from conan.tools.layout import basic_layout
+        basic_layout(self, src_folder="upstream")
 
     def generate(self):
         """Generate build files."""

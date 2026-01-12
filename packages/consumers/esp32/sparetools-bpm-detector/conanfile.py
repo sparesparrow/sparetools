@@ -2,6 +2,7 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 from conan.tools.layout import basic_layout
 from conan.tools.files import copy
+from conan.tools.scm import Git
 import os
 
 # Import SpareTools version management
@@ -57,11 +58,16 @@ class SpareToolsBpmDetectorConan(ConanFile):
         "target_board": "esp32s3",
     }
 
-    # Sources are located in the same place as this recipe
-    exports_sources = "CMakeLists.txt", "src/*", "include/*", "test/*", "scripts/*", "platformio.ini"
+    # Sources are cloned from upstream repository
+    exports_sources = ()
+
+    def source(self):
+        """Clone upstream ESP32 BPM Detector repository"""
+        git = Git(self)
+        git.clone("https://github.com/sparesparrow/esp32-bpm-detector.git", target="upstream")
 
     def layout(self):
-        basic_layout(self, src_folder=".")
+        basic_layout(self, src_folder="upstream")
 
     def build_requirements(self):
         # ESP32 consumer foundation packages - use dynamic versions
