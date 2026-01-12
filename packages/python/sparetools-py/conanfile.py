@@ -21,7 +21,7 @@ class SparetoolsPyConan(ConanFile):
 
     def requirements(self):
         # Protocol schemas for Python decoding
-        self.requires("sparesparrow-protocols/1.0.0")
+        self.requires("sparetools-protocols/1.0.1")
 
         # FlatBuffers for Python protocol handling
         self.requires("flatbuffers/24.3.25")

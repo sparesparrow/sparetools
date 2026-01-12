@@ -10,6 +10,8 @@ class SparetoolsTestHarnessTestConan(ConanFile):
     Validates that the test harness loads correctly and provides
     ngapy-compatible verification methods.
     """
+    name = 'test-harness-test'
+    version = '1.0.0'
     test_type = "explicit"
     python_requires = "sparetools-test-harness/[>=2.0.0]"
 

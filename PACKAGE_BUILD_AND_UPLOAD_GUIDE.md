@@ -46,7 +46,7 @@ cd dev-tools/sparetools
 This will build all packages in dependency order:
 - Foundation packages (recipe-base, base, cpython, test-harness, shared-dev-tools, bootstrap)
 - Embedded packages (hal-sunton, embedded)
-- Schema packages (sparesparrow-protocols)
+- Schema packages (sparetools-protocols)
 - Consumer packages (obd-sim, mia, mcp packages, esp32 packages)
 
 **Note**: `sparetools-cpython` can take 5-30 minutes to build as it compiles Python from source.
@@ -79,7 +79,7 @@ conan create . --user sparetools --channel stable --build=missing
 2. **Upload packages**:
    ```bash
    conan upload "sparetools-*/*" -r sparesparrow-conan --confirm
-   conan upload "sparesparrow-protocols/*" -r sparesparrow-conan --confirm
+   conan upload "sparetools-protocols/*" -r sparesparrow-conan --confirm
    ```
 
 ### Upload to GitHub Packages
@@ -92,7 +92,7 @@ conan create . --user sparetools --channel stable --build=missing
 2. **Upload packages**:
    ```bash
    conan upload "sparetools-*/*" -r github-packages --confirm
-   conan upload "sparesparrow-protocols/*" -r github-packages --confirm
+   conan upload "sparetools-protocols/*" -r github-packages --confirm
    ```
 
 ### Automated Upload (All-in-One)
@@ -122,7 +122,7 @@ python3 scripts/build_and_upload_packages.py
 - `sparetools-embedded/1.0.0` - Embedded utilities
 
 ### Schema Packages
-- `sparesparrow-protocols/1.0.0` - FlatBuffers schemas
+- `sparetools-protocols/1.0.1` - FlatBuffers schemas
 
 ### Consumer Packages
 - `sparetools-obd-sim/2.0.3` - OBD-II simulator
@@ -141,7 +141,7 @@ python3 scripts/build_and_upload_packages.py
 ### List Built Packages
 ```bash
 conan list "sparetools-*"
-conan list "sparesparrow-protocols/*"
+conan list "sparetools-protocols/*"
 ```
 
 ### Verify Upload to Cloudsmith

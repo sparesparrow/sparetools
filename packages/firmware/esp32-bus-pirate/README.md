@@ -140,7 +140,7 @@ The ESP32 BPM Detector project can use this package to provide Bus Pirate functi
 # conanfile.txt
 [requires]
 esp32-bus-pirate/1.0.0
-sparesparrow-protocols/1.0.0
+sparetools-protocols/1.0.1
 
 [options]
 esp32-bus-pirate/*:board=s3-devkit
@@ -200,6 +200,7 @@ This package contains the ESP32 Bus Pirate firmware, which is licensed under the
 - [ESP32 Bus Pirate Wiki](https://github.com/geo-tp/ESP32-Bus-Pirate/wiki)
 - [PlatformIO Documentation](https://docs.platformio.org/)
 - [Conan Package Manager](https://conan.io/)
+
 
 
 

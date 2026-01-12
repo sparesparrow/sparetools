@@ -6,6 +6,8 @@ from conan.tools.build import can_run
 
 
 class SpareToolsProcToolsTestConan(ConanFile):
+    name = 'proc-tools-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
 
     def requirements(self):

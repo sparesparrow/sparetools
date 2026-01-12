@@ -4,7 +4,7 @@ This directory contains the Cookiecutter template for generating ESP32 firmware 
 
 ## Features
 
-- **SpareTools Integration**: Pre-configured with `sparesparrow-protocols` and Conan dependency management
+- **SpareTools Integration**: Pre-configured with `sparetools-protocols` and Conan dependency management
 - **Multiple Board Support**: ESP32, ESP32-S3, ESP32-C3 configurations
 - **Protocol Support**: BPM, MIA, MCP protocol integration options
 - **Web Interface**: Optional WiFi, web server, and WebSocket support
@@ -124,7 +124,7 @@ Enable/disable features based on your hardware requirements:
 
 Generated projects automatically integrate with:
 
-- **sparesparrow-protocols**: Shared FlatBuffers schemas
+- **sparetools-protocols**: Shared FlatBuffers schemas
 - **Conan package management**: Automatic dependency resolution
 - **CI/CD pipelines**: Pre-configured GitHub Actions
 - **Documentation**: Comprehensive project guides
@@ -211,6 +211,7 @@ Ensure cookiecutter.json syntax is valid JSON
 ---
 
 *SpareTools ESP32 Template v1.0.0*
+
 
 
 

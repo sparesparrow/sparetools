@@ -17,7 +17,7 @@ include(${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
 include(${CMAKE_BINARY_DIR}/conandeps_legacy.cmake)
 
 # Find required packages
-find_package(sparesparrow-protocols REQUIRED)
+find_package(sparetools-protocols REQUIRED)
 find_package(GTest REQUIRED)
 
 # Enable testing
@@ -39,7 +39,7 @@ add_executable(bpm_detector_tests ${TEST_SOURCES})
 # Link dependencies
 target_link_libraries(bpm_detector_tests
     PRIVATE
-        sparesparrow-protocols::bpm
+        sparetools-protocols::bpm
         GTest::gtest_main
 )
 

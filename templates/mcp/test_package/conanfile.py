@@ -6,6 +6,8 @@ import sys
 
 
 class {{class_name}}McpServerTestPackage(ConanFile):
+    name = 'mcp-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
 
     def requirements(self):

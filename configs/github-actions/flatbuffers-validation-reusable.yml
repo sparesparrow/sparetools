@@ -116,10 +116,10 @@ jobs:
         cd fb_validation_test
 
         # Install schema package for testing
-        conan install sparetools-protocols/1.0.0 --build=missing
+        conan install sparetools-protocols/1.0.1 --build=missing
 
         # Get schema directory
-        SCHEMA_DIR=$(conan info sparetools-protocols/1.0.0 --paths | grep "schemas:" | cut -d' ' -f2)
+        SCHEMA_DIR=$(conan info sparetools-protocols/1.0.1 --paths | grep "schemas:" | cut -d' ' -f2)
         if [ -z "$SCHEMA_DIR" ]; then
           # Fallback: find schema directory
           SCHEMA_DIR=$(find ~/.conan2 -name "sparetools-protocols" -type d | head -1)/schemas
@@ -178,7 +178,7 @@ EOF
         cd cross_platform_test
 
         # Install schema package
-        conan install sparetools-protocols/1.0.0 --build=missing
+        conan install sparetools-protocols/1.0.1 --build=missing
 
         SCHEMA_DIR=$(find ~/.conan2 -name "sparetools-protocols" -type d | head -1)/schemas
         SAMPLE_SCHEMA="$SCHEMA_DIR/common/common.fbs"

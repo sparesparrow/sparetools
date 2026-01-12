@@ -55,6 +55,34 @@ conan create mia-project --build=missing
 conan create packages/consumers/esp32/sparetools-bpm-detector --build=missing
 ```
 
+### Zero-Copy Development (CPY System)
+
+For consumer projects, SpareTools provides a zero-copy development environment using symlinks to Conan cache instead of versioned Cloudsmith packages:
+
+```bash
+# Setup CPY environment for MIA project
+cd ~/projects/mia
+mkdir CPY
+cd CPY
+
+# Create symlinks to cache packages
+ln -sf $(conan cache path sparetools-base/2.0.3) sparetools-base
+ln -sf $(conan cache path sparetools-embedded/1.0.0) sparetools-embedded
+ln -sf $(conan cache path sparetools-cpython/3.12.7) sparetools-cpython
+
+# Build using symlinked dependencies
+export LD_LIBRARY_PATH="$PWD/sparetools-base/lib:$LD_LIBRARY_PATH"
+conan build ..  # Uses symlinked packages
+```
+
+**Benefits:**
+- ⚡ Zero-copy: No package duplication
+- 🔄 Instant updates: Changes in cache immediately available
+- 🛡️ Isolated development: Local changes don't affect others
+- 📦 Simplified maintenance: No version management for internal packages
+
+See [`docs/CPY_SYSTEM.md`](docs/CPY_SYSTEM.md) for complete documentation.
+
 ---
 
 ## 📋 Multi-Domain Ecosystem

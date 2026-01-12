@@ -1,0 +1,67 @@
+{
+  "name": "Python Project Analysis Workflow",
+  "description": "Complete analysis workflow for Python projects including linting, testing, and coverage analysis",
+  "steps": [
+    {
+      "step_id": "dependency_check",
+      "tool_name": "pytest",
+      "target_path": ".",
+      "arguments": {
+        "test_pattern": "test_import*",
+        "verbose": true
+      },
+      "timeout": 60
+    },
+    {
+      "step_id": "unit_tests",
+      "tool_name": "pytest",
+      "target_path": ".",
+      "arguments": {
+        "output_format": "json",
+        "coverage": true,
+        "coverage_report": ["term-missing", "html:htmlcov", "xml"],
+        "test_pattern": "test_*.py",
+        "parallel": 4
+      },
+      "dependencies": ["dependency_check"],
+      "condition": "result.success",
+      "timeout": 600
+    },
+    {
+      "step_id": "integration_tests",
+      "tool_name": "pytest",
+      "target_path": ".",
+      "arguments": {
+        "output_format": "json",
+        "markers": "integration",
+        "verbose": true,
+        "tb": "short"
+      },
+      "dependencies": ["unit_tests"],
+      "condition": "result.metrics.passed_tests > result.metrics.total_tests * 0.8",
+      "timeout": 300
+    },
+    {
+      "step_id": "performance_tests",
+      "tool_name": "pytest",
+      "target_path": ".",
+      "arguments": {
+        "markers": "performance",
+        "timeout": 30,
+        "maxfail": 1
+      },
+      "dependencies": ["unit_tests"],
+      "condition": "result.success",
+      "timeout": 180
+    }
+  ],
+  "metadata": {
+    "project_type": "python",
+    "estimated_duration": 1140,
+    "quality_gates": {
+      "min_test_coverage": 85,
+      "max_integration_test_failures": 2,
+      "performance_regression_threshold": 10
+    }
+  }
+}

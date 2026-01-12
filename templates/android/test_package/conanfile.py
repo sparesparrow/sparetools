@@ -3,6 +3,8 @@ from conan.tools.files import copy
 import os
 
 class {{class_name}}AndroidTestPackage(ConanFile):
+    name = 'android-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
 
     def requirements(self):

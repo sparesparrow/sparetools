@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(sparesparrow-protocols)
+project(sparetools-protocols)
 
 # Find FlatBuffers
 find_package(FlatBuffers REQUIRED)

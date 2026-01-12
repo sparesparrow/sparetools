@@ -17,7 +17,7 @@ class SparetoolsVersioningConan(ConanFile):
     name = "sparetools-versioning"
     # Use CONAN_BUILD_VERSION from environment (set by git-to-conan collector)
     # Fallback to static version for local development
-    version = os.environ.get('CONAN_BUILD_VERSION', '1.0.0')
+    version = '1.0.0'
     package_type = "python-require"
     description = "Git-based versioning utilities for SpareTools Conan packages"
     license = "Apache-2.0"

@@ -7,6 +7,8 @@ from conan.tools.build import can_run
 
 
 class SpareToolsFsToolsTestConan(ConanFile):
+    name = 'fs-tools-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
 
     def requirements(self):

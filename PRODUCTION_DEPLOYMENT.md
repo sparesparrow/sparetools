@@ -48,20 +48,20 @@ conan remote add sparetools https://your-domain.jfrog.io/artifactory/api/conan/s
 cd ~/sparetools
 
 # Upload foundation packages first (dependencies)
-conan upload "sparetools-recipe-base/1.0.0@sparetools/stable" -r sparetools --force
-conan upload "sparetools-base/2.0.0@sparetools/stable" -r sparetools --force
-conan upload "sparetools-cpython/3.12.7@sparetools/stable" -r sparetools --force
-conan upload "sparetools-test-harness/2.0.0@sparetools/stable" -r sparetools --force
-conan upload "sparetools-shared-dev-tools/2.0.0@sparetools/stable" -r sparetools --force
-conan upload "sparetools-bootstrap/2.0.0@sparetools/stable" -r sparetools --force
+conan upload "sparetools-recipe-base/1.0.0" -r sparetools --force
+conan upload "sparetools-base/2.0.0" -r sparetools --force
+conan upload "sparetools-cpython/3.12.7" -r sparetools --force
+conan upload "sparetools-test-harness/2.0.0" -r sparetools --force
+conan upload "sparetools-shared-dev-tools/2.0.0" -r sparetools --force
+conan upload "sparetools-bootstrap/2.0.0" -r sparetools --force
 
 # Upload consumer packages
-conan upload "sparetools-nucleus/0.1.0@sparetools/stable" -r sparetools --force
-conan upload "sparetools-mia/2.0.0@sparetools/stable" -r sparetools --force
+conan upload "sparetools-nucleus/0.1.0" -r sparetools --force
+conan upload "sparetools-mia/2.0.0" -r sparetools --force
 # ... upload remaining consumer packages
 
 # Optional: Upload deprecated packages
-conan upload "sparetools-openssl-autotools/3.3.2@sparetools/stable" -r sparetools --force
+conan upload "sparetools-openssl-autotools/3.3.2" -r sparetools --force
 # ... upload remaining deprecated packages
 ```
 
@@ -72,7 +72,7 @@ conan upload "sparetools-openssl-autotools/3.3.2@sparetools/stable" -r sparetool
 conan list "sparetools*" -r sparetools
 
 # Test package installation from remote
-conan install "sparetools-nucleus/0.1.0@sparetools/stable" --build=missing
+conan install "sparetools-nucleus/0.1.0" --build=missing
 ```
 
 ### 4. Configure CI/CD Environments
@@ -141,7 +141,7 @@ pio run -e esp32-2432S028Rv3
 conan remote list
 
 # Verify package exists
-conan list "sparetools-nucleus/0.1.0@sparetools/stable" -r sparetools
+conan list "sparetools-nucleus/0.1.0" -r sparetools
 
 # Clear local cache if needed
 conan cache clean
@@ -159,7 +159,7 @@ conan remote auth sparetools --verify
 ### Build Failures
 ```bash
 # Check package dependencies
-conan info "sparetools-nucleus/0.1.0@sparetools/stable"
+conan info "sparetools-nucleus/0.1.0"
 
 # Rebuild with verbose output
 conan install . --build=missing -v
@@ -184,7 +184,7 @@ python scripts/test_runner.py --unit-only
 # Follow semantic versioning for API compatibility
 
 # Test compatibility before deployment
-conan install "sparetools-nucleus/new_version@sparetools/stable" --build=missing
+conan install "sparetools-nucleus/new_version" --build=missing
 ```
 
 ## 🎯 Success Metrics

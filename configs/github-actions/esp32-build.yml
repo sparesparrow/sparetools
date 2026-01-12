@@ -6,7 +6,7 @@ on:
       conan_packages:
         description: 'Conan packages to install'
         required: false
-        default: 'sparesparrow-protocols/1.0.0@sparesparrow/stable'
+        default: 'sparetools-protocols/1.0.1@sparesparrow/stable'
         type: string
       esp32_board:
         description: 'ESP32 board variant'

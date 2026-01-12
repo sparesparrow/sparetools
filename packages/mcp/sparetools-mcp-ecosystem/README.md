@@ -440,7 +440,7 @@ Licensed under the MIT License. See LICENSE file for details.
 - **sparetools-mcp-project-orchestrator**: Project orchestration (integrated)
 - **sparetools-base**: Foundation utilities
 - **sparetools-cpython**: Bundled Python runtime
-- **sparesparrow-protocols**: Shared FlatBuffers schemas
+- **sparetools-protocols**: Shared FlatBuffers schemas
 
 ---
 

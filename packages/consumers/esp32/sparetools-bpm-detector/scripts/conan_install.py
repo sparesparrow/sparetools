@@ -68,10 +68,10 @@ def setup_platformio_headers(project_dir):
         shutil.rmtree(firmware_dir)
     os.makedirs(firmware_dir, exist_ok=True)
 
-    # Find and copy sparesparrow-protocols headers
+    # Find and copy sparetools-protocols headers
     try:
         # Get package binary location (with hash)
-        result = subprocess.run(["conan", "cache", "path", "sparesparrow-protocols/1.0.0:da39a3ee5e6b4b0d3255bfef95601890afd80709"], capture_output=True, text=True, check=True)
+        result = subprocess.run(["conan", "cache", "path", "sparetools-protocols/1.0.1:da39a3ee5e6b4b0d3255bfef95601890afd80709"], capture_output=True, text=True, check=True)
         package_path = result.stdout.strip()
 
         # Copy headers

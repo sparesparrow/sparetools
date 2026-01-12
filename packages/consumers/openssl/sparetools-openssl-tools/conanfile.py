@@ -11,6 +11,7 @@ class SpareToolsOpenSSLToolsConan(ConanFile):
     python_requires_extend = "sparetools-base.SpareToolsSecurityMixin"
 
     name = "sparetools-openssl-tools"
+    version = '1.0.0'
 
     # Source files to export
     exports_sources = (

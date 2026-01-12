@@ -156,7 +156,7 @@ esp32-bpm-detector/ (original repo)
 ## Benefits
 
 1. **Dependency Management**: Uses SpareTools foundation packages
-2. **Shared Schemas**: FlatBuffers schemas from sparesparrow-protocols
+2. **Shared Schemas**: FlatBuffers schemas from sparetools-protocols
 3. **CI/CD Integration**: Reusable workflows and templates
 4. **Consistency**: Follows OMS patterns across all projects
 
@@ -187,7 +187,7 @@ platformio run -e esp32-s3
 
 ## Dependencies
 
-- `sparesparrow-protocols/1.0.0` - FlatBuffers schemas
+- `sparetools-protocols/1.0.1` - FlatBuffers schemas
 - `sparetools-hal-sunton/1.0.0` - Hardware abstraction layer
 - `sparetools-test-harness/2.0.0` - Testing infrastructure
 - `sparetools-shared-dev-tools/2.0.0` - Build tools

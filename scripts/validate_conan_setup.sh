@@ -33,7 +33,7 @@ else
 fi
 
 # Check critical packages exist (remote or local cache)
-for pkg in "sparetools-base/2.0.3" "sparetools-cpython/3.12.7" "sparesparrow-protocols/1.0.0" "sparetools-embedded/1.0.0"; do
+for pkg in "sparetools-base/2.0.3" "sparetools-cpython/3.12.7" "sparetools-protocols/1.0.1" "sparetools-embedded/1.0.0"; do
   echo -n "Checking $pkg... "
   if $AUTH_CONFIGURED && conan search "$pkg" -r=sparetools &>/dev/null; then
     echo "✅ (remote)"

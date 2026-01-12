@@ -83,7 +83,7 @@ builder.Finish(bpm_update)
 
 This package is part of the SpareTools foundation and integrates with:
 
-- `sparesparrow-protocols`: General protocol schemas
+- `sparetools-protocols`: General protocol schemas
 - `sparetools-bpm-detector`: ESP32 BPM detector implementation
 - `sparetools-hal-sunton`: ESP32 hardware abstraction
 

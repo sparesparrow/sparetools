@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  mcp-transport-telegram:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mcp-transport-telegram
+    restart: unless-stopped
+
+    # Environment variables - configure these for your setup
+    environment:
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_PHONE=${TELEGRAM_PHONE:-}
+      - TELEGRAM_SESSION_NAME=mia_telegram_session
+      - TELEGRAM_POLLING_INTERVAL=30
+      - TELEGRAM_MAX_MESSAGE_AGE=3600
+      - TELEGRAM_RATE_LIMIT_PER_MINUTE=30
+
+    # Volume mounts for session storage and logs
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Security
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+
+  # Optional: Redis for session storage (if needed for scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: mcp-telegram-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  redis_data:
+
+networks:
+  default:
+    name: mcp-network

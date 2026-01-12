@@ -9,7 +9,7 @@ class CPythonToolConan(ConanFile):
     """CPython 3.12.7 built directly to Conan cache - Zero-copy architecture"""
     
     name = "sparetools-cpython"
-    version = "3.12.8"
+    version = "3.12.7"
     package_type = "application"
     description = "Prebuilt CPython 3.12.7 with OpenSSL support for DevOps"
     license = "Python-2.0"

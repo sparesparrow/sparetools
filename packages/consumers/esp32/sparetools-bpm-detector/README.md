@@ -11,7 +11,7 @@ This consumer package provides the ESP32 BPM Detector firmware as part of the Sp
 ```
 sparetools-bpm-detector (consumer)
 ├── Dependencies from SpareTools:
-│   ├── sparesparrow-protocols/1.0.0 (FlatBuffers schemas)
+│   ├── sparetools-protocols/1.0.1 (FlatBuffers schemas)
 │   ├── sparetools-hal-sunton/1.0.0 (Display HAL)
 │   ├── sparetools-test-harness/2.0.0 (Testing infrastructure)
 │   └── sparetools-shared-dev-tools/2.0.0 (Build tools)
@@ -63,7 +63,7 @@ ctest --output-on-failure
 
 ### Required SpareTools Packages
 
-- `sparesparrow-protocols/1.0.0` - FlatBuffers schemas for BPM protocol
+- `sparetools-protocols/1.0.1` - FlatBuffers schemas for BPM protocol
 - `sparetools-hal-sunton/1.0.0` - Hardware abstraction layer for displays
 - `sparetools-test-harness/2.0.0` - Testing infrastructure
 - `sparetools-shared-dev-tools/2.0.0` - Build and development tools
@@ -131,7 +131,7 @@ POST /api/reset       - Reset device
 
 ### Adding New Features
 
-1. Define protocol changes in `sparesparrow-protocols` schemas
+1. Define protocol changes in `sparetools-protocols` schemas
 2. Update consumer package to use new schemas
 3. Implement feature in ESP32 firmware
 4. Add unit tests with mocks
@@ -139,7 +139,7 @@ POST /api/reset       - Reset device
 
 ### Schema Updates
 
-When schemas are updated in `sparesparrow-protocols`:
+When schemas are updated in `sparetools-protocols`:
 
 ```bash
 # Rebuild to get latest headers
@@ -161,7 +161,7 @@ This package integrates with SpareTools CI/CD workflows:
 This consumer package replaces the standalone `esp32-bpm-detector` repository, providing:
 
 - **Unified Dependency Management**: All dependencies managed via SpareTools
-- **Shared Schemas**: FlatBuffers schemas centralized in `sparesparrow-protocols`
+- **Shared Schemas**: FlatBuffers schemas centralized in `sparetools-protocols`
 - **Consistent Tooling**: Build, test, and CI/CD tools shared across projects
 - **Better Testing**: Host-based unit tests with hardware mocks
 

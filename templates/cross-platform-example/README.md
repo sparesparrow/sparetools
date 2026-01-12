@@ -92,7 +92,7 @@ target_link_libraries(bpm_detector sparetools-protocols::iot)
 **conanfile.py**:
 ```python
 def requirements(self):
-    self.requires("sparetools-protocols/1.0.0")
+    self.requires("sparetools-protocols/1.0.1")
 
 def build_requirements(self):
     self.tool_requires("sparetools-flatbuffers/24.3.25")
@@ -211,7 +211,7 @@ class CrossPlatformPackage(ConanFile):
     tool_requires = "sparetools-flatbuffers/24.3.25"
 
     def requirements(self):
-        self.requires("sparetools-protocols/1.0.0")
+        self.requires("sparetools-protocols/1.0.1")
         # Platform-specific requirements...
 ```
 

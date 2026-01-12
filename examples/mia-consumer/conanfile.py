@@ -29,7 +29,7 @@ class MIAConsumerConan(ConanFile):
     ]
     
     # Use sparetools utilities if needed
-    python_requires = "sparetools-base/2.0.0"
+    python_requires = "sparetools-base/2.0.3"
     
     def layout(self):
         cmake_layout(self)

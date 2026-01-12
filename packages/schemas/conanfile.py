@@ -3,7 +3,7 @@ from conan import ConanFile
 from conan.tools.files import copy
 
 class ProtocolsConan(ConanFile):
-    name = "sparesparrow-protocols"
+    name = "sparetools-protocols"
     version = "1.0.1"
     package_type = "header-library"
     description = "SpareSparrow Protocol Schemas - FlatBuffers schemas for inter-service communication"

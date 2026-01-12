@@ -16,7 +16,7 @@ except ImportError:
         "gtest": "1.14.0",
         "shared-dev-tools": "2.0.0",
         "bootstrap": "2.0.0",
-        "protocols": "1.0.0"
+        "sparetools-protocols": "1.0.1"
     }
 
 
@@ -73,13 +73,13 @@ class SpareToolsBpmDetectorConan(ConanFile):
 
     def requirements(self):
         # Consolidated protocol schemas from SpareTools foundation
-        self.requires(f"sparetools-protocols/1.0.0")
+        self.requires(f"sparetools-protocols/1.0.1")
 
         # Testing framework for host-based C++ unit tests - use dynamic version
         self.requires(f"gtest/{versions['gtest']}")
 
         # ESP32 firmware package (from existing consumer)
-        self.requires("sparetools-hal-sunton/1.0.0@sparetools/stable")
+        self.requires("sparetools-hal-sunton/1.0.0")
 
         # Audio processing dependencies (if available)
         # self.requires("sparetools-dsp/1.0.0")  # Future package

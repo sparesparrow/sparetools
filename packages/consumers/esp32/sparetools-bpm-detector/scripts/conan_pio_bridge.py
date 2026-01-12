@@ -49,7 +49,7 @@ class BpmDetectorBridge:
 
         # Default configuration
         return {
-            "schema_packages": ["sparesparrow-protocols/1.0.0"],
+            "schema_packages": ["sparetools-protocols/1.0.1"],
             "hal_packages": ["sparetools-hal-sunton/1.0.0"],
             "target_board": "esp32s3",
             "features": {

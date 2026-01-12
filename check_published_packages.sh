@@ -14,7 +14,7 @@ echo "📊 Package Summary:"
 
 # Count packages by category
 echo "Foundation packages:"
-cloudsmith list packages sparesparrow-conan/sparetools --query="sparetools-base OR sparetools-bootstrap OR sparetools-cpython OR sparetools-shared-dev-tools OR sparetools-test-harness OR sparesparrow-protocols OR sparetools-py" 2>/dev/null | grep -c "sparetools\|sparesparrow" || echo "Query failed"
+cloudsmith list packages sparesparrow-conan/sparetools --query="sparetools-base OR sparetools-bootstrap OR sparetools-cpython OR sparetools-shared-dev-tools OR sparetools-test-harness OR sparetools-protocols OR sparetools-py" 2>/dev/null | grep -c "sparetools\|sparesparrow" || echo "Query failed"
 
 echo ""
 echo "Consumer packages:"
@@ -22,7 +22,7 @@ cloudsmith list packages sparesparrow-conan/sparetools --query="sparetools-mia O
 
 echo ""
 echo "Foundation packages status:"
-PACKAGES_TO_CHECK=("sparetools-base" "sparetools-bootstrap" "sparetools-cpython" "sparetools-shared-dev-tools" "sparetools-test-harness" "sparesparrow-protocols" "sparetools-py")
+PACKAGES_TO_CHECK=("sparetools-base" "sparetools-bootstrap" "sparetools-cpython" "sparetools-shared-dev-tools" "sparetools-test-harness" "sparetools-protocols" "sparetools-py")
 
 for package in "${PACKAGES_TO_CHECK[@]}"; do
     echo -n "$package: "

@@ -21,7 +21,7 @@ This consumer package provides the MIA (Modular IoT Architecture) platform as pa
 ```
 sparetools-mia (consumer)
 ├── Dependencies from SpareTools:
-│   ├── sparesparrow-protocols/1.0.0 (FlatBuffers schemas)
+│   ├── sparetools-protocols/1.0.1 (FlatBuffers schemas)
 │   ├── sparetools-embedded/1.0.0 (Embedded utilities)
 │   ├── sparetools-test-harness/2.0.0 (Testing infrastructure)
 │   └── sparetools-base/2.0.3 (Foundation utilities)
@@ -197,7 +197,7 @@ aws_client.publish_device_status(device_id, status)
 ## Dependencies
 
 ### **Required SpareTools Packages**
-- `sparesparrow-protocols/1.0.0` - Shared protocol schemas
+- `sparetools-protocols/1.0.1` - Shared protocol schemas
 - `sparetools-embedded/1.0.0` - Embedded system utilities
 - `sparetools-test-harness/2.0.0` - Testing infrastructure
 - `sparetools-base/2.0.3` - Foundation utilities
@@ -216,7 +216,7 @@ aws_client.publish_device_status(device_id, status)
 This consumer package replaces the standalone `mia` repository integration, providing:
 
 - **Dependency Management**: Uses SpareTools foundation packages
-- **Shared Schemas**: FlatBuffers schemas from sparesparrow-protocols
+- **Shared Schemas**: FlatBuffers schemas from sparetools-protocols
 - **CI/CD Integration**: Reusable workflows and templates
 - **Consistency**: Follows OMS patterns across all projects
 

@@ -1,0 +1,97 @@
+# Pytest Tool Configuration
+# Configuration for Python testing with pytest
+
+tool:
+  name: "pytest"
+  executable: "python"
+  args: ["-m", "pytest"]
+  category: "testing"
+  language: "python"
+
+# Default command line arguments
+default_args:
+  - "--tb=short"
+  - "--strict-markers"
+  - "--disable-warnings"
+
+# Output configuration
+output:
+  verbose: false
+  quiet: false
+  capture: "sys"  # Capture stdout/stderr
+  log_cli_level: "INFO"
+
+# Coverage configuration
+coverage:
+  enabled: true
+  source: ["src", "lib"]
+  omit: ["test_*", "tests/*", "*_test.py"]
+  report:
+    - "term-missing"
+    - "html:htmlcov"
+    - "xml:coverage.xml"
+  fail_under: 80
+
+# Test discovery
+discovery:
+  python_files: ["test_*.py", "*_test.py"]
+  python_classes: ["Test*"]
+  python_functions: ["test_*"]
+
+# Markers for test categorization
+markers:
+  slow: "marks tests as slow (deselect with '-m \"not slow\"')"
+  integration: "marks tests as integration tests"
+  unit: "marks tests as unit tests"
+  smoke: "marks tests as smoke tests"
+  regression: "marks tests as regression tests"
+
+# Platform-specific settings
+platforms:
+  linux:
+    python_executable: "python3"
+  macos:
+    python_executable: "python3"
+  windows:
+    python_executable: "python"
+
+# Project type specific configurations
+project_configs:
+  web:
+    markers:
+      - "not slow"  # Skip slow tests for web CI
+    coverage:
+      fail_under: 85
+
+  library:
+    coverage:
+      fail_under: 90
+    markers:
+      - "not integration"  # Skip integration tests for library CI
+
+  data_science:
+    coverage:
+      fail_under: 70  # Lower requirement for data science
+    timeout: 300  # Longer timeout for ML tests
+
+# Test execution
+execution:
+  timeout: 60  # seconds per test
+  maxfail: 5  # Stop after N failures
+  parallel: false  # Enable with pytest-xdist if needed
+  random_order: false
+
+# Reporting
+reporting:
+  junit_xml: "junit-results.xml"
+  html: "pytest-report.html"
+  json: "pytest-results.json"
+
+# Plugins
+plugins:
+  required: []
+  optional:
+    - "pytest-cov"
+    - "pytest-xdist"
+    - "pytest-html"
+    - "pytest-json-report"

@@ -2,6 +2,8 @@ from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMakeDeps, CMake
 
 class {{class_name}}TestPackage(ConanFile):
+    name = 'generic-test'
+    version = '1.0.0'
     settings = "os", "compiler", "build_type", "arch"
     generators = "CMakeDeps", "CMakeToolchain"
 

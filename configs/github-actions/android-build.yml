@@ -6,7 +6,7 @@ on:
       conan_packages:
         description: 'Conan packages to install'
         required: false
-        default: 'sparesparrow-protocols/1.0.0@sparesparrow/stable'
+        default: 'sparetools-protocols/1.0.1@sparesparrow/stable'
         type: string
       android_api_level:
         description: 'Android API level'

@@ -191,10 +191,10 @@ jobs:
           - **[Common Schema](common.md)** - Shared types and utilities
 
           ### Usage
-          All schemas are available through the `sparesparrow-protocols` Conan package:
+          All schemas are available through the `sparetools-protocols` Conan package:
 
           ```bash
-          conan install sparesparrow-protocols/1.0.0
+          conan install sparetools-protocols/1.0.1
           ```
 
           ### Integration Examples
@@ -270,7 +270,7 @@ jobs:
           ```
 
           ### Package Ecosystem
-          - **sparesparrow-protocols**: FlatBuffers schemas
+          - **sparetools-protocols**: FlatBuffers schemas
           - **sparetools-embedded**: C/C++ utilities
           - **sparetools-py**: Python protocol tools
           - **sparetools-base**: Foundation utilities
@@ -303,7 +303,7 @@ jobs:
           ## Conan Package Dependencies
 
           ### Core Packages
-          - `sparesparrow-protocols/1.0.0` - Protocol schemas
+          - `sparetools-protocols/1.0.1` - Protocol schemas
           - `sparetools-embedded/1.0.0` - Embedded utilities
           - `sparetools-base/2.0.3` - Foundation utilities
 
@@ -468,6 +468,7 @@ jobs:
           echo "- **Custom Domain**: https://docs.sparetools.dev/" >> docs-deployment-report.md
 
           cat docs-deployment-report.md
+
 
 
 

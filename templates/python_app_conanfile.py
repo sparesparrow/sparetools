@@ -54,7 +54,7 @@ class PythonAppConan(ConanFile):
     def requirements(self):
         """Runtime dependencies from SpareTools ecosystem."""
         # Add any SpareTools runtime dependencies here
-        # Example: self.requires("sparesparrow-protocols/1.0.0")
+        # Example: self.requires("sparetools-protocols/1.0.1")
         pass
 
     def build(self):

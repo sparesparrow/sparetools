@@ -6,6 +6,8 @@ import os
 class MiaProjectTestPackage(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
 
+    version = '1.0.0'
+    
     def requirements(self):
         self.requires(self.tested_reference_str)
 
