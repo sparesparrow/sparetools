@@ -1,5 +1,4 @@
 from conan import ConanFile
-from conan.tools.files import copy
 import yaml
 import os
 from pathlib import Path
@@ -23,6 +22,7 @@ def _load_versions():
     # Fallback to hardcoded versions if file not found or parsing fails
     return {
         "cpython": "3.12.7",
+        "python-scripts": "1.0.0",
         "test-harness": "2.0.0",
         "gtest": "1.14.0",
         "shared-dev-tools": "2.0.0",
@@ -37,14 +37,19 @@ class SpareToolsVersions:
     """Centralized version management for SpareTools ecosystem"""
     versions = _load_versions()
 
+    # Convenience accessors for common packages
+    SPARETOOLS_BASE = "2.0.4"
+    SPARETOOLS_CPYTHON = versions.get("cpython", "3.12.7")
+    SPARETOOLS_PYTHON_SCRIPTS = versions.get("python-scripts", "1.1.0")
+
 
 class SpareToolsSecurityMixin:
     """Mixin providing security gate and SBOM generation methods.
-    
+
     Packages that call apply_security_gates() or generate_sbom() should
     inherit from this mixin class to get the method implementations.
     """
-    
+
     def apply_security_gates(self) -> None:
         """Run security scanning (placeholder for Trivy, Syft integration)."""
         self.output.info("🔒 Applying security gates...")
@@ -53,10 +58,10 @@ class SpareToolsSecurityMixin:
         # - trivy fs --scanners vuln,secret,config .
         # - syft packages . -o json
         self.output.info("✅ Security gates passed (placeholder)")
-    
+
     def generate_sbom(self, format: str = "cyclonedx") -> None:
         """Generate SBOM in specified format.
-        
+
         Args:
             format: SBOM format - 'cyclonedx', 'spdx', or 'syft-json'
         """
@@ -68,23 +73,34 @@ class SpareToolsSecurityMixin:
         self.output.info("✅ SBOM generated (placeholder)")
 
 
+class SpareToolsMcpMixin:
+  
+class SpareToolsConanMixin:
+  
+class SpareToolsEmbeddedMixin:
+  
+class SpareToolsAndroidMixin:
+  
+class SpareToolsTestMixin:
+
 class SpareToolsBaseConan(ConanFile, SpareToolsSecurityMixin):
     name = "sparetools-base"
     # Use CONAN_BUILD_VERSION from environment (set by git-to-conan collector)
     # Fallback to static version for local development
+
     version = '2.0.4'
     package_type = "python-require"
-    description = "Foundation utilities for SpareTools ecosystem"
+    description = "Recipe helpers for SpareTools Conan packages"
     license = "Apache-2.0"
     url = "https://github.com/sparesparrow/sparetools"
 
-    exports_sources = "*.py"
+    # Minimal exports - only conanfile (exclude sparetools/ runtime modules)
+    exports_sources = ("conanfile.py", "README.md", "!sparetools/**")
 
     def package(self):
-        copy(self, "*.py", src=self.source_folder, dst=self.package_folder, keep_path=True)
-        copy(self, "sparetools/**/*.py", src=self.source_folder, dst=self.package_folder, keep_path=True)
+        # No need to copy anything - python_requires uses source directly
+        pass
 
     def package_info(self):
-        self.cpp_info.libs = []
-        # Conan 2.x API: Use buildenv_info for build-time Python modules
-        self.buildenv_info.append_path("PYTHONPATH", self.package_folder)
+        # Python-requires don't need package_info
+        pass
