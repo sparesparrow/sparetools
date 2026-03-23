@@ -57,4 +57,11 @@ def get_tools(config: Dict[str, Any]) -> Dict[str, Any]:
     except ImportError as e:
         print(f"⚠ Could not load backup_manager: {e}")
 
+    try:
+        from .github_manager import GitHubManager
+        tools["github_manager"] = GitHubManager(config)
+        print(f"✓ Loaded github_manager tool")
+    except ImportError as e:
+        print(f"⚠ Could not load github_manager: {e}")
+
     return tools

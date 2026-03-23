@@ -1,17 +1,16 @@
 {
   "mcpServers": {
-    "sparetools-mcp-prompts": {
-      "command": "sparetools-mcp-ecosystem",
-      "args": ["mcp-prompts"],
+    "sparetools-static-analysis": {
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.static_analysis"],
       "env": {
-        "MODE": "mcp",
         "LOG_LEVEL": "info",
-        "PORT": "3001"
+        "ANALYSIS_LOG_DIR": "~/.sparetools/static-analysis/logs"
       }
     },
     "sparetools-esp32": {
-      "command": "sparetools-mcp-ecosystem",
-      "args": ["mcp-servers", "esp32"],
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.esp32_serial_monitor"],
       "env": {
         "ESP32_LOG_LEVEL": "info",
         "ESP32_LOG_DIR": "~/.sparetools/esp32/logs",
@@ -19,31 +18,27 @@
       }
     },
     "sparetools-android": {
-      "command": "sparetools-mcp-ecosystem",
-      "args": ["mcp-servers", "android"],
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.android_dev_tools"],
       "env": {
         "ANDROID_LOG_LEVEL": "info",
-        "ANDROID_LOG_DIR": "~/.sparetools/android/logs",
-        "ANDROID_SESSION_STORAGE": "~/.sparetools/android/sessions.json"
+        "ANDROID_LOG_DIR": "~/.sparetools/android/logs"
       }
     },
     "sparetools-conan": {
-      "command": "sparetools-mcp-ecosystem",
-      "args": ["mcp-servers", "conan"],
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.conan_cloudsmith"],
       "env": {
         "CONAN_LOG_LEVEL": "info",
-        "CONAN_LOG_DIR": "~/.sparetools/conan/logs",
-        "CONAN_SESSION_STORAGE": "~/.sparetools/conan/sessions.json",
         "CLOUDSMITH_API_KEY": "${CLOUDSMITH_API_KEY}",
         "CLOUDSMITH_ORG": "sparesparrow-conan"
       }
     },
     "sparetools-repo": {
-      "command": "sparetools-mcp-ecosystem",
-      "args": ["mcp-servers", "repo"],
+      "command": "python",
+      "args": ["-m", "sparetools.mcp_servers.repo_cleanup"],
       "env": {
         "LOG_LEVEL": "info",
-        "REPO_LOG_DIR": "~/.sparetools/repo/logs",
         "GITHUB_TOKEN": "${GITHUB_TOKEN}"
       }
     },
@@ -57,6 +52,16 @@
         "CLOUDSMITH_API_KEY": "${CLOUDSMITH_API_KEY}"
       }
     }
+  },
+  "permissions": {
+    "allow": [
+      "Bash(conan *)",
+      "Bash(npm *)",
+      "Bash(pytest *)",
+      "Bash(python3 *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ]
   }
 }
-
