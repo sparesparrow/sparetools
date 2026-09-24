@@ -167,6 +167,24 @@ install_python_deps() {
     log_success "✓ Python dependencies installed"
 }
 
+# Function to configure Claude Desktop
+configure_claude_desktop() {
+    log_header "Configuring Claude Desktop"
+
+    local claude_config
+    case "$(uname -s)" in
+        Darwin) claude_config="$HOME/Library/Application Support/Claude/claude_desktop_config.json" ;;
+        Linux)  claude_config="$HOME/.config/Claude/claude_desktop_config.json" ;;
+        *)      log_warning "⚠ Unsupported OS for Claude Desktop auto-config"; return ;;
+    esac
+
+    if bash "$SCRIPT_DIR/setup-claude-desktop.sh"; then
+        log_success "✓ Claude Desktop configured: $claude_config"
+    else
+        log_warning "⚠ Claude Desktop setup failed — run scripts/setup-claude-desktop.sh manually"
+    fi
+}
+
 # Function to configure Cursor IDE
 configure_cursor() {
     log_header "Configuring Cursor IDE"
@@ -356,6 +374,9 @@ main() {
     echo ""
 
     configure_cursor
+    echo ""
+
+    configure_claude_desktop
     echo ""
 
     verify_installation

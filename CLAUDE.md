@@ -436,9 +436,50 @@ git push origin feature/my-feature
 #    - Manual approval for publishing
 ```
 
+## MCP Servers (Claude Code / Claude Desktop / Cursor)
+
+This repo ships 6 MCP servers that are auto-loaded when you run `claude` inside the repo
+(via `.claude/settings.json`). They also work in Claude Desktop and Cursor.
+
+| Server | Module | Key Tools |
+|--------|--------|-----------|
+| `sparetools-static-analysis` | `sparetools.mcp_servers.static_analysis` | `analyze_static`, `create_workflow`, `execute_workflow`, `generate_report` |
+| `sparetools-esp32` | `sparetools.mcp_servers.esp32_serial_monitor` | `detect_esp32_ports`, `start_serial_monitor`, `send_serial_command` |
+| `sparetools-android` | `sparetools.mcp_servers.android_dev_tools` | `build_android_apk`, `deploy_android_apk`, `android_logcat` |
+| `sparetools-conan` | `sparetools.mcp_servers.conan_cloudsmith` | `validate_conanfile`, `create_conan_package`, `upload_to_cloudsmith` |
+| `sparetools-repo` | `sparetools.mcp_servers.repo_cleanup` | `repo_cleanup_scan`, `github_list_prs`, `github_get_workflow_status` |
+| `sparetools-orchestrator` | `sparetools.mcp_servers.orchestrator` | `run_full_ci_workflow`, `bootstrap_new_package`, `diagnose_build_failure` |
+
+### Setup
+
+```bash
+# Claude Desktop
+./scripts/setup-claude-desktop.sh
+
+# Cursor IDE
+./scripts/setup-mcp-dev.sh
+
+# Required environment variables
+export CLOUDSMITH_API_KEY="..."   # Cloudsmith registry
+export GITHUB_TOKEN="..."         # GitHub API
+export ANTHROPIC_API_KEY="..."    # Orchestrator AI features (claude-sonnet-4-6)
+```
+
+### Multi-Agent Cursor System
+
+Four coordinated agents are available in Cursor via the `cursor_agent_multi_terminal` server:
+- **Primary** — coordination and planning
+- **Secondary** — execution and implementation
+- **Research** — codebase analysis and documentation
+- **Execution** — deployment and publishing
+
+See `docs/CURSOR-AGENTS.md` for usage.
+
 ## References
 
 - **Conan Documentation**: https://docs.conan.io/
 - **GitHub Repository**: https://github.com/sparesparrow/sparetools
 - **Cloudsmith Registry**: https://cloudsmith.io/~sparesparrow-conan/repos/sparetools/
 - **Issue Tracker**: https://github.com/sparesparrow/sparetools/issues
+- **MCP Integration Guide**: `packages/mcp/sparetools-mcp-ecosystem/SPARETOOLS_MCP_INTEGRATION.md`
+- **Cursor Agents Guide**: `docs/CURSOR-AGENTS.md`

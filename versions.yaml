@@ -28,6 +28,7 @@ mcp:
   mcp-ecosystem: 1.1.0
   mcp-core: 1.0.0
   mcp-project-orchestrator: 0.2.0
+  mcp-anthropic: 1.0.0
 
 security:
   crypto-suite: 1.0.0
