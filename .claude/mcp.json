@@ -2,26 +2,34 @@
   "mcpServers": {
     "mcp-prompts": {
       "command": "npx",
-      "args": ["-y", "@sparesparrow/mcp-prompts", "start"],
+      "args": [
+        "-y",
+        "@sparesparrow/mcp-prompts",
+        "start"
+      ],
       "env": {
         "MODE": "mcp",
         "STORAGE_TYPE": "file",
         "LOG_LEVEL": "debug",
-        "PROMPTS_DIR": "/home/sparrow/mcp/data/prompts"
+        "PROMPTS_DIR": "${PROMPTS_DIR}"
       }
     },
     "mcp-prompts-postgres": {
       "command": "npx",
-      "args": ["-y", "@sparesparrow/mcp-prompts", "start"],
+      "args": [
+        "-y",
+        "@sparesparrow/mcp-prompts",
+        "start"
+      ],
       "env": {
         "MODE": "mcp",
         "STORAGE_TYPE": "postgres",
-        "POSTGRES_URL": "postgresql://postgres:postgres@localhost:5432/mcp_prompts",
-        "POSTGRES_HOST": "localhost",
-        "POSTGRES_PORT": "5432",
-        "POSTGRES_DATABASE": "mcp_prompts",
-        "POSTGRES_USER": "postgres",
-        "POSTGRES_PASSWORD": "postgres",
+        "POSTGRES_URL": "${POSTGRES_URL}",
+        "POSTGRES_HOST": "${POSTGRES_HOST}",
+        "POSTGRES_PORT": "${POSTGRES_PORT}",
+        "POSTGRES_DATABASE": "${POSTGRES_DATABASE}",
+        "POSTGRES_USER": "${POSTGRES_USER}",
+        "POSTGRES_PASSWORD": "${POSTGRES_PASSWORD}",
         "LOG_LEVEL": "info",
         "NODE_OPTIONS": "--no-warnings"
       }
@@ -31,10 +39,10 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://postgres:postgres@localhost:5432/mcp_prompts"
+        "${POSTGRES_URL}"
       ],
       "env": {
-        "POSTGRES_URL": "postgresql://postgres:postgres@localhost:5432/mcp_prompts"
+        "POSTGRES_URL": "${POSTGRES_URL}"
       }
     },
     "github": {
@@ -44,7 +52,7 @@
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
       }
     },
     "filesystem": {
@@ -52,7 +60,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/home/sparrow"
+        "${workspaceRoot}"
       ],
       "env": {}
     },
