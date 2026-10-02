@@ -32,7 +32,8 @@ class VersionManager:
         # Foundation packages that are part of the core release
         self.version_files = {
             "VERSION.txt": self._update_version_txt,
-            "packages/foundation/sparetools-base/conanfile.py": self._update_conanfile_version,
+            # sparetools-base/conanfile.py is a template without a `version = "..."` literal;
+            # publish.yml passes --version explicitly, so it cannot be synchronised here.
             "packages/foundation/sparetools-shared-dev-tools/conanfile.py": self._update_conanfile_version,
             "packages/foundation/sparetools-bootstrap/conanfile.py": self._update_conanfile_version,
             "packages/foundation/sparetools-recipe-base/conanfile.py": self._update_conanfile_version,

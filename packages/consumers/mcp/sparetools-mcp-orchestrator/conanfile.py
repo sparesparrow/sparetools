@@ -12,7 +12,7 @@ class SpareToolsMcpOrchestratorConan(ConanFile):
     """MCP Orchestrator - AI-powered development orchestration using Model Context Protocol."""
 
     name = "sparetools-mcp-orchestrator"
-    version = "2.0.4"
+    version = "2.0.5"
     package_type = "python-require"
     description = "MCP orchestrator with FastMCP integration, project orchestration, and AI-powered development tools"
     license = "Apache-2.0"

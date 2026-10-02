@@ -118,3 +118,12 @@ packages/wifi/sparetools-wifi-sensing/cpy/**/*
 packages/wifi/sparetools-wifi-sensing/research/repositories/flipper_zero/**/*
 packages/wifi/sparetools-wifi-sensing/research/repositories/wigle/wigle-wifi/**/*
 
+
+# Vendored virtualenvs and local build output (never commit)
+test_env/
+build-dev/
+build-conan/
+*.o
+files.zip
+build_report.json
+test-results.xml
