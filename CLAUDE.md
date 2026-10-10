@@ -105,7 +105,7 @@ npm run publish:python    # Publish Python packages
 Cloudsmith remote (configured in `conanfile.py`):
 ```bash
 conan remote add sparesparrow-conan \
-  https://dl.cloudsmith.io/public/sparesparrow-conan/sparetools/
+  https://conan.cloudsmith.io/sparesparrow-conan/sparetools/
 conan upload "sparetools-*/*" -r sparesparrow-conan --confirm --parallel=4
 ```
 
@@ -387,7 +387,7 @@ git commit --no-verify
 Ensure the Conan remote is configured:
 ```bash
 conan remote add sparesparrow-conan \
-  https://dl.cloudsmith.io/public/sparesparrow-conan/sparetools/
+  https://conan.cloudsmith.io/sparesparrow-conan/sparetools/
 conan remote list
 ```
 
