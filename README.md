@@ -17,20 +17,20 @@ Comprehensive Conan 2.x ecosystem spanning embedded systems, AI/ML, cybersecurit
 ```bash
 # Add remote (one-time)
 conan remote add sparesparrow-conan \
-  https://dl.cloudsmith.io/public/sparesparrow-conan/sparetools/
+  https://conan.cloudsmith.io/sparesparrow-conan/sparetools/
 
-# Install Python runtime (foundation)
+# See what is published
+conan search "sparetools-*" -r sparesparrow-conan
+
+# Install Python runtime (foundation, prebuilt)
 conan install --tool-requires=sparetools-cpython/3.12.7 --build=missing
 
-# Install AI assistant tools (MCP ecosystem)
+# Install AI assistant tools (MCP ecosystem; built locally from the published recipe)
 conan install --requires=sparetools-mcp-orchestrator/2.0.3 --build=missing
-
-# Install embedded development tools (ESP32)
-conan install --requires=sparetools-nucleus/2.0.0 --build=missing
-
-# Install cybersecurity toolkit
-conan install --requires=sparetools-pentest-toolkit/2.0.0 --build=missing
 ```
+
+The ESP32 (`sparetools-nucleus`) and cybersecurity (`sparetools-pentest-toolkit`) packages are not
+published to Cloudsmith yet; build them from source as shown below.
 
 ### Build from Source
 
